@@ -1,0 +1,22 @@
+{
+  "name": "@yisu/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Eslint配置",
+  "exports": {
+    "./*": "./*.ts"
+  },
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.24.0",
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "eslint-plugin-react-refresh": "^0.4.23",
+    "globals": "^17.3.0",
+    "typescript-eslint": "^8.54.0"
+  }
+}

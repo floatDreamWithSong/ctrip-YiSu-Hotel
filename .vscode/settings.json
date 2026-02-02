@@ -1,0 +1,32 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "package.json": "nest-cli.json,prisma.config.ts,.npmrc,pnpm-lock.yaml,tsconfig.json,tsconfig.*.json,eslint.config.*,.eslintrc,.eslintrc.*,.eslintignore,.prettierrc,.prettierrc.*,prettier.config.*,.prettierignore,vite.config.*",
+    ".env": ".env.*"
+  },
+  "eslint.workingDirectories": [
+    "backend",
+    "frontend/admin",
+    "packages/eslint-config",
+    "packages/shared",
+  ],
+  "eslint.useFlatConfig": true,
+  "files.watcherExclude": {
+    "**/routeTree.gen.ts": true,
+    "**/prisma-generated/**": true
+  },
+  "search.exclude": {
+    "**/routeTree.gen.ts": true,
+    "**/prisma-generated/**": true
+  },
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true,
+    "**/prisma-generated/**": true
+  },
+  "typescript.preferences.includePackageJsonAutoImports": "on"
+}

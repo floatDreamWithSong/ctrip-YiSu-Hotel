@@ -1,0 +1,10 @@
+node_modules
+dist
+.turbo
+.DS_Store
+dist-ssr
+*.local
+count.txt
+.nitro
+.tanstack
+.wrangler

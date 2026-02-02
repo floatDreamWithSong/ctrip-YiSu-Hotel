@@ -1,0 +1,6 @@
+{
+  "extends": "@yisu/typescript-config/frontend.json",
+  "compilerOptions": {
+    "types": []
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@yisu/shared",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -b -v",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\""
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "./dist/**"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/mapped-types": "*",
+    "zod": "^4.3.6",
+    "enum-plus": "^3.1.8"
+  },
+  "devDependencies": {
+    "@yisu/eslint-config": "workspace:*",
+    "@yisu/typescript-config": "workspace:*"
+  }
+}

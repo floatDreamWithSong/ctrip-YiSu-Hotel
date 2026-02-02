@@ -1,0 +1,25 @@
+{
+  "name": "@yisu/front-utils",
+  "version": "0.0.0",
+  "description": "前端共享工具",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.24.0",
+  "dependencies": {
+    "@yisu/shared": "workspace:*",
+    "axios": "^1.13.4",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.4.0",
+    "tsup": "^8.5.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@yisu/typescript-config": "workspace:*"
+  }
+}

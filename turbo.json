@@ -1,0 +1,48 @@
+{
+  "$schema": "./node_modules/turbo/schema.json",
+  "ui": "tui",
+  "concurrency": "10",
+  "tasks": {
+    "build": {
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "start": {
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "dev": {
+      "persistent": true
+    },
+    "admin#dev": {
+      "dependsOn": [
+        "@yisu/shared#build",
+        "@yisu/front-utils#build"
+      ]
+    },
+    "admin#build": {
+      "dependsOn": [
+        "@yisu/shared#build",
+        "@yisu/front-utils#build"
+      ]
+    },
+    "backend#dev": {
+      "dependsOn": [
+        "@yisu/shared#build"
+      ]
+    },
+    "backend#build": {
+      "dependsOn": [
+        "@yisu/shared#build"
+      ]
+    },
+    "lint": {},
+    "format": {},
+    "check": {}
+  }
+}
