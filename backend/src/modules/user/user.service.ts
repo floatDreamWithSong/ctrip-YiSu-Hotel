@@ -8,6 +8,7 @@ import { JwtUtils } from '@/utils/jwt/jwt.service';
 import { ApiUserTypes, emailSchema, UserType } from '@yisu/shared';
 import { VERIFICATION_CODE_POSTFIX, VerificationCodePostfix } from '@/utils/constants';
 import { generateUid } from '@/utils/generators/uid';
+
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
@@ -17,7 +18,7 @@ export class UserService {
     private readonly emailService: EmailService,
     private readonly jwtUtils: JwtUtils,
     private readonly verificationCodeService: VerificationCodeService,
-  ) {}
+  ) { }
   // async updateAvatar(file: Express.Multer.File, uid: string) {
   //   const user = await this.prismaService.user.findUnique({
   //     where: {
@@ -44,7 +45,7 @@ export class UserService {
   //     avatar: avatarUrl,
   //   }
   // }
-  async updateInfo(body: ApiUserTypes['UserUpdateInfo'] & {uid: string}) {
+  async updateInfo(body: ApiUserTypes['UserUpdateInfo'] & { uid: string }) {
     await this.prismaService.user.update({
       where: {
         uid: body.uid,
@@ -75,7 +76,7 @@ export class UserService {
 
   private checkEmail(email: string) {
     this.logger.debug(`checking email: ${email}`);
-    if(!emailSchema.safeParse(email).success) {
+    if (!emailSchema.safeParse(email).success) {
       throw EXCEPTIONS.INVALID_EMAIL;
     }
   }
@@ -92,7 +93,7 @@ export class UserService {
       username: username,
       userType: userType,
       type: 'access',
-    })    
+    })
   }
   /**
    *  发送验证码
