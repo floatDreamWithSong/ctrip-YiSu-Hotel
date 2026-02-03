@@ -1,0 +1,43 @@
+name: Deploy Backend to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 设置 SSH 密钥
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.PRIVATE_KEY }}
+
+      # 同步文件到服务器
+      - name: Sync files to server
+        run: |
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude '.env.local' \
+            --exclude '.env.development' \
+            --exclude '.env.development.local' \
+            --exclude '.env.production.local' \
+            -e "ssh -p ${{ secrets.REMOTE_PORT }} -o StrictHostKeyChecking=no" \
+            ./ \
+            ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:${{ secrets.TARGET }}
+
+      # 拉起 Docker 容器
+      - name: Deploy via Docker Compose
+        run: |
+          ssh -p ${{ secrets.REMOTE_PORT }} \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} \
+            "cd ${{ secrets.TARGET }}/backend && docker compose up --build -d"

@@ -1,0 +1,53 @@
+services:
+  app:
+    build:
+      context: ..  # monorepo 根目录（从 backend/ 目录执行时，.. 即为根）
+      dockerfile: backend/Dockerfile
+    container_name: ctrip-yisu-hotel-be
+    restart: always
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.production
+        required: false
+      - path: .env.production.local  # 生产密钥，在服务器上手动管理，不入仓库
+        required: false
+    ports:
+      - '80:8000'
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+    entrypoint: ['/bin/sh', 'docker-entrypoint.sh']
+
+  db:
+    image: postgres:15-alpine
+    container_name: ctrip-yisu-hotel-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ctrip-yisu-hotel
+    ports:
+      - '5000:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    container_name: ctrip-yisu-hotel-redis
+    restart: always
+    ports:
+      - '6000:6379'
+    networks:
+      - backend
+
+volumes:
+  db_data:
+
+networks:
+  backend:
+    driver: bridge
