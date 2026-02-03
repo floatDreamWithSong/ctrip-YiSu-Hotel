@@ -1,4 +1,19 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: ctrip-yisu-hotel-nginx
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${HOME}/ssl/cf:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - backend 
+
   app:
     build:
       context: ..  # monorepo 根目录（从 backend/ 目录执行时，.. 即为根）
@@ -12,8 +27,8 @@ services:
         required: false
       - path: .env.production.local  # 生产密钥，在服务器上手动管理，不入仓库
         required: false
-    ports:
-      - '80:8000'
+    expose:
+      - '8000'
     depends_on:
       - db
       - redis
