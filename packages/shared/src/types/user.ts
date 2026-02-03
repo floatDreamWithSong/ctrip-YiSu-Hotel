@@ -28,3 +28,10 @@ export interface UserInfo {
   }
   uid: string
 }
+
+export const verifyCodeType = {
+  REGISTER: 'register',
+  FORGET_PASSWORD: 'forget_password',
+} as const;
+
+export type verifyCodeType = (typeof verifyCodeType)[keyof typeof verifyCodeType];

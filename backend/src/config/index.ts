@@ -65,9 +65,6 @@ export class Configurations implements OnModuleInit {
   static get COS_BUCKET() {
     return this.configService.getOrThrow<string>('COS_BUCKET');
   }
-  static get COS_ENDPOINT() {
-    return this.configService.getOrThrow<string>('COS_ENDPOINT');
-  }
   static get COS_REGION() {
     return this.configService.getOrThrow<string>('COS_REGION');
   }

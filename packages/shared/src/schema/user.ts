@@ -15,7 +15,6 @@ export const passwordSchema = z.string({ error: '密码不能为空' })
   .regex(/[0-9]/, { error: '密码必须包含至少一个数字' });
 
 export const verificationCodeSchema = z.string({ error: '验证码不能为空' })
-  .length(6, { error: '验证码必须是6位数字' })
-  .regex(/^[0-9]+$/, { error: '验证码只能是数字' });
+  .length(6, { error: '验证码必须是6位字符' })
 
 export const userGenderSchema = z.enum(UserGender);
