@@ -5,7 +5,6 @@
   "license": "UNLICENSED",
   "type": "commonjs",
   "scripts": {
-    "postinstall": "prisma generate",
     "dev": "cross-env NODE_ENV=development nest start -b swc --watch",
     "build": "cross-env NODE_ENV=production nest build -b swc",
     "start": "cross-env NODE_ENV=development nest start -b swc",
