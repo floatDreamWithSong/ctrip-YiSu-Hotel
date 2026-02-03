@@ -1,0 +1,15 @@
+# build context 为 monorepo 根，排除不需要进入镜像的内容
+.git
+.github
+frontend/
+docs/
+*.md
+node_modules
+**/node_modules
+**/dist
+
+# 各环境 env（生产密钥不应进入 build context）
+.env.local
+.env.development
+.env.development.local
+.env.production.local
