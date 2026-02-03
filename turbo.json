@@ -30,6 +30,18 @@
         "@yisu/front-utils#build"
       ]
     },
+    "mobile#dev": {
+      "dependsOn": [
+        "@yisu/shared#build",
+        "@yisu/front-utils#build"
+      ]
+    },
+    "mobile#build": {
+      "dependsOn": [
+        "@yisu/shared#build",
+        "@yisu/front-utils#build"
+      ]
+    },
     "backend#dev": {
       "dependsOn": [
         "@yisu/shared#build"
