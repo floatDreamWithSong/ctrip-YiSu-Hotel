@@ -17,7 +17,11 @@ export default defineConfig(({ mode }) => {
         showSwitch: true,
         hotKeys: ['ctrlKey', 'altKey'],
       }),
-      devtools(),
+      devtools({
+        eventBusConfig: {
+          port: 42069,
+        },
+      }),
       tanstackRouter({
         target: 'react',
         autoCodeSplitting: true,
