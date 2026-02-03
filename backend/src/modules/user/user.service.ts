@@ -6,7 +6,7 @@ import { VerificationCodeService } from './verification-code.service';
 import { EXCEPTIONS } from '@/exceptions';
 import { JwtUtils } from '@/utils/jwt/jwt.service';
 import { ApiUserTypes, emailSchema, UserType } from '@yisu/shared';
-import { VERIFICATION_CODE_POSTFIX } from '@/utils/constants';
+import { VERIFICATION_CODE_POSTFIX, VerificationCodePostfix } from '@/utils/constants';
 import { generateUid } from '@/utils/generators/uid';
 @Injectable()
 export class UserService {
@@ -18,32 +18,32 @@ export class UserService {
     private readonly jwtUtils: JwtUtils,
     private readonly verificationCodeService: VerificationCodeService,
   ) {}
-  async updateAvatar(file: Express.Multer.File, uid: string) {
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        uid: uid,
-      },
-    });
-    if (!user) {
-      throw EXCEPTIONS.USER_NOT_FOUND;
-    }
-    const avatarUrl = `https://${await this.cosService.uploadFile(file)}`;
-    const oldAvatarUrl = user.avatar;
-    await this.prismaService.user.update({
-      where: {
-        uid: uid,
-      },
-      data: {
-        avatar: avatarUrl,
-      },
-    });
-    if (oldAvatarUrl) {
-      await this.cosService.deleteFileByUrl(oldAvatarUrl);
-    }
-    return {
-      avatar: avatarUrl,
-    }
-  }
+  // async updateAvatar(file: Express.Multer.File, uid: string) {
+  //   const user = await this.prismaService.user.findUnique({
+  //     where: {
+  //       uid: uid,
+  //     },
+  //   });
+  //   if (!user) {
+  //     throw EXCEPTIONS.USER_NOT_FOUND;
+  //   }
+  //   const avatarUrl = `https://${await this.cosService.uploadFile(file)}`;
+  //   const oldAvatarUrl = user.avatar;
+  //   await this.prismaService.user.update({
+  //     where: {
+  //       uid: uid,
+  //     },
+  //     data: {
+  //       avatar: avatarUrl,
+  //     },
+  //   });
+  //   if (oldAvatarUrl) {
+  //     await this.cosService.deleteFileByUrl(oldAvatarUrl);
+  //   }
+  //   return {
+  //     avatar: avatarUrl,
+  //   }
+  // }
   async updateInfo(body: ApiUserTypes['UserUpdateInfo'] & {uid: string}) {
     await this.prismaService.user.update({
       where: {
@@ -52,14 +52,18 @@ export class UserService {
       data: body,
     });
   }
-  async forgetPassword(body: ApiUserTypes['UserForgetPassword'] & {uid: string}) {
+  async forgetPassword(body: ApiUserTypes['UserForgetPassword']) {
+    const user = await this.findUserByEmail(body.email);
+    if (!user) {
+      throw EXCEPTIONS.USER_NOT_FOUND;
+    }
     const code = await this.verificationCodeService.getCode(body.email, VERIFICATION_CODE_POSTFIX.USER_FORGET_PASSWORD);
     if (code !== body.verifyCode) {
       throw EXCEPTIONS.VERIFY_CODE_ERROR;
     }
     await this.prismaService.user.update({
       where: {
-        uid: body.uid,
+        id: user.id
       },
       data: {
         password: body.password,
@@ -94,13 +98,15 @@ export class UserService {
    *  发送验证码
    * @param email 
    */
-  async sendVerifyCode(email: string, postfixType: string): Promise<void> {
+  async sendVerifyCode(email: string, postfixType: VerificationCodePostfix): Promise<void> {
     // 检查邮箱格式
     this.checkEmail(email)
     // 检查邮箱是否已绑定
-    const user = await this.findUserByEmail(email);
-    if (user) {
-      throw EXCEPTIONS.EMAIL_ALREADY_BOUND;
+    if (postfixType === VERIFICATION_CODE_POSTFIX.USER_REGISTER) {
+      const user = await this.findUserByEmail(email);
+      if (user) {
+        throw EXCEPTIONS.EMAIL_ALREADY_BOUND;
+      }
     }
     let code = await this.verificationCodeService.getCode(email, postfixType);
     if (code) {
