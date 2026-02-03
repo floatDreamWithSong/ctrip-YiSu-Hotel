@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite --port 7000",
     "build": "vite build && tsc",
-    "preview": "vite preview 7100",
+    "start": "vite preview --port 7100",
     "test": "vitest run",
     "lint": "eslint",
     "format": "prettier src/**/*.{js,jsx,ts,tsx}",

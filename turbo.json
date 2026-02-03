@@ -12,9 +12,8 @@
       "dependsOn": [
         "build"
       ],
-      "outputs": [
-        "dist/**"
-      ]
+      "persistent": true,
+      "cache": false
     },
     "dev": {
       "persistent": true
