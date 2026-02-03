@@ -9,8 +9,11 @@ export class ZodValidationPipe<T> implements PipeTransform {
   transform(value: unknown, _: ArgumentMetadata) {
     const result = this.schema.safeParse(value);
     if (!result.success) {
-      console.log(result.error.message);
-      throw new BadRequestException('Zod Validation failed');
+      let message = 'Zod Validation failed'
+      if (result.error.issues.length > 0) {
+        message = result.error.issues[0].message
+      }
+      throw new BadRequestException(message);
     }
     return result.data;
   }
@@ -20,4 +23,5 @@ export class ZodValidationPipe<T> implements PipeTransform {
   static userLoginSchema = new ZodValidationPipe(ApiUserSchemas.userLogin)
   static userUpdateInfoSchema = new ZodValidationPipe(ApiUserSchemas.userUpdateInfo);
   static userForgetPasswordSchema = new ZodValidationPipe(ApiUserSchemas.userForgetPassword);
+  static userCodeSchema = new ZodValidationPipe(ApiUserSchemas.userCode);
 }

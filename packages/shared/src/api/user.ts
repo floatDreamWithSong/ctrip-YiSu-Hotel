@@ -1,3 +1,4 @@
+import { verifyCodeType } from "../types";
 import { emailSchema, passwordSchema, userGenderSchema, usernameSchema, verificationCodeSchema } from "../schema";
 import z from "zod";
 
@@ -12,6 +13,10 @@ import z from "zod";
 
 
 export const ApiUserSchemas = {
+  userCode: z.object({
+    email: emailSchema,
+    type: z.enum(verifyCodeType)
+  }),
   userRegister: z.object({
     email: emailSchema,
     username: usernameSchema,

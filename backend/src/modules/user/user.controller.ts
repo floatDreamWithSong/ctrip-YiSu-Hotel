@@ -7,6 +7,7 @@ import {
   Logger,
   // ParseIntPipe,
   Post,
+  Put,
   // Put,
   // Query,
   // UploadedFile,
@@ -15,10 +16,11 @@ import {
 import { UserService } from './user.service';
 
 import { Public } from '@/utils/decorators/public.decorator';
-import { ApiUserTypes, JwtPayload, } from '@yisu/shared';
+import { ApiUserTypes, JwtPayload, verifyCodeType, } from '@yisu/shared';
 import { ZodValidationPipe } from '@/pipes/zod-validate.pipe';
 // import { User } from '@/utils/decorators/user.decorator';
-import { VERIFICATION_CODE_POSTFIX } from '@/utils/constants';
+import { VERIFICATION_CODE_POSTFIX, VerificationCodePostfix } from '@/utils/constants';
+import { User } from '@/utils/decorators/user.decorator';
 // import { UploadFilter } from '@/utils/upload/upload.filter';
 // import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 
@@ -26,19 +28,18 @@ import { VERIFICATION_CODE_POSTFIX } from '@/utils/constants';
 @Controller('user')
 export class UserController {
   private readonly logger = new Logger(UserController.name);
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
-  @Post('code/register')
+  @Post('code')
   @HttpCode(HttpStatus.OK)
   @Public()
-  async sendRegisterVerifyCode(@Body('email', ZodValidationPipe.emailSchema) email: string) {
-    return await this.userService.sendVerifyCode(email, VERIFICATION_CODE_POSTFIX.USER_REGISTER);
-  }
-  @Post('code/forget')
-  @HttpCode(HttpStatus.OK)
-  @Public()
-  async sendForgetVerifyCode(@Body('email', ZodValidationPipe.emailSchema) email: string) {
-    return await this.userService.sendVerifyCode(email, VERIFICATION_CODE_POSTFIX.USER_FORGET_PASSWORD);
+  async sendRegisterVerifyCode(@Body(ZodValidationPipe.userCodeSchema) body: ApiUserTypes['UserCode']) {
+    const { email, type } = body;
+    let postfix: VerificationCodePostfix = VERIFICATION_CODE_POSTFIX.USER_REGISTER
+    if (type === verifyCodeType.FORGET_PASSWORD) {
+      postfix = VERIFICATION_CODE_POSTFIX.USER_FORGET_PASSWORD;
+    }
+    return await this.userService.sendVerifyCode(email, postfix);
   }
 
   @Post('register')
@@ -75,10 +76,11 @@ export class UserController {
   // async updateEmail(@Body(ZodValidationPipe.userUpdateEmailSchema) body: UserUpdateEmail, @User() user: JwtPayload) {
   //   return await this.userService.updateEmail({...body, uid: user.uid});
   // }
-  // @Put('forget')
-  // async forgetPassword(@Body(ZodValidationPipe.userForgetPasswordSchema) body: UserForgetPassword, @User() user: JwtPayload) {
-  //   return await this.userService.forgetPassword({...body, uid: user.uid});
-  // }
+  @Put('forget')
+  @Public()
+  async forgetPassword(@Body(ZodValidationPipe.userForgetPasswordSchema) body: ApiUserTypes['UserForgetPassword']) {
+    return await this.userService.forgetPassword({ ...body });
+  }
   // @Put('avatar')
   // @UseInterceptors(FileInterceptor('avatar', {
   //   fileFilter: (req, file, callback) => UploadFilter.fileFilter(file.fieldname, file, callback)

@@ -44,6 +44,7 @@
     "prisma": "^7.3.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "tencentcloud-sdk-nodejs": "^4.1.181",
     "zod": "^4.3.6"
   },
   "devDependencies": {
