@@ -7,13 +7,13 @@ import ms from 'ms';
     ConfigModule.forRoot({
       cache: true,
       isGlobal: true, // 配置模块全局可用
-      envFilePath: [ 
+      envFilePath: [
         `.env.${process.env.NODE_ENV}.local`,
         `.env.${process.env.NODE_ENV}`,
-        (console.log(process.env.NODE_ENV),'.env.local'),
+        (console.log(process.env.NODE_ENV), '.env.local'),
         '.env',
       ],
-      
+
     }),
   ],
 })
@@ -72,6 +72,9 @@ export class Configurations implements OnModuleInit {
     return this.configService.getOrThrow<string>('CRYPTO_SECRET');
   }
 
+  static get CDN_HOST() {
+    return this.configService.getOrThrow<string>('CDN_HOST');
+  }
   constructor(private readonly configService: ConfigService) { }
 
   onModuleInit() {

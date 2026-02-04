@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CosService } from '@/utils/cos/cos.service';
+import { CosService } from '@/modules/cos/cos.service';
 import { PrismaService } from '@/utils/prisma/prisma.service';
 import { EmailService } from '@/utils/email/email.service';
 import { VerificationCodeService } from './verification-code.service';
