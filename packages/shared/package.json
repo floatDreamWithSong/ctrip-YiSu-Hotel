@@ -6,6 +6,7 @@
   "scripts": {
     "postinstall": "pnpm run build",
     "build": "tsc -b -v",
+    "dev": "tsc -b -v --watch",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\""
   },
   "main": "./dist/index.js",
