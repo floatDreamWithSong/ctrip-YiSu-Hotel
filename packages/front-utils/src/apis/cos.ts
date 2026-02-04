@@ -28,8 +28,8 @@ const upload = (request: UploadRequest) =>
 
 const getSignedUrl = (data: ApiCosTypes['GeneratePresignedUrl']) =>
   request<{
-    accessURL: string;
-    presignedURL: string;
+    accessUrl: string;
+    presignedUrl: string;
   }>({
     url: "/cos/generate-presigned-url",
     method: "POST",
@@ -40,12 +40,12 @@ export const CosRequest = {
   uploadCosFile: async (
     request: ApiCosTypes['GeneratePresignedUrl'] & Omit<UploadRequest, 'signedUrl'>
   ) => {
-    const { presignedURL: signedUrl, accessURL: AccessURL } = await getSignedUrl(
+    const { presignedUrl: signedUrl, accessUrl } = await getSignedUrl(
       request
     );
     await upload({ signedUrl, file: request.file, onProgress: request.onProgress });
     return {
-      url: AccessURL,
+      url: accessUrl,
     };
   }
 }
