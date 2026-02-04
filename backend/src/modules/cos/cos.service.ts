@@ -2,13 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import COS from 'cos-nodejs-sdk-v5';
 import { Configurations } from '@/config';
 import path from 'node:path';
-
-interface UploadOptions {
-  prefix: string,
-  serviceType?: string,
-  fileName?: string,
-  ext?: string,
-}
+import { buildStorageKey } from '@/utils/path';
 
 @Injectable()
 export class CosService implements OnModuleInit {
@@ -26,21 +20,10 @@ export class CosService implements OnModuleInit {
     };
     this.logger.log(this.baseParam);
   }
-  public buildStorageKey(data: UploadOptions): string {
-    let serviceId = crypto.randomUUID().substring(0, 8);
-    if (data.fileName) {
-      serviceId = `${serviceId}-${data.fileName}`;
-    }
-    if (data.ext) {
-      if (!data.ext.startsWith('.'))
-        data.ext = `.${data.ext}`;
-      serviceId = `${serviceId}${data.ext}`;
-    }
-    return [data.prefix, data.serviceType, serviceId].filter(Boolean).join('/');
-  }
+
   async uploadFile(file: Express.Multer.File) {
     const { originalname, buffer } = file;
-    const Key = this.buildStorageKey({
+    const Key = buildStorageKey({
       prefix: 'system',
       serviceType: 'upload',
       fileName: originalname,

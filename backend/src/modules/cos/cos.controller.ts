@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Logger, Post } from "@nestjs/co
 import { CosService } from "./cos.service";
 import { ApiCosTypes, getKey, JwtPayload, UserType } from "@yisu/shared";
 import { User } from "@/utils/decorators/user.decorator";
-import path from "path/posix";
+import { buildStorageKey, joinPath } from "@/utils/path";
 
 @Controller('cos')
 export class CosController {
@@ -12,8 +12,8 @@ export class CosController {
   @Post('generate-presigned-url')
   @HttpCode(HttpStatus.OK)
   generatePresignedUrl(@Body() body: ApiCosTypes['GeneratePresignedUrl'], @User() user: JwtPayload) {
-    const key = this.cosService.buildStorageKey({
-      prefix: path.join(user.uid, getKey(UserType, user.userType), body.dir),
+    const key = buildStorageKey({
+      prefix: joinPath(user.uid, getKey(UserType, user.userType), body.dir),
       ext: body.ext,
     });
     const presignedUrl = this.cosService.generatePresignedUrl(key);
