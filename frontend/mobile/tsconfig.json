@@ -30,7 +30,8 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@yisu/shared/src/*": ["../../packages/shared/src/*"]
     }
   }
 }
