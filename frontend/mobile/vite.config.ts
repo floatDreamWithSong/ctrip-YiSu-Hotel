@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
+        '@yisu/shared/src': fileURLToPath(new URL('../../packages/shared/src', import.meta.url)),
       },
     },
   })
