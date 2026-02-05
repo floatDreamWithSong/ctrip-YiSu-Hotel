@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { META_USER_TYPE, UserTypeValidator } from '@/utils/decorators/user-type.decorator';
-import { JwtPayload } from '@yisu/shared';
+import { JwtPayload } from '@/utils/jwt/types';
 
 @Injectable()
 export class UserTypeGuard implements CanActivate {

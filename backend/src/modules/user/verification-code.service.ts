@@ -6,6 +6,7 @@ import { EXCEPTIONS } from '@/exceptions';
 export class VerificationCodeService {
   private readonly prefix = 'verification_code:';
   private readonly codeExpire = 5 * 60; // 5分钟
+  private readonly codeFrequencyLowerBound = 4 * 60 + 30; // 发送验证码不能过于频繁(30s)
 
   constructor(@InjectRedis() private readonly redisService: Redis) { }
 
@@ -17,6 +18,16 @@ export class VerificationCodeService {
   async getCode(email: string, postfix: string ): Promise<string | null> {
     const key = this.prefix + email + postfix;
     return await this.redisService.get(key);
+  }
+
+  async isCodeFrequent(email: string, postfix: string): Promise<boolean> {
+    const key = this.prefix + email + postfix;
+    const ttl = await this.redisService.ttl(key);
+    console.log('TTL:', ttl);
+    if (ttl > this.codeFrequencyLowerBound) {
+      return true;
+    }
+    return false;
   }
 
   async deleteCode(email: string, postfix: string ): Promise<void> {

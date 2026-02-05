@@ -1,5 +1,6 @@
 import { Injectable, ExecutionContext, Logger } from '@nestjs/common';
 import { ThrottlerGuard, ThrottlerException } from '@nestjs/throttler';
+import { USER_FROM_HEADER, userFrom } from '@yisu/shared';
 import { Request } from 'express';
 
 type RequestWithUser = Request & { user?: {uid: string} };
@@ -32,12 +33,13 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
     
     this.logger.log(`rule: ${name} ip: ${clientIp}, user: ${user?.uid}`);
 
+    const route = `${request.method}:${request.path}`;
+    const env = request.headers[USER_FROM_HEADER] as userFrom;
+
     if (user?.uid) {
-      // 登录用户：基于用户ID限流
-      return `user-${user.uid}-${name}-${suffix}`;
+      return `${env}:user-${user.uid}-${route}-${name}-${suffix}`;
     } else {
-      // 游客：基于IP限流
-      return `ip-${clientIp}-${name}-${suffix}`;
+      return `${env}:ip-${clientIp}-${route}-${name}-${suffix}`;
     }
   }
 
