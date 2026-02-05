@@ -7,16 +7,68 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id           Int      @id @default(autoincrement())
-  uid          String   @unique
-  email        String   @unique
-  username     String   @unique
-  password     String
-  gender       Int      @default(0) // 0 unkown，1 female， 2 male
-  avatar       String?
-  userType     Int      @default(0) // 0 user，1 merchant，2 admin
-  registerTime DateTime @default(now()) @map("register_time")
+// schema.prisma
 
+enum Realm {
+  MOBILE
+  MERCHANT
+  ADMIN
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  realm     Realm
+  email     String
+  username  String
+  password  String   @map("password")
+  gender    Int      @default(0) // 0 unknown, 1 female, 2 male
+  avatar    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  mobileProfile   MobileProfile?
+  merchantProfile MerchantProfile?
+  adminProfile    AdminProfile?
+
+  // 注册：同 realm 下邮箱只能有一个账号
+  @@unique([realm, email], name: "uniq_realm_email")
+  // 登录：同 realm 下用户名只能有一个账号（不同 realm 允许同名）
+  @@unique([realm, username], name: "uniq_realm_username")
+  @@index([email], name: "idx_email")
+  @@index([realm, username], name: "idx_realm_username")
   @@map("users")
+}
+
+model MobileProfile {
+  userId Int  @id @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("mobile_profiles")
+}
+
+model MerchantProfile {
+  userId Int  @id @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotels Hotel[]
+
+  @@map("merchant_profiles")
+}
+
+model AdminProfile {
+  userId Int  @id @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_profiles")
+}
+
+model Hotel {
+  id     Int     @id @default(autoincrement())
+  name   String
+  enName String? @map("en_name")
+
+  merchantId Int @map("merchant_id")
+  merchant   MerchantProfile @relation(fields: [merchantId], references: [userId])
+
+  @@index([merchantId], name: "idx_hotels_merchant_id")
+  @@map("hotels")
 }

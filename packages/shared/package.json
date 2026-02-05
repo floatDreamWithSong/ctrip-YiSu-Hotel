@@ -5,25 +5,21 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "pnpm run build",
-    "build": "tsc -b -v",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\""
   },
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
     "./dist/**"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
-    },
-    "./*": {
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
     }
   },
   "dependencies": {
@@ -33,6 +29,7 @@
   },
   "devDependencies": {
     "@yisu/eslint-config": "workspace:*",
-    "@yisu/typescript-config": "workspace:*"
+    "@yisu/typescript-config": "workspace:*",
+    "tsup": "^8.5.1"
   }
 }
