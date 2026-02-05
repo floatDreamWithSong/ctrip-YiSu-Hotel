@@ -77,6 +77,7 @@ export class UserService {
         },
       });
     }
+    // 后台用户在验证码注册之前，已检查邮箱是否已绑定，保证邮箱查找唯一
     return this.prismaService.user.findFirst({
       where: {
         email: email,
@@ -96,6 +97,13 @@ export class UserService {
         },
       });
     }
+    /**
+     * backend\prisma\migrations\20260205064346_add_staff_username_unique\migration.sql
+     * 保证后台用户之间的用户名唯一
+     * CREATE UNIQUE INDEX IF NOT EXISTS uniq_staff_username
+     * ON "users" ("username")
+     * WHERE "realm" IN ('MERCHANT','ADMIN');
+     */
     return this.prismaService.user.findFirst({
       where: {
         username: username,
@@ -123,6 +131,7 @@ export class UserService {
     }
     const user = await this.findUserByEmail(email, from);
     if (body.type === verifyCodeType.REGISTER) {
+      // 在管理端，一个邮箱只能注册为商家或者管理员
       if (user)
         throw EXCEPTIONS.EMAIL_ALREADY_BOUND;
     } else {
