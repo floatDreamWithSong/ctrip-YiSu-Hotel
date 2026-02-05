@@ -3,7 +3,7 @@ import { Button, Form, Input, Toast } from 'antd-mobile'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { AuthRequest } from '@yisu/front-utils/apis/auth'
-import { ApiUserSchemas } from '@yisu/shared/src/api/user'
+import { ApiUserSchemas } from '@yisu/shared'
 import { PasswordInput } from '@/components/PasswordInput'
 
 const ForgotPassword = () => {
