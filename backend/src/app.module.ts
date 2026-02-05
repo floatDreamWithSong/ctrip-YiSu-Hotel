@@ -7,6 +7,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './guards/jwt.guard';
 import { UserTypeGuard } from './guards/user-type.guard';
 import { UserModule } from './modules/user/user.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './guards/custom-throttler.guard';
 
 @Module({
   imports: [
@@ -14,7 +16,19 @@ import { UserModule } from './modules/user/user.module';
     JwtUtilsModule,
     PrismaModule,
     RedisCacheModule,
-    UserModule
+    UserModule,
+    ThrottlerModule.forRoot([
+      {
+        name: 'burst',
+        ttl: 1000,  // 1秒
+        limit: 10,   // 1秒内最多10次请求
+      },
+      // {
+      //   name: 'sustained',
+      //   ttl: 30_000, // 30秒
+      //   limit: 10, // 最多10次请求
+      // }
+    ])
   ],
   providers: [
     {
@@ -23,8 +37,12 @@ import { UserModule } from './modules/user/user.module';
     },
     {
       provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
       useClass: UserTypeGuard,
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

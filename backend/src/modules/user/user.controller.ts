@@ -16,13 +16,10 @@ import {
 import { UserService } from './user.service';
 
 import { Public } from '@/utils/decorators/public.decorator';
-import { ApiUserTypes, JwtPayload, verifyCodeType, } from '@yisu/shared';
+import { ApiUserTypes, userFrom } from '@yisu/shared';
 import { ZodValidationPipe } from '@/pipes/zod-validate.pipe';
-// import { User } from '@/utils/decorators/user.decorator';
-import { VERIFICATION_CODE_POSTFIX, VerificationCodePostfix } from '@/utils/constants';
-import { User } from '@/utils/decorators/user.decorator';
-// import { UploadFilter } from '@/utils/upload/upload.filter';
-// import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { Env } from '@/utils/decorators/env.decorator';
+import { Throttle } from '@nestjs/throttler';
 
 
 @Controller('user')
@@ -33,27 +30,23 @@ export class UserController {
   @Post('code')
   @HttpCode(HttpStatus.OK)
   @Public()
-  async sendRegisterVerifyCode(@Body(ZodValidationPipe.userCodeSchema) body: ApiUserTypes['UserCode']) {
-    const { email, type } = body;
-    let postfix: VerificationCodePostfix = VERIFICATION_CODE_POSTFIX.USER_REGISTER
-    if (type === verifyCodeType.FORGET_PASSWORD) {
-      postfix = VERIFICATION_CODE_POSTFIX.USER_FORGET_PASSWORD;
-    }
-    return await this.userService.sendVerifyCode(email, postfix);
+  // @Throttle({ burst: { ttl: 30_000, limit: 1 } })
+  async sendRegisterVerifyCode(@Body(ZodValidationPipe.userCodeSchema) body: ApiUserTypes['UserCode'], @Env() env: userFrom) {
+    return await this.userService.sendVerifyCode(env, body);
   }
 
   @Post('register')
   @HttpCode(HttpStatus.OK)
   @Public()
-  async register(@Body(ZodValidationPipe.userRegisterSchema) body: ApiUserTypes['UserRegister']) {
-    return await this.userService.register(body);
+  async register(@Body(ZodValidationPipe.userRegisterSchema) body: ApiUserTypes['UserRegister'], @Env() env: userFrom) {
+    return await this.userService.register(env, body);
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Public()
-  async login(@Body(ZodValidationPipe.userLoginSchema) body: ApiUserTypes['UserLogin']) {
-    return await this.userService.login(body);
+  async login(@Body(ZodValidationPipe.userLoginSchema) body: ApiUserTypes['UserLogin'], @Env() env: userFrom) {
+    return await this.userService.login(env, body);
   }
   // @Get('info')
   // @Public()
@@ -78,8 +71,8 @@ export class UserController {
   // }
   @Put('forget')
   @Public()
-  async forgetPassword(@Body(ZodValidationPipe.userForgetPasswordSchema) body: ApiUserTypes['UserForgetPassword']) {
-    return await this.userService.forgetPassword({ ...body });
+  async forgetPassword(@Body(ZodValidationPipe.userForgetPasswordSchema) body: ApiUserTypes['UserForgetPassword'], @Env() env: userFrom) {
+    return await this.userService.forgetPassword(env, body);
   }
   // @Put('avatar')
   // @UseInterceptors(FileInterceptor('avatar', {

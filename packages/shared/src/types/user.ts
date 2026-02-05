@@ -35,3 +35,12 @@ export const verifyCodeType = {
 } as const;
 
 export type verifyCodeType = (typeof verifyCodeType)[keyof typeof verifyCodeType];
+
+export const userFrom = {
+  MOBILE: 'mobile',
+  ADMIN: 'admin',
+} as const;
+
+export type userFrom = (typeof userFrom)[keyof typeof userFrom];
+
+export const USER_FROM_HEADER = 'x-from-env'
