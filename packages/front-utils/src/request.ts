@@ -107,9 +107,10 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
       if (
         error.response?.data &&
         typeof error.response.data === "object" &&
-        "msg" in error.response.data
+        "message" in error.response.data &&
+        typeof error.response.data.message === "string"
       ) {
-        errorMessage += `: ${error.response.data.msg}`;
+        errorMessage = error.response.data.message;
       }
       onError?.(error);
       return Promise.reject(new Error(errorMessage));
