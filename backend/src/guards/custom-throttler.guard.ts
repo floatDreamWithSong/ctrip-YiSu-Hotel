@@ -1,9 +1,10 @@
+import { JwtPayload } from '@/utils/jwt/types';
 import { Injectable, ExecutionContext, Logger } from '@nestjs/common';
 import { ThrottlerGuard, ThrottlerException } from '@nestjs/throttler';
 import { USER_FROM_HEADER, userFrom } from '@yisu/shared';
 import { Request } from 'express';
 
-type RequestWithUser = Request & { user?: {uid: string} };
+type RequestWithUser = Request & { user?: JwtPayload };
 
 @Injectable()
 export class CustomThrottlerGuard extends ThrottlerGuard {
@@ -31,13 +32,13 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
     // 检查用户是否登录
     const user = request.user;
     
-    this.logger.log(`rule: ${name} ip: ${clientIp}, user: ${user?.uid}`);
+    this.logger.log(`rule: ${name} ip: ${clientIp}, user: ${user?.sub}`);
 
     const route = `${request.method}:${request.path}`;
     const env = request.headers[USER_FROM_HEADER] as userFrom;
 
-    if (user?.uid) {
-      return `${env}:user-${user.uid}-${route}-${name}-${suffix}`;
+    if (user?.sub) {
+      return `${env}:user-${user.sub}-${route}-${name}-${suffix}`;
     } else {
       return `${env}:ip-${clientIp}-${route}-${name}-${suffix}`;
     }
@@ -47,8 +48,8 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
     const user = request.user;
     
-    const message = user?.uid 
-      ? `用户${user?.uid}请求过于频繁，请稍后再试`
+    const message = user?.sub 
+      ? `用户${user?.sub}请求过于频繁，请稍后再试`
       : `IP${this.getClientIp(request)}请求过于频繁，请稍后再试`;
       
     throw new ThrottlerException(message);
