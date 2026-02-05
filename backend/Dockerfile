@@ -17,6 +17,7 @@ COPY backend/package.json backend/
 #   @yisu/shared postinstall 执行 tsc build，需要 src + tsconfig
 #   backend   postinstall 执行 prisma generate，需要 prisma/schema.prisma
 COPY packages/shared/tsconfig.json packages/shared/
+COPY packages/shared/tsup.config.ts packages/shared/
 COPY packages/shared/src/          packages/shared/src/
 COPY backend/prisma/               backend/prisma/
 
