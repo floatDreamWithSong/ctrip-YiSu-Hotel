@@ -65,10 +65,13 @@ export class PassageException extends ClientException {
 
 export const EXCEPTIONS = {
   ILLEGAL_BUFFER: new BadRequestException('非法的buffer'),
+  ILLEGAL_ENV: new BadRequestException('缺少合法的头部env参数'),
   SESSION_KEY_NOT_FOUND: new NoEffectRequestException('session_key不存在'),
   ALREADY_REGISTERED: new AuthException('用户已注册'),
   VERIFY_CODE_ERROR: new AuthException('验证码错误'),
+  NO_CODE_FOUND: new AuthException('请先获取验证码'),
   EMAIL_ALREADY_BOUND: new AuthException('邮箱已被绑定'),
+  USERNAME_ALREADY_BOUND: new AuthException('用户名已被绑定'),
   USER_NOT_FOUND: new AuthException('用户不存在'),
   PASSWORD_ERROR: new AuthException('密码错误'),
   USERNAME_ALREADY_EXISTS: new AuthException('用户名已存在'),

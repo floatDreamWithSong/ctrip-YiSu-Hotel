@@ -1,18 +1,18 @@
 import { SetMetadata } from '@nestjs/common';
-import { JwtPayload, UserType } from '@yisu/shared';
+import { JwtPayload } from '@/utils/jwt/types';
+import { Realm } from 'prisma-generated';
 
 export const META_USER_TYPE = Symbol('user_type');
 
 export type UserTypeValidator = (user: JwtPayload) => boolean;
 
 const validators = {
-  onlyUser: (user: JwtPayload) => user.userType === UserType.USER,
-  onlyMerchant: (user: JwtPayload) => user.userType === UserType.MERCHANT,
-  onlyAdmin: (user: JwtPayload) => user.userType === UserType.ADMIN,
-  beyondMerchant: (user: JwtPayload) => user.userType > UserType.MERCHANT,
+  onlyUser: (user: JwtPayload) => user.userType === Realm.MOBILE,
+  onlyMerchant: (user: JwtPayload) => user.userType === Realm.MERCHANT,
+  onlyAdmin: (user: JwtPayload) => user.userType === Realm.ADMIN,
 } satisfies Record<string, UserTypeValidator>;
 
-export const UserRole = (validator: UserTypeValidator | keyof typeof validators) => {
+export const UserType = (validator: UserTypeValidator | keyof typeof validators) => {
   if (typeof validator === 'string') {
     return SetMetadata(META_USER_TYPE, validators[validator]);
   }
