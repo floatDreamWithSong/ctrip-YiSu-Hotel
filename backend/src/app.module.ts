@@ -7,6 +7,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './guards/jwt.guard';
 import { UserTypeGuard } from './guards/user-type.guard';
 import { UserModule } from './modules/user/user.module';
+import { LocationModule } from './modules/location/location.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './guards/custom-throttler.guard';
 
@@ -17,6 +18,7 @@ import { CustomThrottlerGuard } from './guards/custom-throttler.guard';
     PrismaModule,
     RedisCacheModule,
     UserModule,
+    LocationModule,
     ThrottlerModule.forRoot([
       {
         name: 'burst',

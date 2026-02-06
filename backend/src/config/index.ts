@@ -76,8 +76,8 @@ export class Configurations implements OnModuleInit {
     return this.configService.getOrThrow<string>('CDN_HOST');
   }
 
-  static get GAODE_MAP_API_KEY() {
-    return this.configService.getOrThrow<string>('GAODE_MAP_API_KEY');
+  static get AMAP_WEB_KEY() {
+    return this.configService.getOrThrow<string>('AMAP_WEB_KEY');
   }
 
   constructor(private readonly configService: ConfigService) { }
