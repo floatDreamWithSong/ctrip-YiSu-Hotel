@@ -1,36 +1,36 @@
-import { MailOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
+import { MailOutlined, SendOutlined } from '@ant-design/icons'
 import { useNavigate } from '@tanstack/react-router'
 import type { ApiUserTypes } from '@yisu/shared'
 import { verifyCodeType } from '@yisu/shared'
-import { Button, Flex, Form, message, Radio } from 'antd'
+import { Button, Flex, Form, message } from 'antd'
 import Input from 'antd/es/input/Input'
 import Password from 'antd/es/input/Password'
 import { useMutation } from '@tanstack/react-query'
 import { AuthRequest } from '@yisu/front-utils/apis/auth'
-import { tokenStore } from '@/lib/request'
 import { useState } from 'react'
 
-type FieldType = Partial<ApiUserTypes['UserRegister']> & {
+type FieldType = Partial<ApiUserTypes['UserForgetPassword']> & {
   confirmPassword?: string
 }
 
 const COUNTDOWN_SECONDS = 60
 
-const Register = () => {
+const ForgetPassword = () => {
   const [form] = Form.useForm<FieldType>()
   const navigate = useNavigate()
   const [countdown, setCountdown] = useState(0)
 
-  // 注册请求
-  const registerMutation = useMutation({
-    mutationFn: AuthRequest.register,
-    onSuccess: (data) => {
-      tokenStore.set(data.accessToken)
-      message.success('注册成功，正在跳转...')
-      navigate({ to: '/' })
+  // 修改密码请求
+  const forgetPasswordMutation = useMutation({
+    mutationFn: AuthRequest.forgetPassword,
+    onSuccess: () => {
+      message.success('密码修改成功，请重新登录')
+      setTimeout(() => {
+        navigate({ to: '/login' })
+      }, 2000)
     },
     onError: (error: Error) => {
-      message.error(error.message || '注册失败，请重试')
+      message.error(error.message || '密码修改失败，请重试')
     },
   })
 
@@ -39,7 +39,7 @@ const Register = () => {
     mutationFn: (email: string) => {
       return AuthRequest.sendVerifyCode({
         email,
-        type: verifyCodeType.REGISTER,
+        type: verifyCodeType.FORGET_PASSWORD,
       })
     },
     onSuccess: () => {
@@ -78,24 +78,22 @@ const Register = () => {
   }
 
   const onFinish = (values: FieldType) => {
-    const { confirmPassword, ...registerData } = values
+    const { confirmPassword, ...forgetData } = values
 
-    if (registerData.password !== confirmPassword) {
+    if (forgetData.password !== confirmPassword) {
       message.error('两次输入的密码不一致')
       return
     }
 
-    if (!registerData.email || !registerData.username || !registerData.password || !registerData.verifyCode) {
+    if (!forgetData.email || !forgetData.password || !forgetData.verifyCode) {
       message.error('请填写所有必填项')
       return
     }
 
-    registerMutation.mutate({
-      email: registerData.email,
-      username: registerData.username,
-      password: registerData.password,
-      verifyCode: registerData.verifyCode,
-      isMerchant: registerData.isMerchant ?? true,
+    forgetPasswordMutation.mutate({
+      email: forgetData.email,
+      password: forgetData.password,
+      verifyCode: forgetData.verifyCode,
     })
   }
 
@@ -103,9 +101,9 @@ const Register = () => {
     <Flex vertical gap="small" style={{ width: '100%' }}>
       <Form
         form={form}
-        name="register"
+        name="forget-password"
         style={{ maxWidth: 600 }}
-        initialValues={{ remember: true, isMerchant: true }}
+        initialValues={{ remember: true }}
         colon={false}
         onFinish={onFinish}
         autoComplete="off"
@@ -121,60 +119,7 @@ const Register = () => {
             placeholder="请输入邮箱"
             type="email"
             prefix={<MailOutlined />}
-          />
-        </Form.Item>
-
-        <Form.Item<FieldType>
-          name="username"
-          rules={[
-            { required: true, message: '请输入用户名' },
-            { min: 3, message: '用户名至少需要3个字符' },
-            { max: 18, message: '用户名最多18个字符' },
-          ]}
-        >
-          <Input
-            placeholder="请输入用户名"
-            type="text"
-            prefix={<UserOutlined />}
-          />
-        </Form.Item>
-
-        <Form.Item<FieldType>
-          name="password"
-          rules={[
-            { required: true, message: '请输入密码' },
-            { min: 6, message: '密码至少需要6个字符' },
-            { max: 32, message: '密码最多32个字符' },
-            {
-              pattern: /[0-9]/,
-              message: '密码必须包含至少一个数字',
-            },
-          ]}
-        >
-          <Password
-            placeholder="请输入密码"
-            type="password"
-          />
-        </Form.Item>
-
-        <Form.Item<FieldType>
-          name="confirmPassword"
-          dependencies={['password']}
-          rules={[
-            { required: true, message: '请确认密码' },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue('password') === value) {
-                  return Promise.resolve()
-                }
-                return Promise.reject(new Error('两次输入的密码不一致'))
-              },
-            }),
-          ]}
-        >
-          <Password
-            placeholder="请确认密码"
-            type="password"
+            disabled={forgetPasswordMutation.isPending}
           />
         </Form.Item>
 
@@ -190,7 +135,7 @@ const Register = () => {
               placeholder="请输入验证码"
               type="text"
               maxLength={6}
-              disabled={registerMutation.isPending}
+              disabled={forgetPasswordMutation.isPending}
             />
             <Button
               type="default"
@@ -199,7 +144,7 @@ const Register = () => {
               icon={<SendOutlined />}
               onClick={handleSendCode}
               loading={sendCodeMutation.isPending}
-              disabled={countdown > 0 || registerMutation.isPending}
+              disabled={countdown > 0 || forgetPasswordMutation.isPending}
             >
               {countdown > 0 ? `${countdown}s 后重发` : '发送验证码'}
             </Button>
@@ -207,13 +152,44 @@ const Register = () => {
         </Form.Item>
 
         <Form.Item<FieldType>
-          name="isMerchant"
-          rules={[{ required: true, message: '请选择注册身份' }]}
+          name="password"
+          rules={[
+            { required: true, message: '请输入新密码' },
+            { min: 6, message: '密码至少需要6个字符' },
+            { max: 32, message: '密码最多32个字符' },
+            {
+              pattern: /[0-9]/,
+              message: '密码必须包含至少一个数字',
+            },
+          ]}
         >
-          <Radio.Group>
-            <Radio value={true}>注册为商家</Radio>
-            <Radio value={false}>注册为管理员</Radio>
-          </Radio.Group>
+          <Password
+            placeholder="请输入新密码"
+            type="password"
+            disabled={forgetPasswordMutation.isPending}
+          />
+        </Form.Item>
+
+        <Form.Item<FieldType>
+          name="confirmPassword"
+          dependencies={['password']}
+          rules={[
+            { required: true, message: '请确认新密码' },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue('password') === value) {
+                  return Promise.resolve()
+                }
+                return Promise.reject(new Error('两次输入的密码不一致'))
+              },
+            }),
+          ]}
+        >
+          <Password
+            placeholder="请确认新密码"
+            type="password"
+            disabled={forgetPasswordMutation.isPending}
+          />
         </Form.Item>
 
         <Form.Item>
@@ -221,17 +197,18 @@ const Register = () => {
             type="primary"
             block
             htmlType="submit"
-            loading={registerMutation.isPending}
+            loading={forgetPasswordMutation.isPending}
           >
-            注册
+            修改密码
           </Button>
         </Form.Item>
       </Form>
       <Flex justify="space-around">
-        <a onClick={() => navigate({ to: '/login' })}>前往登录</a>
+        <a onClick={() => navigate({ to: '/login' })}>返回登录</a>
+        <a onClick={() => navigate({ to: '/register' })}>前往注册</a>
       </Flex>
     </Flex>
   )
 }
 
-export default Register
+export default ForgetPassword
