@@ -1,4 +1,5 @@
 import type { ApiUserTypes } from "@yisu/shared";
+import { ApiUserSchemas } from "@yisu/shared";
 import { request } from "../request";
 
 export interface AuthRequestResponse {
@@ -12,6 +13,7 @@ export const AuthRequest = {
       url: '/user/login',
       method: 'POST',
       data,
+      dataValidator: ApiUserSchemas.userLogin,
     });
   },
   register: (data: ApiUserTypes['UserRegister']) => {
@@ -19,6 +21,7 @@ export const AuthRequest = {
       url: '/user/register',
       method: 'POST',
       data,
+      dataValidator: ApiUserSchemas.userRegister,
     });
   },
   forgetPassword: (data: ApiUserTypes['UserForgetPassword']) => {
@@ -26,6 +29,7 @@ export const AuthRequest = {
       url: '/user/forget',
       method: 'PUT',
       data,
+      dataValidator: ApiUserSchemas.userForgetPassword,
     });
   },
   sendVerifyCode: (data: ApiUserTypes['UserCode']) => {
@@ -33,6 +37,7 @@ export const AuthRequest = {
       url: '/user/code',
       method: 'POST',
       data,
+      dataValidator: ApiUserSchemas.userCode,
     });
   },
 };
