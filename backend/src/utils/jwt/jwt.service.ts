@@ -1,14 +1,16 @@
 import { Configurations } from '@/config';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload, SignatureType } from '@yisu/shared';
+import { JwtPayload } from '@/utils/jwt/types';
+import { SignatureType } from '@/utils/constants';
+import { Realm } from 'prisma-generated';
 
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
 }
 
-type InputJwtPayload = Omit<JwtPayload, 'type'|'userType'> & { type?: SignatureType } & { userType: number };
+type InputJwtPayload = Omit<JwtPayload, 'type'|'userType'> & { type?: SignatureType } & { userType: Realm };
 
 @Injectable()
 export class JwtUtils {
@@ -83,7 +85,7 @@ export class JwtUtils {
     const payload = this.verifyRefreshToken(refreshToken);
     // 注意： 这里实际会多出来iat和exp字段导致新签发失败，所以需要过滤
     return this.generateTokenPair({
-      uid: payload.uid,
+      sub: payload.sub,
       username: payload.username,
       userType: payload.userType,
       type: payload.type,

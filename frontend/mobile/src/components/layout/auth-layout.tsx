@@ -14,7 +14,7 @@ export const AuthLayout = ({
         className,
       )}
     >
-      <div className="w-full max-w-sm flex">{children ?? <Outlet />}</div>
+      <div className="w-full">{children ?? <Outlet />}</div>
     </div>
   )
 }
