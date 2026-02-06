@@ -14,7 +14,6 @@ createAxiosInstance({
   baseURL: env.VITE_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'x-from-env': import.meta.env.MODE,
     [USER_FROM_HEADER]: userFrom.ADMIN,
   },
   timeout: 10000,

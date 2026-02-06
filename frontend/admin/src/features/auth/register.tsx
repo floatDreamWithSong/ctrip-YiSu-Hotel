@@ -1,8 +1,8 @@
-import { LockOutlined, MailOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
+import { MailOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
 import { useNavigate } from '@tanstack/react-router'
 import type { ApiUserTypes } from '@yisu/shared'
 import { verifyCodeType } from '@yisu/shared'
-import { Button, Flex, Form, message } from 'antd'
+import { Button, Flex, Form, message, Radio } from 'antd'
 import Input from 'antd/es/input/Input'
 import Password from 'antd/es/input/Password'
 import { useMutation } from '@tanstack/react-query'
@@ -95,7 +95,7 @@ const Register = () => {
       username: registerData.username,
       password: registerData.password,
       verifyCode: registerData.verifyCode,
-      isMerchant: false,
+      isMerchant: registerData.isMerchant ?? true,
     })
   }
 
@@ -105,7 +105,7 @@ const Register = () => {
         form={form}
         name="register"
         style={{ maxWidth: 600 }}
-        initialValues={{ remember: true }}
+        initialValues={{ remember: true, isMerchant: true }}
         colon={false}
         onFinish={onFinish}
         autoComplete="off"
@@ -204,6 +204,16 @@ const Register = () => {
               {countdown > 0 ? `${countdown}s 后重发` : '发送验证码'}
             </Button>
           </Flex>
+        </Form.Item>
+
+        <Form.Item<FieldType>
+          name="isMerchant"
+          rules={[{ required: true, message: '请选择注册身份' }]}
+        >
+          <Radio.Group>
+            <Radio value={true}>注册为商家</Radio>
+            <Radio value={false}>注册为管理员</Radio>
+          </Radio.Group>
         </Form.Item>
 
         <Form.Item>
