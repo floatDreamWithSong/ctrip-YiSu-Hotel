@@ -1,12 +1,12 @@
-import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined, SendOutlined } from '@ant-design/icons'
+import { MailOutlined, SendOutlined } from '@ant-design/icons'
 import { useNavigate } from '@tanstack/react-router'
 import type { ApiUserTypes } from '@yisu/shared'
+import { verifyCodeType } from '@yisu/shared'
 import { Button, Flex, Form, message } from 'antd'
 import Input from 'antd/es/input/Input'
 import Password from 'antd/es/input/Password'
 import { useMutation } from '@tanstack/react-query'
 import { AuthRequest } from '@yisu/front-utils/apis/auth'
-import { verifyCodeType } from '@yisu/shared'
 import { useState } from 'react'
 
 type FieldType = Partial<ApiUserTypes['UserForgetPassword']> & {
@@ -19,10 +19,6 @@ const ForgetPassword = () => {
   const [form] = Form.useForm<FieldType>()
   const navigate = useNavigate()
   const [countdown, setCountdown] = useState(0)
-
-  const passwordIconRender = (visible: boolean) => {
-    return visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-  }
 
   // 修改密码请求
   const forgetPasswordMutation = useMutation({
@@ -170,8 +166,6 @@ const ForgetPassword = () => {
           <Password
             placeholder="请输入新密码"
             type="password"
-            prefix={<LockOutlined />}
-            iconRender={passwordIconRender}
             disabled={forgetPasswordMutation.isPending}
           />
         </Form.Item>
@@ -194,8 +188,6 @@ const ForgetPassword = () => {
           <Password
             placeholder="请确认新密码"
             type="password"
-            prefix={<LockOutlined />}
-            iconRender={passwordIconRender}
             disabled={forgetPasswordMutation.isPending}
           />
         </Form.Item>

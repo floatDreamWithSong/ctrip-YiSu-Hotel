@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import type { ApiUserTypes } from '@yisu/shared'
 import { Button, Flex, Form, message } from 'antd'
 import Input from 'antd/es/input/Input'
+import Password from 'antd/es/input/Password'
 import { useMutation } from '@tanstack/react-query'
 import { AuthRequest } from '@yisu/front-utils/apis/auth'
 import { tokenStore } from '@/lib/request'
@@ -71,7 +72,7 @@ const Login = () => {
             { max: 32, message: '密码最多32个字符' },
           ]}
         >
-          <Input
+          <Password
             placeholder="请输入密码"
             type="password"
             prefix={<LockOutlined />}

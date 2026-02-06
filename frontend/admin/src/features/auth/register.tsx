@@ -1,11 +1,4 @@
-import {
-  EyeInvisibleOutlined,
-  EyeTwoTone,
-  LockOutlined,
-  MailOutlined,
-  SendOutlined,
-  UserOutlined,
-} from '@ant-design/icons'
+import { LockOutlined, MailOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
 import { useNavigate } from '@tanstack/react-router'
 import type { ApiUserTypes } from '@yisu/shared'
 import { verifyCodeType } from '@yisu/shared'
@@ -27,10 +20,6 @@ const Register = () => {
   const [form] = Form.useForm<FieldType>()
   const navigate = useNavigate()
   const [countdown, setCountdown] = useState(0)
-
-  const passwordIconRender = (visible: boolean) => {
-    return visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-  }
 
   // 注册请求
   const registerMutation = useMutation({
@@ -165,8 +154,6 @@ const Register = () => {
           <Password
             placeholder="请输入密码"
             type="password"
-            prefix={<LockOutlined />}
-            iconRender={passwordIconRender}
           />
         </Form.Item>
 
@@ -188,8 +175,6 @@ const Register = () => {
           <Password
             placeholder="请确认密码"
             type="password"
-            prefix={<LockOutlined />}
-            iconRender={passwordIconRender}
           />
         </Form.Item>
 
