@@ -91,7 +91,7 @@ const Login = () => {
       </Form>
       <Flex justify="space-around">
         <a onClick={() => navigate({ to: '/register' })}>前往注册</a>
-        {/* <a onClick={() => navigate({ to: '/forget-password' })}>忘记密码</a> */}
+        <a onClick={() => navigate({ to: '/forget-password' })}>忘记密码</a>
       </Flex>
     </Flex>
   )
