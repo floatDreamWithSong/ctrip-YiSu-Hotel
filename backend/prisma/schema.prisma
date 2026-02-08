@@ -7,13 +7,40 @@ datasource db {
   provider = "postgresql"
 }
 
-// schema.prisma
+// ===== 用户相关枚举 =====
 
 enum Realm {
   MOBILE
   MERCHANT
   ADMIN
 }
+
+// ===== 酒店相关枚举 =====
+
+enum ReviewStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  DEPRECATED // 当审核通过替换已发布的版本时，将原先的发布版本标记为废弃
+}
+
+enum RejectReasonType {
+  INFO_INCOMPLETE // 信息不完整
+  INFO_INACCURATE // 信息不准确
+  IMAGE_QUALITY // 图片质量问题
+  PRICE_ABNORMAL // 价格异常
+  DUPLICATE // 重复酒店
+  POLICY_VIOLATION // 政策违反
+  OTHER // 其他
+}
+
+enum PriceMode {
+  PER_NIGHT
+  PER_HOUR
+}
+
+// ===== 用户模型 =====
 
 model User {
   id        Int      @id @default(autoincrement())
@@ -47,9 +74,10 @@ model MobileProfile {
 }
 
 model MerchantProfile {
-  userId Int  @id @map("user_id")
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hotels Hotel[]
+  userId      Int     @id @map("user_id")
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String? @map("display_name") // 商户显示名称
+  hotels      Hotel[]
 
   @@map("merchant_profiles")
 }
@@ -61,14 +89,158 @@ model AdminProfile {
   @@map("admin_profiles")
 }
 
-model Hotel {
-  id     Int     @id @default(autoincrement())
-  name   String
-  enName String? @map("en_name")
+// ===== 酒店模型 =====
 
-  merchantId Int @map("merchant_id")
+model Hotel {
+  id Int @id @default(autoincrement())
+
+  // 已发布版本（用户端可见）
+  publishedVersionId Int?          @unique @map("published_version_id")
+  publishedVersion   HotelVersion? @relation("publishedVersion", fields: [publishedVersionId], references: [id])
+
+  // 商户归属
+  merchantId Int             @map("merchant_id")
   merchant   MerchantProfile @relation(fields: [merchantId], references: [userId])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 所有版本信息
+  versions HotelVersion[] @relation("hotelVersions")
+  // 审核记录
+  reviews  ReviewRecord[]
+  
+  // 软删除
+  isDeleted Boolean @default(false) @map("is_deleted")
 
   @@index([merchantId], name: "idx_hotels_merchant_id")
   @@map("hotels")
+}
+
+// 版本信息：每次编辑产生或更新一条记录
+model HotelVersion {
+  id      Int   @id @default(autoincrement())
+  hotelId Int   @map("hotel_id")
+  hotel   Hotel @relation("hotelVersions", fields: [hotelId], references: [id], onDelete: Cascade)
+
+  // 关联前一版本（用于 diff 对比）
+  previousVersionId Int?           @map("previous_version_id")
+  previousVersion   HotelVersion?  @relation("versionChain", fields: [previousVersionId], references: [id])
+  nextVersions      HotelVersion[] @relation("versionChain")
+
+  // ===== 酒店基本信息 =====
+  name        String
+  enName      String? @map("en_name")
+  starLevel   Int     @map("star_level")
+  phone       String?
+  description String? @db.Text
+
+  // 地址信息
+  province     String?
+  city         String?
+  district     String?
+  address      String
+  // PostGIS用
+  locationGeog Unsupported("geography(Point,4326)")? @map("location_geog")
+
+  // 开业时间
+  openedAt DateTime? @map("opened_at")
+
+  // 审核状态
+  reviewStatus ReviewStatus @default(DRAFT) @map("review_status")
+
+  // 提交人（商户 userId）
+  createdBy Int      @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // 版本信息的关联数据
+  images    HotelImage[]
+  roomTypes RoomType[]
+  tags      HotelTagRelation[]
+  hotels    Hotel[]            @relation("publishedVersion")
+
+  homeAdImage String? @map("home_ad_image") // 参与首页广告图
+
+  @@index([hotelId], name: "idx_hotel_version_hotel_id")
+  @@index([reviewStatus], name: "idx_hotel_version_review_status")
+  @@map("hotel_versions")
+}
+
+model RoomType {
+  id        Int          @id @default(autoincrement())
+  versionId Int          @map("version_id")
+  version   HotelVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  count     Int     @map("count") // 数量
+  name      String // 钟点房/单人间/双人间/大床房/家庭房/套房/其他
+  price     Float // 价格
+  priceMode PriceMode @default(PER_NIGHT) @map("price_mode")
+  bedType   String? @map("bed_type") // 床型,例如：1.8m *2.0 m
+  maxGuests Int     @default(2) @map("max_guests") // 最大入住人数
+  area      Float? // 面积
+  imageUrl  String? @map("image_url") // 图片
+  sortOrder Int     @default(0) @map("sort_order") // 排序用
+
+  @@index([versionId], name: "idx_room_type_version_id")
+  @@index([price], name: "idx_room_type_price")
+  @@map("room_types")
+}
+
+// 详情页轮播图
+model HotelImage {
+  id        Int          @id @default(autoincrement())
+  versionId Int          @map("version_id")
+  version   HotelVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  url       String
+  sortOrder Int     @default(0) @map("sort_order")
+  caption   String? // 图片说明文字
+
+  @@index([versionId], name: "idx_hotel_image_version_id")
+  @@map("hotel_images")
+}
+
+// 全局标签字典
+model HotelTag {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  category String // facility / feature / scene 等分类
+  icon     String?
+
+  relations HotelTagRelation[]
+
+  @@index([category], name: "idx_hotel_tag_category")
+  @@map("hotel_tags")
+}
+
+// 版本-标签关联
+model HotelTagRelation {
+  id        Int          @id @default(autoincrement())
+  versionId Int          @map("version_id")
+  version   HotelVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  tagId     Int          @map("tag_id")
+  tag       HotelTag     @relation(fields: [tagId], references: [id])
+
+  @@unique([versionId, tagId], name: "uniq_version_tag")
+  @@map("hotel_tag_relations")
+}
+
+// 审核记录
+model ReviewRecord {
+  id      Int   @id @default(autoincrement())
+  hotelId Int   @map("hotel_id")
+  hotel   Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  versionId    Int               @map("version_id")
+  reviewerId   Int               @map("reviewer_id")
+  action       ReviewStatus
+  rejectReason RejectReasonType? @map("reject_reason")
+  rejectDetail String?           @map("reject_detail") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([hotelId], name: "idx_review_record_hotel_id")
+  @@index([versionId], name: "idx_review_record_version_id")
+  @@index([reviewerId], name: "idx_review_record_reviewer_id")
+  @@map("review_records")
 }
