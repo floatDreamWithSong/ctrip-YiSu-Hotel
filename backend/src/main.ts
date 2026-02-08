@@ -8,9 +8,7 @@ import { Configurations } from './config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  for(const filter of FiltersChain) {
-    app.useGlobalFilters(filter);
-  }
+  app.useGlobalFilters(...FiltersChain);
 
   app.enableCors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

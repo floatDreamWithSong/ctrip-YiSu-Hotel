@@ -75,6 +75,11 @@ export class Configurations implements OnModuleInit {
   static get CDN_HOST() {
     return this.configService.getOrThrow<string>('CDN_HOST');
   }
+
+  static get AMAP_WEB_KEY() {
+    return this.configService.getOrThrow<string>('AMAP_WEB_KEY');
+  }
+
   constructor(private readonly configService: ConfigService) { }
 
   onModuleInit() {

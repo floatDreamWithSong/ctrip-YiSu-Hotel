@@ -1,5 +1,5 @@
 import { PipeTransform, Injectable, ArgumentMetadata, BadRequestException } from '@nestjs/common';
-import { ApiUserSchemas, emailSchema, pageQuerySchema } from '@yisu/shared';
+import { ApiUserSchemas, ApiLocationSchemas, emailSchema, pageQuerySchema } from '@yisu/shared';
 import { ZodType } from 'zod';
 
 @Injectable()
@@ -24,4 +24,7 @@ export class ZodValidationPipe<T> implements PipeTransform {
   static userUpdateInfoSchema = new ZodValidationPipe(ApiUserSchemas.userUpdateInfo);
   static userForgetPasswordSchema = new ZodValidationPipe(ApiUserSchemas.userForgetPassword);
   static userCodeSchema = new ZodValidationPipe(ApiUserSchemas.userCode);
+  static regeocodeRequestSchema = new ZodValidationPipe(ApiLocationSchemas.regeocodeRequest);
+  static inputTipsRequestSchema = new ZodValidationPipe(ApiLocationSchemas.inputTipsRequest);
+  static geocodeRequestSchema = new ZodValidationPipe(ApiLocationSchemas.geocodeRequest);
 }

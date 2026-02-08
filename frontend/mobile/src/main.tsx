@@ -34,7 +34,7 @@ if (rootElement && !rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <TanStackQueryProvider queryClient={queryClient}>
-        <RouterProvider router={router} />
+          <RouterProvider router={router} />
       </TanStackQueryProvider>
     </StrictMode>,
   )
