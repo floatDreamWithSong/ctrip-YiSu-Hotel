@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/utils/prisma/prisma.service';
 import { GetPendingHotelsType } from '@yisu/shared';
 import { Prisma } from 'prisma-generated';
@@ -68,5 +68,97 @@ export class AdminService {
         reviewStatus: item.reviewStatus,
       })),
     };
+  }
+
+  async getHotelDetail(versionId: number) {
+    const currentVersion = await this.prisma.hotelVersion.findUnique({
+      where: { id: versionId },
+      include: {
+        roomTypes: true,
+        images: { orderBy: { sortOrder: 'asc' } },
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+        hotel: {
+          include: {
+            merchant: {
+              select: {
+                userId: true,
+                displayName: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!currentVersion)
+      return null;
+
+    let previousVersion = null;
+    if (currentVersion.previousVersionId) {
+      previousVersion = await this.prisma.hotelVersion.findUnique({
+        where: { id: currentVersion.previousVersionId },
+        include: {
+          roomTypes: true,
+          images: { orderBy: { sortOrder: 'asc' } },
+          tags: {
+            include: {
+              tag: true,
+            },
+          },
+        },
+      });
+    }
+
+    return {
+      currentVersion,
+      previousVersion,
+      merchant: {
+        id: currentVersion.hotel.merchantId,
+        displayName: currentVersion.hotel.merchant.displayName,
+      },
+    };
+  }
+
+  async approveHotel(versionId: number, adminUserId: number) {
+    const version = await this.prisma.hotelVersion.findUnique({
+      where: { id: versionId },
+      include: { hotel: true },
+    });
+
+    if (!version || version.reviewStatus !== 'PENDING') {
+      throw new BadRequestException('酒店版本不存在或已审核');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.hotelVersion.update({
+        where: { id: versionId },
+        data: { reviewStatus: 'APPROVED' },
+      });
+
+      await tx.hotel.update({
+        where: { id: version.hotelId },
+        data: { publishedVersionId: versionId },
+      });
+
+      if (version.previousVersionId) {
+        await tx.hotelVersion.update({
+          where: { id: version.previousVersionId },
+          data: { reviewStatus: 'DEPRECATED' },
+        });
+      }
+
+      await tx.reviewRecord.create({
+        data: {
+          hotelId: version.hotelId,
+          versionId: versionId,
+          reviewerId: adminUserId,
+          action: 'APPROVED',
+        },
+      });
+    });
   }
 }
