@@ -1,18 +1,26 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/utils/prisma/prisma.service';
-import { GetPendingHotelsType, RejectHotelType, RejectReasonTypeSchema } from '@yisu/shared';
+import {
+  GetHotelsType,
+  GetPendingHotelsType,
+  GetReviewRecordsType,
+  RejectHotelType,
+  RejectReasonTypeSchema,
+} from '@yisu/shared';
 import { Prisma } from 'prisma-generated';
 
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getPendingHotels(query: GetPendingHotelsType) {
-    const { page, pageSize, startTime, endTime, merchantName } = query;
+  async getHotels(query: GetHotelsType) {
+    const { page, pageSize, status, startTime, endTime, merchantName } = query;
 
-    const where: Prisma.HotelVersionWhereInput = {
-      reviewStatus: 'PENDING',
-    };
+    const where: Prisma.HotelVersionWhereInput = {};
+
+    if (status) {
+      where.reviewStatus = status;
+    }
 
     if (startTime || endTime) {
       where.createdAt = {
@@ -55,6 +63,21 @@ export class AdminService {
       }),
     ]);
 
+    const versionIds = items.map(item => item.id);
+    const latestReviewRecords = versionIds.length
+      ? await this.prisma.reviewRecord.findMany({
+        where: { versionId: { in: versionIds } },
+        orderBy: { createdAt: 'desc' },
+      })
+      : [];
+
+    const reviewedAtMap = new Map<number, Date>();
+    for (const record of latestReviewRecords) {
+      if (!reviewedAtMap.has(record.versionId)) {
+        reviewedAtMap.set(record.versionId, record.createdAt);
+      }
+    }
+
     return {
       total,
       items: items.map(item => ({
@@ -64,9 +87,102 @@ export class AdminService {
         merchantId: item.hotel.merchantId,
         merchantName: item.hotel.merchant.displayName,
         createdAt: item.createdAt,
+        reviewedAt: reviewedAtMap.get(item.id),
         isNewHotel: !item.previousVersionId,
         reviewStatus: item.reviewStatus,
       })),
+    };
+  }
+
+  async getPendingHotels(query: GetPendingHotelsType) {
+    return this.getHotels({
+      ...query,
+      status: 'PENDING',
+    });
+  }
+
+  async getReviewRecords(query: GetReviewRecordsType) {
+    const { page, pageSize, startTime, endTime, action, rejectReason, sort } = query;
+
+    const where: Prisma.ReviewRecordWhereInput = {};
+
+    if (action) {
+      where.action = action;
+    }
+
+    if (rejectReason) {
+      where.rejectReason = rejectReason;
+    }
+
+    if (startTime || endTime) {
+      where.createdAt = {
+        ...(startTime && { gte: new Date(startTime) }),
+        ...(endTime && { lte: new Date(endTime) }),
+      };
+    }
+
+    const [total, records] = await this.prisma.$transaction([
+      this.prisma.reviewRecord.count({ where }),
+      this.prisma.reviewRecord.findMany({
+        where,
+        orderBy: {
+          createdAt: sort,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
+
+    const versionIds = [...new Set(records.map(record => record.versionId))];
+    const reviewerIds = [...new Set(records.map(record => record.reviewerId))];
+
+    const [versions, reviewers] = await this.prisma.$transaction([
+      this.prisma.hotelVersion.findMany({
+        where: { id: { in: versionIds } },
+        select: {
+          id: true,
+          name: true,
+          hotel: {
+            select: {
+              merchant: {
+                select: {
+                  displayName: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.user.findMany({
+        where: { id: { in: reviewerIds } },
+        select: {
+          id: true,
+          username: true,
+        },
+      }),
+    ]);
+
+    const versionMap = new Map(versions.map(version => [version.id, version]));
+    const reviewerMap = new Map(reviewers.map(reviewer => [reviewer.id, reviewer.username]));
+
+    return {
+      total,
+      items: records.map(record => {
+        const version = versionMap.get(record.versionId);
+        return {
+          id: record.id,
+          versionId: record.versionId,
+          hotelId: record.hotelId,
+          hotelName: version?.name ?? '未知酒店',
+          merchantName: version?.hotel.merchant.displayName ?? '未知商家',
+          reviewerId: record.reviewerId,
+          reviewerName: reviewerMap.get(record.reviewerId) ?? '未知',
+          action: record.action,
+          rejectReason: record.rejectReason,
+          rejectDetail: record.rejectDetail,
+          createdAt: record.createdAt,
+        };
+      }),
     };
   }
 
@@ -165,10 +281,15 @@ export class AdminService {
   async rejectHotel(versionId: number, adminUserId: number, dto: RejectHotelType) {
     const version = await this.prisma.hotelVersion.findUnique({
       where: { id: versionId },
+      include: { hotel: true },
     });
 
-    if (!version || version.reviewStatus !== 'PENDING') {
-      throw new BadRequestException('酒店版本不存在或已审核');
+    if (!version) {
+      throw new BadRequestException('酒店版本不存在');
+    }
+
+    if (version.reviewStatus !== 'PENDING' && version.reviewStatus !== 'APPROVED') {
+      throw new BadRequestException('只能拒绝待审核或已通过的酒店版本');
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -176,6 +297,13 @@ export class AdminService {
         where: { id: versionId },
         data: { reviewStatus: 'REJECTED' },
       });
+
+      if (version.reviewStatus === 'APPROVED' && version.hotel.publishedVersionId === versionId) {
+        await tx.hotel.update({
+          where: { id: version.hotelId },
+          data: { publishedVersionId: null },
+        });
+      }
 
       await tx.reviewRecord.create({
         data: {

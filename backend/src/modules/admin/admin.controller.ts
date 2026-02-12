@@ -1,7 +1,16 @@
 import { Controller, Get, Query, Param, ParseIntPipe, NotFoundException, Post, HttpCode, Body } from '@nestjs/common';
 import { UserType } from '@/utils/decorators/user-type.decorator';
 import { ZodValidationPipe } from '@/pipes/zod-validate.pipe';
-import { GetPendingHotelsSchema, GetPendingHotelsType, RejectHotelSchema, RejectHotelType } from '@yisu/shared';
+import {
+  GetHotelsSchema,
+  GetHotelsType,
+  GetPendingHotelsSchema,
+  GetPendingHotelsType,
+  GetReviewRecordsSchema,
+  GetReviewRecordsType,
+  RejectHotelSchema,
+  RejectHotelType,
+} from '@yisu/shared';
 import { AdminService } from './admin.service';
 import { User } from '@/utils/decorators/user.decorator';
 
@@ -9,10 +18,22 @@ import { User } from '@/utils/decorators/user.decorator';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Get('hotels')
+  @UserType('onlyAdmin')
+  async getHotels(@Query(new ZodValidationPipe(GetHotelsSchema)) query: GetHotelsType) {
+    return this.adminService.getHotels(query);
+  }
+
   @Get('pending')
   @UserType('onlyAdmin')
   async getPendingHotels(@Query(new ZodValidationPipe(GetPendingHotelsSchema)) query: GetPendingHotelsType) {
     return this.adminService.getPendingHotels(query);
+  }
+
+  @Get('review-records')
+  @UserType('onlyAdmin')
+  async getReviewRecords(@Query(new ZodValidationPipe(GetReviewRecordsSchema)) query: GetReviewRecordsType) {
+    return this.adminService.getReviewRecords(query);
   }
 
   @Get(':versionId/detail')
