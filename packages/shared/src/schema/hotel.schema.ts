@@ -24,3 +24,5 @@ export const RejectHotelSchema = z.object({
   rejectReason: RejectReasonTypeSchema,
   rejectDetail: z.string().max(1000).optional(),
 });
+
+export type RejectHotelType = z.infer<typeof RejectHotelSchema>;

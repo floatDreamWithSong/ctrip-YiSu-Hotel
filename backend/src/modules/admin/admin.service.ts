@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/utils/prisma/prisma.service';
-import { GetPendingHotelsType } from '@yisu/shared';
+import { GetPendingHotelsType, RejectHotelType, RejectReasonTypeSchema } from '@yisu/shared';
 import { Prisma } from 'prisma-generated';
 
 @Injectable()
@@ -160,5 +160,79 @@ export class AdminService {
         },
       });
     });
+  }
+
+  async rejectHotel(versionId: number, adminUserId: number, dto: RejectHotelType) {
+    const version = await this.prisma.hotelVersion.findUnique({
+      where: { id: versionId },
+    });
+
+    if (!version || version.reviewStatus !== 'PENDING') {
+      throw new BadRequestException('酒店版本不存在或已审核');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.hotelVersion.update({
+        where: { id: versionId },
+        data: { reviewStatus: 'REJECTED' },
+      });
+
+      await tx.reviewRecord.create({
+        data: {
+          hotelId: version.hotelId,
+          versionId: versionId,
+          reviewerId: adminUserId,
+          action: 'REJECTED',
+          rejectReason: dto.rejectReason,
+          rejectDetail: dto.rejectDetail,
+        },
+      });
+    });
+  }
+
+  getRejectReasons() {
+    const labels: Record<typeof RejectReasonTypeSchema.enum[keyof typeof RejectReasonTypeSchema.enum], string> = {
+      INFO_INCOMPLETE: '信息不完整',
+      INFO_INACCURATE: '信息不准确',
+      IMAGE_QUALITY: '图片质量问题',
+      PRICE_ABNORMAL: '价格异常',
+      DUPLICATE: '重复酒店',
+      POLICY_VIOLATION: '违反政策',
+      OTHER: '其他原因',
+    };
+
+    return RejectReasonTypeSchema.options.map(option => ({
+      value: option,
+      label: labels[option],
+    }));
+  }
+
+  async getReviewHistory(hotelId: number) {
+    const records = await this.prisma.reviewRecord.findMany({
+      where: { hotelId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!records.length) {
+      return [];
+    }
+
+    const reviewerIds = [...new Set(records.map(r => r.reviewerId))];
+    const reviewers = await this.prisma.user.findMany({
+      where: { id: { in: reviewerIds } },
+      select: { id: true, username: true },
+    });
+
+    const reviewerMap = new Map(reviewers.map(r => [r.id, r.username]));
+
+    return records.map(record => ({
+      id: record.id,
+      versionId: record.versionId,
+      reviewerName: reviewerMap.get(record.reviewerId) || '未知',
+      action: record.action,
+      rejectReason: record.rejectReason,
+      rejectDetail: record.rejectDetail,
+      createdAt: record.createdAt.toISOString(),
+    }));
   }
 }
