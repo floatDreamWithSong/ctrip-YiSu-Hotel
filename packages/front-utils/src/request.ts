@@ -160,6 +160,7 @@ export async function request<DATA>(
     }
     const result = config.responseValidator.safeParse(response.data.data);
     if (!result.success) {
+      console.error(result.error)
       throw new Error(
         `请求${config.url}的响应数据格式错误:${result.error.message}`,
       );
