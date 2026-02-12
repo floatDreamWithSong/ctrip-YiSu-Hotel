@@ -3,7 +3,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import FiltersChain from './filters/app-exception.filter';
-import { Configurations } from './config';
 
 
 async function bootstrap() {
@@ -11,6 +10,7 @@ async function bootstrap() {
   app.useGlobalFilters(...FiltersChain);
 
   app.enableCors({
+    origin: ['https://yisu-admin.daydreamer.net.cn','https://yisu-mobile.daydreamer.net.cn'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     preflightContinue: false,
   });
