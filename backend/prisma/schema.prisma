@@ -126,6 +126,7 @@ model HotelInfo {
   hotel   Hotel @relation("hotelInfos", fields: [hotelId], references: [id], onDelete: Cascade)
 
   // ===== 酒店基本信息 =====
+  infoNickname String  @map("info_nickname") // 信息昵称（仅商家可见）
   name        String // 酒店名称
   enName      String? @map("en_name") // 酒店英文名称
   starLevel   Int     @map("star_level") // 酒店星级
@@ -149,11 +150,13 @@ model HotelInfo {
   // 提交人（商户 userId）
   createdBy Int      @map("created_by")
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // 版本信息的关联数据
   images    HotelImage[] // 详情页顶部轮播图
   roomTypes RoomType[] // 房型列表
   tags      HotelTagRelation[] // 酒店标签
+  reviewRecords ReviewRecord[]
   hotels    Hotel[]            @relation("publishedInfo") // 其实这里只可能有0或一个
 
   homeAdImage String? @map("home_ad_image") // 首页广告图
@@ -229,6 +232,7 @@ model ReviewRecord {
   hotel   Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
 
   infoId       Int               @map("info_id")
+  info         HotelInfo         @relation(fields: [infoId], references: [id], onDelete: Cascade)
   reviewerId   Int               @map("reviewer_id")
   reviewer     AdminProfile      @relation(fields: [reviewerId], references: [userId])
   action       ReviewStatus
