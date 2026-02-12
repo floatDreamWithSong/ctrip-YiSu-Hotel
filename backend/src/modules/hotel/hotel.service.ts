@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
-import { ApiHotelTypes, HotelReviewStatus, RejectReasonType } from '@yisu/shared'
+import { ApiHotelTypes, HotelReviewStatus } from '@yisu/shared'
 import { PrismaService } from '@/utils/prisma/prisma.service'
-import { Prisma, PriceMode, ReviewStatus, RejectReasonType as PrismaRejectReasonType } from 'prisma-generated'
+import { Prisma, PriceMode, ReviewStatus, RejectReasonType } from 'prisma-generated'
 
 type PrismaTransaction = Prisma.TransactionClient
 
@@ -14,13 +14,6 @@ export class HotelService {
       skip: (page - 1) * limit,
       take: limit,
     }
-  }
-
-  private mapReviewStatus(status?: string) {
-    if (!status) {
-      return undefined
-    }
-    return status as ReviewStatus
   }
 
   private assertEditableStatus(status: ReviewStatus) {
@@ -168,7 +161,7 @@ export class HotelService {
           count: room.count,
           name: room.name,
           price: room.price,
-          priceMode: room.priceMode as PriceMode,
+          priceMode: room.priceMode,
           bedType: room.bedType,
           maxGuests: room.maxGuests,
           area: room.area,
@@ -391,7 +384,7 @@ export class HotelService {
       },
       ...(reviewStatus
         ? {
-            reviewStatus: this.mapReviewStatus(reviewStatus),
+            reviewStatus: reviewStatus,
           }
         : {}),
     }
@@ -626,7 +619,7 @@ export class HotelService {
           count: room.count,
           name: room.name,
           price: room.price,
-          priceMode: room.priceMode as unknown as ApiHotelTypes['HotelInfoCreate']['roomTypes'][number]['priceMode'],
+          priceMode: room.priceMode,
           bedType: room.bedType ?? undefined,
           maxGuests: room.maxGuests,
           area: room.area ?? undefined,
@@ -693,7 +686,7 @@ export class HotelService {
         isDeleted: false,
       },
       reviewStatus: reviewStatus
-        ? (reviewStatus as ReviewStatus)
+        ? reviewStatus
         : {
             in: [ReviewStatus.PENDING, ReviewStatus.APPROVED, ReviewStatus.REJECTED],
           },
@@ -887,7 +880,7 @@ export class HotelService {
           infoId: info.id,
           reviewerId: adminId,
           action: nextStatus,
-          rejectReason: nextStatus === ReviewStatus.REJECTED ? (body.rejectReason as PrismaRejectReasonType) : null,
+          rejectReason: nextStatus === ReviewStatus.REJECTED ? body.rejectReason : null,
           rejectDetail:
             nextStatus === ReviewStatus.REJECTED && body.rejectReason === RejectReasonType.OTHER
               ? (body.rejectDetail ?? null)
@@ -909,8 +902,8 @@ export class HotelService {
             },
           }
         : {}),
-      ...(action ? { action: action as ReviewStatus } : {}),
-      ...(rejectReason ? { rejectReason: rejectReason as PrismaRejectReasonType } : {}),
+      ...(action ? { action: action } : {}),
+      ...(rejectReason ? { rejectReason: rejectReason } : {}),
       hotel: {
         isDeleted: false,
       },
