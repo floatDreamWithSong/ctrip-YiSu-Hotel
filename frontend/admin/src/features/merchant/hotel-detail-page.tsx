@@ -42,6 +42,11 @@ const HOTEL_INFOS_QUERY_KEY = 'merchant-hotel-infos'
 
 type HotelInfoFormValues = ApiHotelTypes['HotelInfoCreate']
 
+const parseTimeToMinutes = (time: string) => {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
 const reviewStatusText: Record<string, string> = {
   [HotelReviewStatus.DRAFT]: '待发布',
   [HotelReviewStatus.PENDING]: '审核中',
@@ -354,7 +359,7 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                     <Button
                       size="small"
                       onClick={() => duplicateInfoMutation.mutate(record.id)}
-                      loading={duplicateInfoMutation.isPending}
+                      loading={duplicateInfoMutation.isPending && duplicateInfoMutation.variables === record.id}
                     >
                       创建副本
                     </Button>
@@ -367,7 +372,7 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                         record.reviewStatus !== HotelReviewStatus.REJECTED
                       }
                       onClick={() => submitInfoMutation.mutate(record.id)}
-                      loading={submitInfoMutation.isPending}
+                      loading={submitInfoMutation.isPending && submitInfoMutation.variables === record.id}
                     >
                       发布
                     </Button>
@@ -375,7 +380,7 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                       size="small"
                       disabled={record.reviewStatus !== HotelReviewStatus.PENDING}
                       onClick={() => withdrawInfoMutation.mutate(record.id)}
-                      loading={withdrawInfoMutation.isPending}
+                      loading={withdrawInfoMutation.isPending && withdrawInfoMutation.variables === record.id}
                     >
                       撤回
                     </Button>
@@ -383,7 +388,7 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                       size="small"
                       disabled={record.reviewStatus !== HotelReviewStatus.APPROVED}
                       onClick={() => offlineInfoMutation.mutate(record.id)}
-                      loading={offlineInfoMutation.isPending}
+                      loading={offlineInfoMutation.isPending && offlineInfoMutation.variables === record.id}
                     >
                       下线
                     </Button>
@@ -391,7 +396,11 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                       title="确认删除该酒店信息？"
                       onConfirm={() => deleteInfoMutation.mutate(record.id)}
                     >
-                      <Button danger size="small" loading={deleteInfoMutation.isPending}>
+                      <Button
+                        danger
+                        size="small"
+                        loading={deleteInfoMutation.isPending && deleteInfoMutation.variables === record.id}
+                      >
                         删除
                       </Button>
                     </Popconfirm>
@@ -600,10 +609,19 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                         >
                           <Select
                             options={[
-                              { label: '按晚', value: PriceMode.PER_NIGHT },
-                              { label: '按小时', value: PriceMode.PER_HOUR },
+                              { label: '标准住宿', value: PriceMode.PER_NIGHT },
+                              { label: '钟点房', value: PriceMode.PER_HOUR },
                             ]}
                           />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Form.Item
+                          name={[field.name, 'duration']}
+                          label={`购买时长： ${form.getFieldValue(['roomTypes', field.name, 'priceMode']) === PriceMode.PER_HOUR ? '小时' : '夜晚'}`}
+                          rules={[{ required: true }]}
+                        >
+                          <InputNumber min={1} style={{ width: '100%' }} />
                         </Form.Item>
                       </Col>
                       <Col span={4}>
@@ -645,6 +663,70 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                         </Form.Item>
                       </Col>
                     </Row>
+                    <Form.Item shouldUpdate noStyle>
+                      {() => {
+                        const mode = form.getFieldValue(['roomTypes', field.name, 'priceMode']) as string | undefined
+                        if (mode !== PriceMode.PER_HOUR) {
+                          return null
+                        }
+                        return (
+                          <>
+                            <Divider>钟点时段</Divider>
+                            <Form.List name={[field.name, 'hourlySlots']}>
+                              {(slotFields, { add: addSlot, remove: removeSlot }) => (
+                                <Space direction="vertical" style={{ width: '100%' }}>
+                                  {slotFields.map((slotField) => (
+                                    <Row gutter={12} key={slotField.key}>
+                                      <Col span={6}>
+                                        <Form.Item
+                                          name={[slotField.name, 'startTime']}
+                                          label="开始时间"
+                                          rules={[
+                                            { required: true },
+                                            {
+                                              validator: async (_, value: string) => {
+                                                if (!value) return
+                                                const duration = Number(form.getFieldValue(['roomTypes', field.name, 'duration']) ?? 0)
+                                                if (!duration || duration < 1) return
+                                                const endMinutes = parseTimeToMinutes(value) + duration * 60
+                                                if (endMinutes > 24 * 60) {
+                                                  throw new Error('时段结束时间不能超过24:00')
+                                                }
+                                              },
+                                            },
+                                          ]}
+                                        >
+                                          <Input placeholder="12:00" />
+                                        </Form.Item>
+                                      </Col>
+                                      <Col span={14}>
+                                        <div className="pt-8 text-xs text-gray-500">
+                                          结束时间将按 房型时长单位(duration) 自动推导
+                                        </div>
+                                      </Col>
+                                      <Col span={4}>
+                                        <Button danger onClick={() => removeSlot(slotField.name)}>
+                                          删
+                                        </Button>
+                                      </Col>
+                                    </Row>
+                                  ))}
+                                  <Button
+                                    onClick={() =>
+                                      addSlot({
+                                        startTime: '12:00',
+                                      })
+                                    }
+                                  >
+                                    新增时段
+                                  </Button>
+                                </Space>
+                              )}
+                            </Form.List>
+                          </>
+                        )
+                      }}
+                    </Form.Item>
                   </Card>
                 ))}
                 <Button
@@ -654,8 +736,10 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                       count: 0,
                       price: 0,
                       priceMode: PriceMode.PER_NIGHT,
+                      duration: 1,
                       maxGuests: 1,
                       sortOrder: 0,
+                      hourlySlots: [],
                     })
                   }
                 >

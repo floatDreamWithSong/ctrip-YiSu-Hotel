@@ -215,11 +215,16 @@ export const AdminReviewRequest = {
         count: number
         price: number
         priceMode: string
+        duration: number
         bedType?: string
         maxGuests: number
         area?: number
         imageUrl?: string
         sortOrder: number
+        hourlySlots: Array<{
+          id: number
+          startTime: string
+        }>
       }>
       tags: string[]
       location: null | { lng: number; lat: number }

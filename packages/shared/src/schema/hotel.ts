@@ -40,11 +40,19 @@ export const roomTypeInputSchema = z.object({
   count: z.number().int().min(0),
   price: z.number().nonnegative(),
   priceMode: priceModeSchema.default(PriceMode.PER_NIGHT),
+  duration: z.number().int().min(1),
   bedType: z.string().trim().max(64).optional(),
   maxGuests: z.number().int().min(1),
   area: z.number().nonnegative().optional(),
   imageUrl: z.url('房型图片链接格式不正确').optional(),
   sortOrder: z.number().int().min(0),
+  hourlySlots: z
+    .array(
+      z.object({
+        startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
+      }),
+    )
+    .default([]),
 })
 
 export const locationInputSchema = z.object({

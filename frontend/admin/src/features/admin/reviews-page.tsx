@@ -40,6 +40,14 @@ const rejectReasonOptions = [
   { value: RejectReasonType.OTHER, label: '其他' },
 ]
 
+const deriveEndTime = (startTime: string, duration: number) => {
+  const [hours, minutes] = startTime.split(':').map(Number)
+  const total = hours * 60 + minutes + duration * 60
+  const endHours = Math.floor(total / 60)
+  const endMinutes = total % 60
+  return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`
+}
+
 type ReviewActionForm = ApiHotelTypes['AdminReviewAction']
 
 const ReviewsPage = () => {
@@ -331,10 +339,32 @@ const ReviewsPage = () => {
               <Descriptions.Item label="房型数量">
                 {detailQuery.data?.roomTypes.length ?? 0}
               </Descriptions.Item>
+              <Descriptions.Item label="钟点时段数">
+                {(detailQuery.data?.roomTypes ?? []).reduce((total, room) => total + (room.hourlySlots?.length ?? 0), 0)}
+              </Descriptions.Item>
               <Descriptions.Item label="轮播图数量">
                 {detailQuery.data?.images.length ?? 0}
               </Descriptions.Item>
             </Descriptions>
+          </Card>
+          <Card title="房型与时段">
+            <Space direction="vertical" style={{ width: '100%' }}>
+              {(detailQuery.data?.roomTypes ?? []).map((room) => (
+                <Card key={room.id} size="small">
+                  <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                    <Typography.Text strong>{room.name}</Typography.Text>
+                    <Typography.Text type="secondary">
+                      计价：{room.priceMode}，基础价：{room.price}，时长单位：{room.duration}
+                    </Typography.Text>
+                    {(room.hourlySlots ?? []).map((slot) => (
+                      <Typography.Text key={slot.id} type="secondary">
+                        {slot.startTime}-{deriveEndTime(slot.startTime, room.duration)}
+                      </Typography.Text>
+                    ))}
+                  </Space>
+                </Card>
+              ))}
+            </Space>
           </Card>
           <Card>
             <Form form={actionForm} layout="vertical">

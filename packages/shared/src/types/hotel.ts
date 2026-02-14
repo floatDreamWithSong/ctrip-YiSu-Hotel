@@ -26,3 +26,27 @@ export const PriceMode = {
 } as const
 
 export type PriceMode = (typeof PriceMode)[keyof typeof PriceMode]
+
+export const HotelSearchRoomType = {
+  HOTEL: 'HOTEL',
+  HOURLY: 'HOURLY',
+} as const
+
+export type HotelSearchRoomType = (typeof HotelSearchRoomType)[keyof typeof HotelSearchRoomType]
+
+export const HotelSortBy = {
+  PRICE: 'price',
+  DISTANCE: 'distance',
+  STAR_LEVEL: 'starLevel',
+} as const
+
+export type HotelSortBy = (typeof HotelSortBy)[keyof typeof HotelSortBy]
+
+export const PoiCategory = {
+  SCENIC: 'scenic',
+  FOOD: 'food',
+  ENTERTAINMENT: 'entertainment',
+  TRAFFIC: 'traffic',
+} as const
+
+export type PoiCategory = (typeof PoiCategory)[keyof typeof PoiCategory]

@@ -98,6 +98,33 @@ export class HotelService {
     return Array.from(new Set(tags.map((item) => item.trim()).filter(Boolean)))
   }
 
+  private parseTimeToMinutes(time: string) {
+    const [hours, minutes] = time.split(':').map(Number)
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      throw new BadRequestException(`非法时间格式: ${time}`)
+    }
+    return hours * 60 + minutes
+  }
+
+  private validateRoomTypeInput(room: ApiHotelTypes['HotelInfoCreate']['roomTypes'][number]) {
+    if (room.priceMode === PriceMode.PER_HOUR) {
+      if (room.hourlySlots.length === 0) {
+        throw new BadRequestException(`钟点房型 ${room.name} 至少需要一个时段`)
+      }
+      for (const slot of room.hourlySlots) {
+        const start = this.parseTimeToMinutes(slot.startTime)
+        const end = start + room.duration * 60
+        if (end > 24 * 60) {
+          throw new BadRequestException(`钟点房型 ${room.name} 的时段 ${slot.startTime} 超过当日 24:00`)
+        }
+      }
+      return
+    }
+    if (room.hourlySlots.length > 0) {
+      throw new BadRequestException(`非钟点房型 ${room.name} 不能配置时段`)
+    }
+  }
+
   private async replaceTags(tx: PrismaTransaction, infoId: number, tags: string[]) {
     const normalized = this.normalizeTags(tags)
     await tx.hotelTagRelation.deleteMany({
@@ -140,6 +167,13 @@ export class HotelService {
 
   private async replaceInfoChildren(tx: PrismaTransaction, infoId: number, body: ApiHotelTypes['HotelInfoCreate']) {
     await tx.hotelImage.deleteMany({ where: { infoId } })
+    await tx.hourlyRoomSlot.deleteMany({
+      where: {
+        roomType: {
+          infoId,
+        },
+      },
+    })
     await tx.roomType.deleteMany({ where: { infoId } })
     await this.replaceTags(tx, infoId, body.tags)
 
@@ -155,20 +189,32 @@ export class HotelService {
     }
 
     if (body.roomTypes.length > 0) {
-      await tx.roomType.createMany({
-        data: body.roomTypes.map((room) => ({
-          infoId,
-          count: room.count,
-          name: room.name,
-          price: room.price,
-          priceMode: room.priceMode,
-          bedType: room.bedType,
-          maxGuests: room.maxGuests,
-          area: room.area,
-          imageUrl: room.imageUrl,
-          sortOrder: room.sortOrder,
-        })),
-      })
+      for (const room of body.roomTypes) {
+        this.validateRoomTypeInput(room)
+        const createdRoom = await tx.roomType.create({
+          data: {
+            infoId,
+            count: room.count,
+            name: room.name,
+            price: room.price,
+            priceMode: room.priceMode,
+            duration: room.duration,
+            bedType: room.bedType,
+            maxGuests: room.maxGuests,
+            area: room.area,
+            imageUrl: room.imageUrl,
+            sortOrder: room.sortOrder,
+          },
+        })
+        if (room.hourlySlots.length > 0) {
+          await tx.hourlyRoomSlot.createMany({
+            data: room.hourlySlots.map((slot) => ({
+              roomTypeId: createdRoom.id,
+              startTime: slot.startTime,
+            })),
+          })
+        }
+      }
     }
   }
 
@@ -229,11 +275,16 @@ export class HotelService {
       name: string
       price: number
       priceMode: PriceMode
+      duration: number
       bedType: string | null
       maxGuests: number
       area: number | null
       imageUrl: string | null
       sortOrder: number
+      hourlySlots: Array<{
+        id: number
+        startTime: string
+      }>
     }>
     tags: Array<{ tag: { id: number; name: string; category: string; icon: string | null } }>
   }) {
@@ -270,6 +321,12 @@ export class HotelService {
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((room) => ({
           ...room,
+          hourlySlots: room.hourlySlots
+            .slice()
+            .map((slot) => ({
+              id: slot.id,
+              startTime: slot.startTime,
+            })),
         })),
       tags: info.tags.map((relation) => relation.tag.name),
     }
@@ -424,7 +481,11 @@ export class HotelService {
       },
       include: {
         images: true,
-        roomTypes: true,
+        roomTypes: {
+          include: {
+            hourlySlots: true
+          },
+        },
         tags: {
           include: {
             tag: true,
@@ -563,7 +624,11 @@ export class HotelService {
       },
       include: {
         images: true,
-        roomTypes: true,
+        roomTypes: {
+          include: {
+            hourlySlots: true
+          },
+        },
         tags: {
           include: {
             tag: true,
@@ -620,11 +685,15 @@ export class HotelService {
           name: room.name,
           price: room.price,
           priceMode: room.priceMode,
+          duration: room.duration,
           bedType: room.bedType ?? undefined,
           maxGuests: room.maxGuests,
           area: room.area ?? undefined,
           imageUrl: room.imageUrl ?? undefined,
           sortOrder: room.sortOrder,
+          hourlySlots: room.hourlySlots.map((slot) => ({
+            startTime: slot.startTime,
+          })),
         })),
       })
       await this.updateGeoLocation(tx, copy.id, location ?? undefined)
@@ -636,6 +705,16 @@ export class HotelService {
   async submitForReview(merchantId: number, hotelId: number, infoId: number) {
     const info = await this.ensureMerchantHotelInfo(merchantId, hotelId, infoId)
     this.assertCanSubmit(info.reviewStatus)
+    const pendingCount = await this.prisma.hotelInfo.count({
+      where: {
+        hotelId,
+        id: { not: infoId },
+        reviewStatus: ReviewStatus.PENDING,
+      },
+    })
+    if (pendingCount > 0) {
+      throw new BadRequestException('当前酒店已有正在审核的酒店信息，请等待审核完成后再提交')
+    }
     await this.prisma.hotelInfo.update({
       where: { id: infoId },
       data: {
@@ -762,7 +841,11 @@ export class HotelService {
           },
         },
         images: true,
-        roomTypes: true,
+        roomTypes: {
+          include: {
+            hourlySlots: true,
+          },
+        },
         tags: {
           include: {
             tag: true,

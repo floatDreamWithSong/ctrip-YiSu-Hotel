@@ -36,8 +36,8 @@ enum RejectReasonType {
 }
 
 enum PriceMode {
-  PER_NIGHT // 按夜晚计价
-  PER_HOUR // 按小时计价
+  PER_NIGHT // 标准住宿，按住宿夜晚计费
+  PER_HOUR // 钟点房，按照住宿时间段的数量计费
 }
 
 // ===== 用户模型 =====
@@ -86,6 +86,7 @@ model AdminProfile {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reviewRecords ReviewRecord[] // 管理员审核记录
+
   @@map("admin_profiles")
 }
 
@@ -127,11 +128,11 @@ model HotelInfo {
 
   // ===== 酒店基本信息 =====
   infoNickname String  @map("info_nickname") // 信息昵称（仅商家可见）
-  name        String // 酒店名称
-  enName      String? @map("en_name") // 酒店英文名称
-  starLevel   Int     @map("star_level") // 酒店星级
-  phone       String? // 酒店热线电话
-  description String? @db.Text // 酒店简介
+  name         String // 酒店名称
+  enName       String? @map("en_name") // 酒店英文名称
+  starLevel    Int     @map("star_level") // 酒店星级
+  phone        String? // 酒店热线电话
+  description  String? @db.Text // 酒店简介
 
   // 地址信息
   province     String?
@@ -153,16 +154,18 @@ model HotelInfo {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // 版本信息的关联数据
-  images    HotelImage[] // 详情页顶部轮播图
-  roomTypes RoomType[] // 房型列表
-  tags      HotelTagRelation[] // 酒店标签
+  images        HotelImage[] // 详情页顶部轮播图
+  roomTypes     RoomType[] // 房型列表
+  tags          HotelTagRelation[] // 酒店标签
   reviewRecords ReviewRecord[]
-  hotels    Hotel[]            @relation("publishedInfo") // 其实这里只可能有0或一个
+  hotels        Hotel[]            @relation("publishedInfo") // 其实这里只可能有0或一个
 
   homeAdImage String? @map("home_ad_image") // 首页广告图
 
   @@index([hotelId], name: "idx_hotel_info_hotel_id")
   @@index([reviewStatus], name: "idx_hotel_info_review_status")
+  @@index([city, reviewStatus], map: "idx_hotel_infos_city_review_status")
+  @@index([locationGeog], type: Gist, map: "idx_hotel_infos_location_geog")
   @@map("hotel_infos")
 }
 
@@ -171,19 +174,36 @@ model RoomType {
   infoId Int       @map("info_id")
   info   HotelInfo @relation(fields: [infoId], references: [id], onDelete: Cascade)
 
-  count     Int       @map("count") // 房型总数量
-  name      String // 钟点房/单人间/双人间/大床房/家庭房/套房/其他
-  price     Float // 价格
-  priceMode PriceMode @default(PER_NIGHT) @map("price_mode")
-  bedType   String?   @map("bed_type") // 床型,例如：1.8m *2.0 m
-  maxGuests Int       @map("max_guests") // 最大入住人数
-  area      Float? // 面积
-  imageUrl  String?   @map("image_url") // 参考图片
-  sortOrder Int       @map("sort_order") // 排序用
+  count       Int              @map("count") // 房型总数量
+  name        String // 钟点房/单人间/双人间/大床房/家庭房/套房/其他
+  price       Float // 价格。标准住宿按夜晚数量计费，钟点房按时间段数量计费
+  priceMode   PriceMode        @default(PER_NIGHT) @map("price_mode")
+  bedType     String?          @map("bed_type") // 床型,例如：1.8m *2.0 m
+  maxGuests   Int              @map("max_guests") // 最大入住人数
+  area        Float? // 面积
+  imageUrl    String?          @map("image_url") // 参考图片
+  sortOrder   Int              @map("sort_order") // 排序用
+  hourlySlots HourlyRoomSlot[] // 钟点房时间段列表
+  duration    Int // price价格相对应的单位：对于标准住宿，单位为夜晚；对于钟点房，单位为小时
+  // 比如当price为100，且为标准住宿，且duration为1，则表示该房型每晚100元
+  // 比如当price为100，且为钟点房，且duration为4，则表示该房型每4小时100元
 
   @@index([infoId], name: "idx_room_type_info_id")
   @@index([price], name: "idx_room_type_price")
+  @@index([infoId, price, priceMode], map: "idx_room_types_info_price_mode")
   @@map("room_types")
+}
+
+model HourlyRoomSlot {
+  id         Int      @id @default(autoincrement())
+  roomTypeId Int      @map("room_type_id")
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  startTime String @map("start_time") // 时间段开始时间，格式为HH:mm，时间段长度取决于RoomType的duration
+
+  @@unique([roomTypeId, startTime], name: "uniq_room_slot")
+  @@index([roomTypeId], name: "idx_hourly_slot_room_type_id")
+  @@map("hourly_room_slots")
 }
 
 // 详情页轮播图
@@ -222,6 +242,7 @@ model HotelTagRelation {
   tag    HotelTag  @relation(fields: [tagId], references: [id])
 
   @@unique([infoId, tagId], name: "uniq_info_tag")
+  @@index([tagId, infoId], map: "idx_hotel_tag_relations_tag_info")
   @@map("hotel_tag_relations")
 }
 

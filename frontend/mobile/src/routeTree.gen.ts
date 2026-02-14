@@ -11,9 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAddressSearchRouteImport } from './routes/_authenticated/address-search'
 import { Route as authRegisterRouteImport } from './routes/(auth)/register'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
+import { Route as AuthenticatedListRoomTypeRouteImport } from './routes/_authenticated/list.$roomType'
+import { Route as AuthenticatedHotelHotelIdRouteImport } from './routes/_authenticated/hotel.$hotelId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -24,6 +27,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAddressSearchRoute =
+  AuthenticatedAddressSearchRouteImport.update({
+    id: '/address-search',
+    path: '/address-search',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const authRegisterRoute = authRegisterRouteImport.update({
   id: '/(auth)/register',
   path: '/register',
@@ -39,18 +48,36 @@ const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedListRoomTypeRoute =
+  AuthenticatedListRoomTypeRouteImport.update({
+    id: '/list/$roomType',
+    path: '/list/$roomType',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHotelHotelIdRoute =
+  AuthenticatedHotelHotelIdRouteImport.update({
+    id: '/hotel/$hotelId',
+    path: '/hotel/$hotelId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/address-search': typeof AuthenticatedAddressSearchRoute
+  '/hotel/$hotelId': typeof AuthenticatedHotelHotelIdRoute
+  '/list/$roomType': typeof AuthenticatedListRoomTypeRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/address-search': typeof AuthenticatedAddressSearchRoute
   '/': typeof AuthenticatedIndexRoute
+  '/hotel/$hotelId': typeof AuthenticatedHotelHotelIdRoute
+  '/list/$roomType': typeof AuthenticatedListRoomTypeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -58,20 +85,40 @@ export interface FileRoutesById {
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/register': typeof authRegisterRoute
+  '/_authenticated/address-search': typeof AuthenticatedAddressSearchRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/hotel/$hotelId': typeof AuthenticatedHotelHotelIdRoute
+  '/_authenticated/list/$roomType': typeof AuthenticatedListRoomTypeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/forgot-password' | '/login' | '/register'
+  fullPaths:
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/address-search'
+    | '/hotel/$hotelId'
+    | '/list/$roomType'
   fileRoutesByTo: FileRoutesByTo
-  to: '/forgot-password' | '/login' | '/register' | '/'
+  to:
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/address-search'
+    | '/'
+    | '/hotel/$hotelId'
+    | '/list/$roomType'
   id:
     | '__root__'
     | '/_authenticated'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/register'
+    | '/_authenticated/address-search'
     | '/_authenticated/'
+    | '/_authenticated/hotel/$hotelId'
+    | '/_authenticated/list/$roomType'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -97,6 +144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/address-search': {
+      id: '/_authenticated/address-search'
+      path: '/address-search'
+      fullPath: '/address-search'
+      preLoaderRoute: typeof AuthenticatedAddressSearchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/(auth)/register': {
       id: '/(auth)/register'
       path: '/register'
@@ -118,15 +172,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/list/$roomType': {
+      id: '/_authenticated/list/$roomType'
+      path: '/list/$roomType'
+      fullPath: '/list/$roomType'
+      preLoaderRoute: typeof AuthenticatedListRoomTypeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hotel/$hotelId': {
+      id: '/_authenticated/hotel/$hotelId'
+      path: '/hotel/$hotelId'
+      fullPath: '/hotel/$hotelId'
+      preLoaderRoute: typeof AuthenticatedHotelHotelIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAddressSearchRoute: typeof AuthenticatedAddressSearchRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedHotelHotelIdRoute: typeof AuthenticatedHotelHotelIdRoute
+  AuthenticatedListRoomTypeRoute: typeof AuthenticatedListRoomTypeRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAddressSearchRoute: AuthenticatedAddressSearchRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedHotelHotelIdRoute: AuthenticatedHotelHotelIdRoute,
+  AuthenticatedListRoomTypeRoute: AuthenticatedListRoomTypeRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

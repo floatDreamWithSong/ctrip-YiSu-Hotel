@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { Configurations } from '@/config';
 import { firstValueFrom } from 'rxjs';
-import type { ApiLocationTypes } from '@yisu/shared';
+import type { ApiLocationTypes, PoiCategory } from '@yisu/shared';
 
 interface AmapApiResponse<T> {
   status: string;
@@ -46,6 +46,15 @@ interface AmapIpLocateResponse extends AmapApiResponse<never> {
 // 地理编码响应直接包含 geocodes，不在 data 中
 interface AmapGeocodeResponse extends AmapApiResponse<never> {
   geocodes?: AmapGeocodeData['geocodes'];
+}
+interface AmapNearbyPoiResponse extends AmapApiResponse<never> {
+  pois?: Array<{
+    id: string;
+    name: string;
+    address?: string;
+    location?: string;
+    distance?: string;
+  }>;
 }
 
 interface AmapInputTipsData {
@@ -239,5 +248,43 @@ export class LocationService {
       this.logger.error('地理编码异常', error);
       throw error;
     }
+  }
+
+  /**
+   * 周边 POI 检索
+   */
+  async nearbySearch(params: {
+    location: string;
+    radiusMeters: number;
+    limit: number;
+    keywords: string;
+    category: PoiCategory;
+  }) {
+    const response = await firstValueFrom(
+      this.httpService.get<AmapNearbyPoiResponse>(`${this.baseUrl}/place/around`, {
+        params: {
+          key: this.key,
+          location: params.location,
+          radius: params.radiusMeters,
+          keywords: params.keywords,
+          page_size: params.limit,
+          sortrule: 'distance',
+          output: 'JSON',
+        },
+      }),
+    )
+    const { status, info, pois } = response.data
+    if (status !== '1') {
+      this.logger.error(`周边检索失败: status=${status}, info=${info}`)
+      return []
+    }
+    return (pois ?? []).map((poi) => ({
+      id: poi.id,
+      name: poi.name,
+      address: poi.address ?? null,
+      location: poi.location ?? null,
+      distance: poi.distance ? Number(poi.distance) : null,
+      category: params.category,
+    }))
   }
 }
