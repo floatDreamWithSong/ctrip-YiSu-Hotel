@@ -16,7 +16,7 @@ export class AdminService {
   async getHotels(query: GetHotelsType) {
     const { page, pageSize, status, startTime, endTime, merchantName } = query;
 
-    const where: Prisma.HotelVersionWhereInput = {};
+    const where: Prisma.HotelInfoWhereInput = {};
 
     if (status) {
       where.reviewStatus = status;
@@ -32,16 +32,18 @@ export class AdminService {
     if (merchantName) {
       where.hotel = {
         merchant: {
-          displayName: {
-            contains: merchantName,
+          user: {
+            username: {
+              contains: merchantName,
+            },
           },
         },
       };
     }
 
     const [total, items] = await this.prisma.$transaction([
-      this.prisma.hotelVersion.count({ where }),
-      this.prisma.hotelVersion.findMany({
+      this.prisma.hotelInfo.count({ where }),
+      this.prisma.hotelInfo.findMany({
         where,
         include: {
           hotel: {
@@ -49,7 +51,11 @@ export class AdminService {
               merchant: {
                 select: {
                   userId: true,
-                  displayName: true,
+                  user: {
+                    select: {
+                      username: true,
+                    },
+                  },
                 },
               },
             },
@@ -66,15 +72,15 @@ export class AdminService {
     const versionIds = items.map(item => item.id);
     const latestReviewRecords = versionIds.length
       ? await this.prisma.reviewRecord.findMany({
-        where: { versionId: { in: versionIds } },
+        where: { infoId: { in: versionIds } },
         orderBy: { createdAt: 'desc' },
       })
       : [];
 
     const reviewedAtMap = new Map<number, Date>();
     for (const record of latestReviewRecords) {
-      if (!reviewedAtMap.has(record.versionId)) {
-        reviewedAtMap.set(record.versionId, record.createdAt);
+      if (!reviewedAtMap.has(record.infoId)) {
+        reviewedAtMap.set(record.infoId, record.createdAt);
       }
     }
 
@@ -85,10 +91,10 @@ export class AdminService {
         hotelId: item.hotelId,
         name: item.name,
         merchantId: item.hotel.merchantId,
-        merchantName: item.hotel.merchant.displayName,
+        merchantName: item.hotel.merchant.user.username,
         createdAt: item.createdAt,
         reviewedAt: reviewedAtMap.get(item.id),
-        isNewHotel: !item.previousVersionId,
+        isNewHotel: !item.hotel.publishedInfoId,
         reviewStatus: item.reviewStatus,
       })),
     };
@@ -133,11 +139,11 @@ export class AdminService {
       }),
     ]);
 
-    const versionIds = [...new Set(records.map(record => record.versionId))];
+    const versionIds = [...new Set(records.map(record => record.infoId))];
     const reviewerIds = [...new Set(records.map(record => record.reviewerId))];
 
     const [versions, reviewers] = await this.prisma.$transaction([
-      this.prisma.hotelVersion.findMany({
+      this.prisma.hotelInfo.findMany({
         where: { id: { in: versionIds } },
         select: {
           id: true,
@@ -146,7 +152,12 @@ export class AdminService {
             select: {
               merchant: {
                 select: {
-                  displayName: true,
+                  userId: true,
+                  user: {
+                    select: {
+                      username: true,
+                    },
+                  },
                 },
               },
             },
@@ -168,13 +179,13 @@ export class AdminService {
     return {
       total,
       items: records.map(record => {
-        const version = versionMap.get(record.versionId);
+        const version = versionMap.get(record.infoId);
         return {
           id: record.id,
-          versionId: record.versionId,
+          versionId: record.infoId,
           hotelId: record.hotelId,
           hotelName: version?.name ?? '未知酒店',
-          merchantName: version?.hotel.merchant.displayName ?? '未知商家',
+          merchantName: version?.hotel.merchant.user.username ?? '未知商家',
           reviewerId: record.reviewerId,
           reviewerName: reviewerMap.get(record.reviewerId) ?? '未知',
           action: record.action,
@@ -187,7 +198,7 @@ export class AdminService {
   }
 
   async getHotelDetail(versionId: number) {
-    const currentVersion = await this.prisma.hotelVersion.findUnique({
+    const currentVersion = await this.prisma.hotelInfo.findUnique({
       where: { id: versionId },
       include: {
         roomTypes: true,
@@ -200,11 +211,14 @@ export class AdminService {
         hotel: {
           include: {
             merchant: {
-              select: {
-                userId: true,
-                displayName: true,
-              },
-            },
+                          select: {
+                            userId: true,
+                            user: {
+                              select: {
+                                username: true,
+                              },
+                            },
+                          },            },
           },
         },
       },
@@ -214,9 +228,9 @@ export class AdminService {
       return null;
 
     let previousVersion = null;
-    if (currentVersion.previousVersionId) {
-      previousVersion = await this.prisma.hotelVersion.findUnique({
-        where: { id: currentVersion.previousVersionId },
+    if (currentVersion.hotel.publishedInfoId && currentVersion.hotel.publishedInfoId !== currentVersion.id) {
+      previousVersion = await this.prisma.hotelInfo.findUnique({
+        where: { id: currentVersion.hotel.publishedInfoId },
         include: {
           roomTypes: true,
           images: { orderBy: { sortOrder: 'asc' } },
@@ -234,13 +248,13 @@ export class AdminService {
       previousVersion,
       merchant: {
         id: currentVersion.hotel.merchantId,
-        displayName: currentVersion.hotel.merchant.displayName,
+        displayName: currentVersion.hotel.merchant.user.username,
       },
     };
   }
 
   async approveHotel(versionId: number, adminUserId: number) {
-    const version = await this.prisma.hotelVersion.findUnique({
+    const version = await this.prisma.hotelInfo.findUnique({
       where: { id: versionId },
       include: { hotel: true },
     });
@@ -250,19 +264,19 @@ export class AdminService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      await tx.hotelVersion.update({
+      await tx.hotelInfo.update({
         where: { id: versionId },
         data: { reviewStatus: 'APPROVED' },
       });
 
       await tx.hotel.update({
         where: { id: version.hotelId },
-        data: { publishedVersionId: versionId },
+        data: { publishedInfoId: versionId },
       });
 
-      if (version.previousVersionId) {
-        await tx.hotelVersion.update({
-          where: { id: version.previousVersionId },
+      if (version.hotel.publishedInfoId && version.hotel.publishedInfoId !== versionId) {
+        await tx.hotelInfo.update({
+          where: { id: version.hotel.publishedInfoId },
           data: { reviewStatus: 'DEPRECATED' },
         });
       }
@@ -270,7 +284,7 @@ export class AdminService {
       await tx.reviewRecord.create({
         data: {
           hotelId: version.hotelId,
-          versionId: versionId,
+          infoId: versionId,
           reviewerId: adminUserId,
           action: 'APPROVED',
         },
@@ -279,7 +293,7 @@ export class AdminService {
   }
 
   async rejectHotel(versionId: number, adminUserId: number, dto: RejectHotelType) {
-    const version = await this.prisma.hotelVersion.findUnique({
+    const version = await this.prisma.hotelInfo.findUnique({
       where: { id: versionId },
       include: { hotel: true },
     });
@@ -293,22 +307,22 @@ export class AdminService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      await tx.hotelVersion.update({
+      await tx.hotelInfo.update({
         where: { id: versionId },
         data: { reviewStatus: 'REJECTED' },
       });
 
-      if (version.reviewStatus === 'APPROVED' && version.hotel.publishedVersionId === versionId) {
+      if (version.reviewStatus === 'APPROVED' && version.hotel.publishedInfoId === versionId) {
         await tx.hotel.update({
           where: { id: version.hotelId },
-          data: { publishedVersionId: null },
+          data: { publishedInfoId: null },
         });
       }
 
       await tx.reviewRecord.create({
         data: {
           hotelId: version.hotelId,
-          versionId: versionId,
+          infoId: versionId,
           reviewerId: adminUserId,
           action: 'REJECTED',
           rejectReason: dto.rejectReason,
@@ -355,7 +369,7 @@ export class AdminService {
 
     return records.map(record => ({
       id: record.id,
-      versionId: record.versionId,
+      versionId: record.infoId,
       reviewerName: reviewerMap.get(record.reviewerId) || '未知',
       action: record.action,
       rejectReason: record.rejectReason,
