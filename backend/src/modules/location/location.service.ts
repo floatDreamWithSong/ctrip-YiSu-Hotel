@@ -51,11 +51,11 @@ interface AmapGeocodeResponse extends AmapApiResponse<never> {
 interface AmapInputTipsData {
   tips: Array<{
     name: string;
-    address?: string;
-    location?: string;
-    adcode?: string;
-    district?: string;
-    city?: string;
+    address?: string | string[];
+    location?: string | string[];
+    adcode?: string | string[];
+    district?: string | string[];
+    city?: string | string[];
     type?: string;
   }>;
 }
@@ -175,13 +175,22 @@ export class LocationService {
 
       const tips = responseTips || [];
 
+      // 辅助函数：将字符串或数组转换为字符串
+      const normalizeField = (value: string | string[] | undefined): string | undefined => {
+        if (!value) return undefined;
+        if (Array.isArray(value)) {
+          return value.length > 0 ? value[0] : undefined;
+        }
+        return value;
+      };
+
       return tips.map((tip) => ({
         name: tip.name,
-        address: tip.address,
-        location: tip.location,
-        adcode: tip.adcode,
-        district: tip.district,
-        city: tip.city,
+        address: normalizeField(tip.address),
+        location: normalizeField(tip.location),
+        adcode: normalizeField(tip.adcode),
+        district: normalizeField(tip.district),
+        city: normalizeField(tip.city),
         type: tip.type,
       }));
     } catch (error) {

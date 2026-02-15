@@ -53,9 +53,9 @@ const HotelsPage = () => {
   const rows = useMemo(() => hotelsQuery.data?.items ?? [], [hotelsQuery.data])
 
   return (
-    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={16} style={{ width: '100%' }}>
       <Card>
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
           <Typography.Title level={3} className="m-0!">
             酒店列表
           </Typography.Title>

@@ -10,7 +10,7 @@ async function bootstrap() {
   app.useGlobalFilters(...FiltersChain);
 
   app.enableCors({
-    origin: ['https://yisu-admin.daydreamer.net.cn','https://yisu-mobile.daydreamer.net.cn'],
+    origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') || [],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     preflightContinue: false,
   });

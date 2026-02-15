@@ -56,9 +56,9 @@ export function AddressAutoComplete({ form, ...rest }: AddressAutoCompleteProps)
       }
       try {
         const city = form.getFieldValue('city') as string | undefined
-        console.log(city)
+        console.log('搜索参数:', { keywords, city })
         const tips = await LocationRequest.inputTips(keywords, city || undefined)
-        console.log(tips)
+        console.log('搜索结果:', tips)
         const map = new Map<string, TipOption>()
         const opts = tips
           .filter((tip) => tip.location)
@@ -70,10 +70,12 @@ export function AddressAutoComplete({ form, ...rest }: AddressAutoCompleteProps)
               label: key,
             }
           })
-        console.log(opts)
+        console.log('选项列表:', opts)
         setTipsMap(map)
         setOptions(opts)
-      } catch {
+      } catch (error) {
+        console.error('地址搜索失败:', error)
+        void message.error(error instanceof Error ? error.message : '地址搜索失败')
         setOptions([])
       }
     },
@@ -103,7 +105,8 @@ export function AddressAutoComplete({ form, ...rest }: AddressAutoCompleteProps)
             location: { lng, lat },
           })
           return
-        } catch {
+        } catch (error) {
+          console.error('逆地理编码失败:', error)
           // 降级：仅填充部分信息
         }
 

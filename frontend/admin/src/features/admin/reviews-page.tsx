@@ -142,9 +142,9 @@ const ReviewsPage = () => {
   )
 
   return (
-    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={16} style={{ width: '100%' }}>
       <Card>
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
           <Typography.Title level={3} className="m-0!">
             审核列表
           </Typography.Title>
@@ -213,7 +213,7 @@ const ReviewsPage = () => {
       </Card>
 
       <Card>
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
           <Typography.Title level={4} className="m-0!">
             审核记录
           </Typography.Title>
@@ -309,7 +309,7 @@ const ReviewsPage = () => {
         onOk={() => void submitAction()}
         confirmLoading={reviewActionMutation.isPending}
       >
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={16} style={{ width: '100%' }}>
           <Card loading={detailQuery.isLoading}>
             <Descriptions bordered size="small" column={2}>
               <Descriptions.Item label="酒店昵称">

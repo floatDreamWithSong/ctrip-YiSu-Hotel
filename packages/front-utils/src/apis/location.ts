@@ -26,6 +26,8 @@ export const LocationRequest = {
       url: '/location/input-tips',
       method: 'GET',
       params: { keywords, ...(city ? { city } : {}) },
+      paramsValidator: ApiLocationSchemas.inputTipsRequest,
+      responseValidator: ApiLocationSchemas.inputTipsResponse,
     });
   },
 
