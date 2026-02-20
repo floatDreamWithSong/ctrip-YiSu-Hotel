@@ -15,7 +15,7 @@ services:
       - backend 
 
   app:
-    image: ${APP_IMAGE:ghcr.io/floatdreamwithsong/ctrip-yisu-hotel-backend:latest}
+    image: ${APP_IMAGE:-ghcr.io/floatdreamwithsong/ctrip-yisu-hotel-backend:latest}
     container_name: ctrip-yisu-hotel-be
     restart: always
     env_file:
