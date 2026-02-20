@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { CalendarPicker, Swiper, Tabs } from 'antd-mobile'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
 import { useHotelSearchStore } from '@/store/hotel-search'
+import HotelListCard from './components/hotel-list-card'
 
 type IntentRoomType = 'HOTEL' | 'HOURLY'
 
@@ -261,9 +262,9 @@ const HotelDetailPage = () => {
         {activeTab === 'nearby' && (
           <div className="space-y-2">
             {(nearbyHotelsQuery.data ?? []).map((hotel) => (
-              <div
+              <HotelListCard
                 key={`${hotel.hotelId}-${hotel.infoId}`}
-                className="rounded-xl bg-white p-3"
+                className="rounded-2xl bg-white p-3 shadow-sm"
                 onClick={() =>
                   navigate({
                     to: '/hotel/$hotelId',
@@ -278,12 +279,8 @@ const HotelDetailPage = () => {
                     },
                   })
                 }
-              >
-                <div className="text-sm font-medium">{hotel.name}</div>
-                <div className="mt-1 text-xs text-gray-500">
-                  {hotel.distanceMeters ? `${(hotel.distanceMeters / 1000).toFixed(1)}km` : '-'}
-                </div>
-              </div>
+                item={hotel}
+              />
             ))}
           </div>
         )}
