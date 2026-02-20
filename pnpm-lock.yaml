@@ -105,6 +105,9 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
+      '@faker-js/faker':
+        specifier: ^10.3.0
+        version: 10.3.0
       '@jest/globals':
         specifier: ^29.7.0
         version: 29.7.0
@@ -180,6 +183,9 @@ importers:
       typescript:
         specifier: 5.5.4
         version: 5.5.4
+      uapi-sdk-typescript:
+        specifier: ^0.1.5
+        version: 0.1.5
 
   frontend/admin:
     dependencies:
@@ -1065,6 +1071,10 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@faker-js/faker@10.3.0':
+    resolution: {integrity: sha512-It0Sne6P3szg7JIi6CgKbvTZoMjxBZhcv91ZrqrNuaZQfB5WoqYYbzCUOq89YR+VY8juY9M1vDWmDDa2TzfXCw==}
+    engines: {node: ^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0, npm: '>=10'}
 
   '@floating-ui/core@1.7.4':
     resolution: {integrity: sha512-C3HlIdsBxszvm5McXlB8PeOEWfBhcGBTZGkGlWc2U0KFY5IwG5OQEuQ8rq52DZmcHDlPLd+YFBK+cZcytwIFWg==}
@@ -6332,6 +6342,9 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  uapi-sdk-typescript@0.1.5:
+    resolution: {integrity: sha512-YMwEOnI1hKNnJMFlkLDdIuCxh+cmYX5yGUY00N60i76opFqBBffEVe0B+UFzUT3grlxWrlGqMZwFdlg6PeWvhg==}
+
   ufo@1.6.3:
     resolution: {integrity: sha512-yDJTmhydvl5lJzBmy/hyOAA0d+aqCBuwl818haVdYCRrWV84o7YyeVm4QlVHStqNrrJSTb6jKuFAVqAFsr+K3Q==}
 
@@ -7250,6 +7263,8 @@ snapshots:
   '@exodus/bytes@1.10.0(@noble/hashes@1.8.0)':
     optionalDependencies:
       '@noble/hashes': 1.8.0
+
+  '@faker-js/faker@10.3.0': {}
 
   '@floating-ui/core@1.7.4':
     dependencies:
@@ -13050,6 +13065,12 @@ snapshots:
   typescript@5.5.4: {}
 
   typescript@5.9.3: {}
+
+  uapi-sdk-typescript@0.1.5:
+    dependencies:
+      axios: 1.13.4
+    transitivePeerDependencies:
+      - debug
 
   ufo@1.6.3: {}
 
