@@ -9,7 +9,6 @@ import { UserTypeGuard } from './guards/user-type.guard';
 import { UserModule } from './modules/user/user.module';
 import { LocationModule } from './modules/location/location.module';
 import { HotelModule } from './modules/hotel/hotel.module';
-import { AdminModule } from './modules/admin/admin.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './guards/custom-throttler.guard';
 
@@ -22,7 +21,6 @@ import { CustomThrottlerGuard } from './guards/custom-throttler.guard';
     UserModule,
     LocationModule,
     HotelModule,
-    AdminModule,
     ThrottlerModule.forRoot([
       {
         name: 'burst',

@@ -1,5 +1,5 @@
 import { PipeTransform, Injectable, ArgumentMetadata, BadRequestException } from '@nestjs/common';
-import { ApiUserSchemas, ApiLocationSchemas, ApiHotelSchemas, emailSchema, pageQuerySchema, ApiHotelAdminSchemas } from '@yisu/shared';
+import { ApiUserSchemas, ApiLocationSchemas, ApiHotelSchemas, emailSchema, pageQuerySchema } from '@yisu/shared';
 import { ZodType } from 'zod';
 
 @Injectable()
@@ -36,7 +36,4 @@ export class ZodValidationPipe<T> implements PipeTransform {
   static adminReviewQuerySchema = new ZodValidationPipe(ApiHotelSchemas.adminReviewQuery);
   static adminReviewActionSchema = new ZodValidationPipe(ApiHotelSchemas.adminReviewAction);
   static reviewRecordQuerySchema = new ZodValidationPipe(ApiHotelSchemas.reviewRecordQuery);
-  static getHotelsSchema = new ZodValidationPipe(ApiHotelAdminSchemas.GetHotelsSchema);
-  static rejectHotelSchema = new ZodValidationPipe(ApiHotelAdminSchemas.RejectHotelSchema);
-  static getReviewRecordsSchema = new ZodValidationPipe(ApiHotelAdminSchemas.GetReviewRecordsSchema);
 }
