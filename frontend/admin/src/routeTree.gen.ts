@@ -14,10 +14,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as authRegisterRouteImport } from './routes/(auth)/register'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgetPasswordRouteImport } from './routes/(auth)/forget-password'
-import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAdminReviewsRouteImport } from './routes/_authenticated/admin.reviews'
-import { Route as AuthenticatedAdminHotelsRouteImport } from './routes/_authenticated/admin/hotels'
-import { Route as AuthenticatedAdminVersionIdRouteImport } from './routes/_authenticated/admin/$versionId'
 import { Route as AuthenticatedMerchantHotelsIndexRouteImport } from './routes/_authenticated/merchant.hotels.index'
 import { Route as AuthenticatedMerchantHotelsHotelIdRouteImport } from './routes/_authenticated/merchant.hotels.$hotelId'
 
@@ -45,28 +42,11 @@ const authForgetPasswordRoute = authForgetPasswordRouteImport.update({
   path: '/forget-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedAdminReviewsRoute =
   AuthenticatedAdminReviewsRouteImport.update({
-    id: '/reviews',
-    path: '/reviews',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminHotelsRoute =
-  AuthenticatedAdminHotelsRouteImport.update({
-    id: '/hotels',
-    path: '/hotels',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminVersionIdRoute =
-  AuthenticatedAdminVersionIdRouteImport.update({
-    id: '/$versionId',
-    path: '/$versionId',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
+    id: '/admin/reviews',
+    path: '/admin/reviews',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMerchantHotelsIndexRoute =
   AuthenticatedMerchantHotelsIndexRouteImport.update({
@@ -83,24 +63,18 @@ const AuthenticatedMerchantHotelsHotelIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
-  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/forget-password': typeof authForgetPasswordRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
-  '/admin/$versionId': typeof AuthenticatedAdminVersionIdRoute
-  '/admin/hotels': typeof AuthenticatedAdminHotelsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/merchant/hotels/$hotelId': typeof AuthenticatedMerchantHotelsHotelIdRoute
   '/merchant/hotels/': typeof AuthenticatedMerchantHotelsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/forget-password': typeof authForgetPasswordRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
   '/': typeof AuthenticatedIndexRoute
-  '/admin/$versionId': typeof AuthenticatedAdminVersionIdRoute
-  '/admin/hotels': typeof AuthenticatedAdminHotelsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/merchant/hotels/$hotelId': typeof AuthenticatedMerchantHotelsHotelIdRoute
   '/merchant/hotels': typeof AuthenticatedMerchantHotelsIndexRoute
@@ -108,13 +82,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/(auth)/forget-password': typeof authForgetPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/register': typeof authRegisterRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/_authenticated/admin/$versionId': typeof AuthenticatedAdminVersionIdRoute
-  '/_authenticated/admin/hotels': typeof AuthenticatedAdminHotelsRoute
   '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/_authenticated/merchant/hotels/$hotelId': typeof AuthenticatedMerchantHotelsHotelIdRoute
   '/_authenticated/merchant/hotels/': typeof AuthenticatedMerchantHotelsIndexRoute
@@ -123,37 +94,28 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
     | '/forget-password'
     | '/login'
     | '/register'
-    | '/admin/$versionId'
-    | '/admin/hotels'
     | '/admin/reviews'
     | '/merchant/hotels/$hotelId'
     | '/merchant/hotels/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/admin'
     | '/forget-password'
     | '/login'
     | '/register'
     | '/'
-    | '/admin/$versionId'
-    | '/admin/hotels'
     | '/admin/reviews'
     | '/merchant/hotels/$hotelId'
     | '/merchant/hotels'
   id:
     | '__root__'
     | '/_authenticated'
-    | '/_authenticated/admin'
     | '/(auth)/forget-password'
     | '/(auth)/login'
     | '/(auth)/register'
     | '/_authenticated/'
-    | '/_authenticated/admin/$versionId'
-    | '/_authenticated/admin/hotels'
     | '/_authenticated/admin/reviews'
     | '/_authenticated/merchant/hotels/$hotelId'
     | '/_authenticated/merchant/hotels/'
@@ -203,33 +165,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authForgetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/admin/reviews': {
       id: '/_authenticated/admin/reviews'
-      path: '/reviews'
+      path: '/admin/reviews'
       fullPath: '/admin/reviews'
       preLoaderRoute: typeof AuthenticatedAdminReviewsRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/hotels': {
-      id: '/_authenticated/admin/hotels'
-      path: '/hotels'
-      fullPath: '/admin/hotels'
-      preLoaderRoute: typeof AuthenticatedAdminHotelsRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/$versionId': {
-      id: '/_authenticated/admin/$versionId'
-      path: '/$versionId'
-      fullPath: '/admin/$versionId'
-      preLoaderRoute: typeof AuthenticatedAdminVersionIdRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/merchant/hotels/': {
       id: '/_authenticated/merchant/hotels/'
@@ -248,34 +189,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedAdminRouteRouteChildren {
-  AuthenticatedAdminVersionIdRoute: typeof AuthenticatedAdminVersionIdRoute
-  AuthenticatedAdminHotelsRoute: typeof AuthenticatedAdminHotelsRoute
-  AuthenticatedAdminReviewsRoute: typeof AuthenticatedAdminReviewsRoute
-}
-
-const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
-  {
-    AuthenticatedAdminVersionIdRoute: AuthenticatedAdminVersionIdRoute,
-    AuthenticatedAdminHotelsRoute: AuthenticatedAdminHotelsRoute,
-    AuthenticatedAdminReviewsRoute: AuthenticatedAdminReviewsRoute,
-  }
-
-const AuthenticatedAdminRouteRouteWithChildren =
-  AuthenticatedAdminRouteRoute._addFileChildren(
-    AuthenticatedAdminRouteRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAdminReviewsRoute: typeof AuthenticatedAdminReviewsRoute
   AuthenticatedMerchantHotelsHotelIdRoute: typeof AuthenticatedMerchantHotelsHotelIdRoute
   AuthenticatedMerchantHotelsIndexRoute: typeof AuthenticatedMerchantHotelsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAdminReviewsRoute: AuthenticatedAdminReviewsRoute,
   AuthenticatedMerchantHotelsHotelIdRoute:
     AuthenticatedMerchantHotelsHotelIdRoute,
   AuthenticatedMerchantHotelsIndexRoute: AuthenticatedMerchantHotelsIndexRoute,

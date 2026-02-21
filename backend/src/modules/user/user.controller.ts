@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Get,
+  // Get,
   HttpCode,
   HttpStatus,
   Logger,
@@ -16,12 +16,10 @@ import {
 import { UserService } from './user.service';
 
 import { Public } from '@/utils/decorators/public.decorator';
-import { User } from '@/utils/decorators/user.decorator';
 import { ApiUserTypes, userFrom } from '@yisu/shared';
 import { ZodValidationPipe } from '@/pipes/zod-validate.pipe';
 import { Env } from '@/utils/decorators/env.decorator';
 import { Throttle } from '@nestjs/throttler';
-import { JwtPayload } from '@/utils/jwt/types';
 
 
 @Controller('user')
@@ -55,10 +53,10 @@ export class UserController {
   // async info(@Query('uid', ParseIntPipe) uid: string) {
   //   return await this.userService.publicInfo(uid);
   // }
-  @Get('self')
-  async self(@User() user: JwtPayload){
-    return await this.userService.privateInfo(user.sub)
-  }
+  // @Get('self')
+  // async self(@User() user: JwtPayload){
+  //   return await this.userService.privateInfo(user.sub)
+  // }
   // @Put('info')
   // async updateInfo(@Body(ZodValidationPipe.userUpdateInfoSchema) body: ApiUserTypes['UserUpdateInfo'], @User() user: JwtPayload) {
   //   return await this.userService.updateInfo({...body, uid: user.uid});

@@ -11,7 +11,7 @@ import axios from "axios";
 import z from "zod";
 
 // 通用响应数据格式
-export interface ApiResponse<T = unknown> extends BaseResponse<T> { }
+export interface ApiResponse<T = unknown> extends BaseResponse<T> {}
 
 /**
  * AxiosClientOptions
@@ -27,20 +27,35 @@ export interface ApiResponse<T = unknown> extends BaseResponse<T> { }
 interface AxiosClientOptions {
   baseURL: string;
   timeout: number;
-  headers: CreateAxiosDefaults['headers'];
+  headers: CreateAxiosDefaults["headers"];
   onTokenGet: () => string | null;
   onTokenRemove: () => void;
 
-  onRequest?: (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig;
-  onResponse?: (response: AxiosResponse<ApiResponse>) => AxiosResponse<ApiResponse>;
+  onRequest?: (
+    config: InternalAxiosRequestConfig,
+  ) => InternalAxiosRequestConfig;
+  onResponse?: (
+    response: AxiosResponse<ApiResponse>,
+  ) => AxiosResponse<ApiResponse>;
   onError?: (error: AxiosError) => AxiosError;
 }
 
 export let axiosClientRef: AxiosInstance | undefined = void 0;
 
 // 创建axios实例
-export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance {
-  const { baseURL, timeout, headers, onRequest, onResponse, onError, onTokenGet, onTokenRemove } = options;
+export function createAxiosInstance(
+  options: AxiosClientOptions,
+): AxiosInstance {
+  const {
+    baseURL,
+    timeout,
+    headers,
+    onRequest,
+    onResponse,
+    onError,
+    onTokenGet,
+    onTokenRemove,
+  } = options;
   const instance = axios.create({
     baseURL,
     timeout,
@@ -53,15 +68,6 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
       const token = onTokenGet();
       if (token) {
         config.headers.Authorization = token;
-        // 调试日志
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔑 Token attached:', token.substring(0, 20) + '...');
-        }
-      } else {
-        // 调试日志
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('⚠️ No token found for request:', config.url);
-        }
       }
       onRequest?.(config);
       return config;
@@ -92,7 +98,6 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
     (error: AxiosError) => {
       // 网络错误处理
       let errorMessage = "网络请求失败";
-      let shouldRemoveToken = false;
 
       if (error.response) {
         const status = error.response.status;
@@ -102,23 +107,7 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
             break;
           case 401:
             errorMessage = "未授权，请重新登录";
-            // ⚠️ 只有在明确是 token 无效时才删除
-            // 检查是否有 refresh token 机制
-            const hasRefreshToken = error.config?.headers?.['x-refresh-token'];
-            if (!hasRefreshToken) {
-              // 没有 refresh token，说明 token 确实无效
-              shouldRemoveToken = true;
-              // 调试日志
-              if (process.env.NODE_ENV === 'development') {
-                console.error('❌ 401 Unauthorized:', {
-                  url: error.config?.url,
-                  method: error.config?.method,
-                  hasToken: !!error.config?.headers?.Authorization,
-                  tokenPreview: error.config?.headers?.Authorization?.toString().substring(0, 30),
-                  response: error.response?.data,
-                });
-              }
-            }
+            onTokenRemove();
             break;
           case 403:
             errorMessage = "拒绝访问";
@@ -143,12 +132,6 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
       ) {
         errorMessage = error.response.data.message;
       }
-
-      // 只有在确定需要时才删除 token
-      if (shouldRemoveToken) {
-        onTokenRemove();
-      }
-
       onError?.(error);
       return Promise.reject(new Error(errorMessage));
     },
@@ -161,7 +144,7 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
 /**
  * 基础请求方法，可直接传入泛型以获得接口类型提示。或者传入zod验证器进行更严格的数据校验
  * @param config - 请求配置
- * @returns 
+ * @returns
  */
 export async function request<DATA>(
   config: AxiosRequestConfig & {
@@ -203,7 +186,7 @@ export async function request<DATA>(
     }
     const result = config.responseValidator.safeParse(response.data.data);
     if (!result.success) {
-      console.error(result.error)
+      console.error(result.error);
       throw new Error(
         `请求${config.url}的响应数据格式错误:${result.error.message}`,
       );
