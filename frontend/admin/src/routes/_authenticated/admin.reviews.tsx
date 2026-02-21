@@ -1,6 +1,6 @@
-import ReviewsPage from '@/features/admin/reviews-page'
+import ReviewPage from '@/features/admin/review/pages/ReviewPage'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_authenticated/admin/reviews')({
-  component: ReviewsPage,
+  component: ReviewPage,
 })
