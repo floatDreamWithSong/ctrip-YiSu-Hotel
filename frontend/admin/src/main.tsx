@@ -1,6 +1,9 @@
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider } from '@tanstack/react-router'
+import { ConfigProvider } from 'antd'
+import zhCN from 'antd/locale/zh_CN'
+import { adminTheme } from './theme'
 import {
   queryClient,
   router,
@@ -20,9 +23,11 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <TanStackQueryProvider queryClient={queryClient}>
-        <RouterProvider router={router} />
-      </TanStackQueryProvider>
+      <ConfigProvider theme={adminTheme} locale={zhCN}>
+        <TanStackQueryProvider queryClient={queryClient}>
+          <RouterProvider router={router} />
+        </TanStackQueryProvider>
+      </ConfigProvider>
     </StrictMode>,
   )
 }

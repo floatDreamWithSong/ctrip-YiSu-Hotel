@@ -194,12 +194,28 @@ export class UserService {
     // 创建用户
     try {
       const passwordHash = await this.getPasswordHash(body.password);
+      const realm = this.getTargetRealm(from, body.isMerchant);
       const newUser = await this.prismaService.user.create({
         data: {
           email: body.email,
           password: passwordHash,
           username: body.username,
-          realm: this.getTargetRealm(from, body.isMerchant),
+          realm: realm,
+          ...(realm === Realm.ADMIN && {
+            adminProfile: {
+              create: {},
+            },
+          }),
+          ...(realm === Realm.MERCHANT && {
+            merchantProfile: {
+              create: {},
+            },
+          }),
+          ...(realm === Realm.MOBILE && {
+            mobileProfile: {
+              create: {},
+            },
+          }),
         },
       });
       return {
@@ -237,5 +253,22 @@ export class UserService {
       },
     });
     await this.verificationCodeService.deleteCode(body.email, `:${from}_${VERIFICATION_CODE_POSTFIX.USER_FORGET_PASSWORD}`);
+  }
+
+  async privateInfo(id: number) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        realm: true,
+      },
+    });
+
+    if (!user) {
+      throw EXCEPTIONS.USER_NOT_FOUND;
+    }
+    return user;
   }
 }

@@ -66,6 +66,11 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
   // 响应拦截器 - 全局错误拦截和数据格式验证
   instance.interceptors.response.use(
     (response: AxiosResponse<ApiResponse>) => {
+      // Handle 204 No Content responses as success
+      if (response.status === 204) {
+        return response;
+      }
+
       const { data: payload } = response;
       // 检查业务状态码
       if (payload.code !== 0) {
@@ -155,6 +160,12 @@ export async function request<DATA>(
       }
     }
     const response = await httpClient.request<ApiResponse<DATA>>(config);
+
+    // Handle 204 No Content responses
+    if (response.status === 204) {
+      return undefined as any;
+    }
+
     if (!config.responseValidator) {
       return response.data.data;
     }

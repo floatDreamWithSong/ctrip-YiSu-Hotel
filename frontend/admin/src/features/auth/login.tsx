@@ -7,6 +7,8 @@ import Password from 'antd/es/input/Password'
 import { useMutation } from '@tanstack/react-query'
 import { AuthRequest } from '@yisu/front-utils/apis/auth'
 import { tokenStore } from '@/lib/request'
+import { userApi } from '@yisu/front-utils/apis/user'
+import { useUserStore } from '@/store/user'
 
 type FieldType = Partial<ApiUserTypes['UserLogin']>
 
@@ -17,10 +19,16 @@ const Login = () => {
   // 登录请求
   const loginMutation = useMutation({
     mutationFn: AuthRequest.login,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       tokenStore.set(data.accessToken)
-      message.success('登录成功，正在跳转...')
-      navigate({ to: '/' })
+      try {
+        const userData = await userApi.getSelf()
+        useUserStore.getState().setUser(userData)
+        message.success('登录成功，正在跳转...')
+        navigate({ to: '/' })
+      } catch (error) {
+        message.error('获取用户信息失败，请重试')
+      }
     },
     onError: (error: Error) => {
       message.error(error.message || '登录失败，请重试')
