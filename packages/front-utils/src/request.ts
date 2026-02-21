@@ -11,7 +11,7 @@ import axios from "axios";
 import z from "zod";
 
 // 通用响应数据格式
-export interface ApiResponse<T = unknown> extends BaseResponse<T> {}
+export interface ApiResponse<T = unknown> extends BaseResponse<T> { }
 
 /**
  * AxiosClientOptions
@@ -24,7 +24,7 @@ export interface ApiResponse<T = unknown> extends BaseResponse<T> {}
  * @param onResponse - 响应拦截器
  * @param onError - 错误拦截器
  */
-interface AxiosClientOptions  {
+interface AxiosClientOptions {
   baseURL: string;
   timeout: number;
   headers: CreateAxiosDefaults['headers'];
@@ -36,7 +36,7 @@ interface AxiosClientOptions  {
   onError?: (error: AxiosError) => AxiosError;
 }
 
-export let axiosClientRef : AxiosInstance | undefined = void 0;
+export let axiosClientRef: AxiosInstance | undefined = void 0;
 
 // 创建axios实例
 export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance {
@@ -46,13 +46,22 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
     timeout,
     headers,
   });
-  
+
   // 请求拦截器 - 自动token装配
   instance.interceptors.request.use(
     async (config) => {
       const token = onTokenGet();
       if (token) {
         config.headers.Authorization = token;
+        // 调试日志
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔑 Token attached:', token.substring(0, 20) + '...');
+        }
+      } else {
+        // 调试日志
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('⚠️ No token found for request:', config.url);
+        }
       }
       onRequest?.(config);
       return config;
@@ -62,7 +71,7 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
       return Promise.reject(error);
     },
   );
-  
+
   // 响应拦截器 - 全局错误拦截和数据格式验证
   instance.interceptors.response.use(
     (response: AxiosResponse<ApiResponse>) => {
@@ -83,16 +92,33 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
     (error: AxiosError) => {
       // 网络错误处理
       let errorMessage = "网络请求失败";
-      
+      let shouldRemoveToken = false;
+
       if (error.response) {
         const status = error.response.status;
         switch (status) {
           case 400:
             errorMessage = "请求参数错误";
             break;
-            case 401:
+          case 401:
             errorMessage = "未授权，请重新登录";
-            onTokenRemove();
+            // ⚠️ 只有在明确是 token 无效时才删除
+            // 检查是否有 refresh token 机制
+            const hasRefreshToken = error.config?.headers?.['x-refresh-token'];
+            if (!hasRefreshToken) {
+              // 没有 refresh token，说明 token 确实无效
+              shouldRemoveToken = true;
+              // 调试日志
+              if (process.env.NODE_ENV === 'development') {
+                console.error('❌ 401 Unauthorized:', {
+                  url: error.config?.url,
+                  method: error.config?.method,
+                  hasToken: !!error.config?.headers?.Authorization,
+                  tokenPreview: error.config?.headers?.Authorization?.toString().substring(0, 30),
+                  response: error.response?.data,
+                });
+              }
+            }
             break;
           case 403:
             errorMessage = "拒绝访问";
@@ -117,6 +143,12 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
       ) {
         errorMessage = error.response.data.message;
       }
+
+      // 只有在确定需要时才删除 token
+      if (shouldRemoveToken) {
+        onTokenRemove();
+      }
+
       onError?.(error);
       return Promise.reject(new Error(errorMessage));
     },
@@ -138,7 +170,7 @@ export async function request<DATA>(
     paramsValidator?: z.ZodSchema;
   },
 ): Promise<DATA> {
-  if(!axiosClientRef) {
+  if (!axiosClientRef) {
     throw new Error("axiosClientRef is not defined");
   }
   const httpClient = axiosClientRef;
@@ -171,6 +203,7 @@ export async function request<DATA>(
     }
     const result = config.responseValidator.safeParse(response.data.data);
     if (!result.success) {
+      console.error(result.error)
       throw new Error(
         `请求${config.url}的响应数据格式错误:${result.error.message}`,
       );

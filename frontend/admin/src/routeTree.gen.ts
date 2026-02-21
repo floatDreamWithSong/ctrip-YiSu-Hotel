@@ -15,8 +15,11 @@ import { Route as authRegisterRouteImport } from './routes/(auth)/register'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgetPasswordRouteImport } from './routes/(auth)/forget-password'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedAdminReviewsRouteImport } from './routes/_authenticated/admin.reviews'
 import { Route as AuthenticatedAdminHotelsRouteImport } from './routes/_authenticated/admin/hotels'
 import { Route as AuthenticatedAdminVersionIdRouteImport } from './routes/_authenticated/admin/$versionId'
+import { Route as AuthenticatedMerchantHotelsIndexRouteImport } from './routes/_authenticated/merchant.hotels.index'
+import { Route as AuthenticatedMerchantHotelsHotelIdRouteImport } from './routes/_authenticated/merchant.hotels.$hotelId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -47,6 +50,12 @@ const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminReviewsRoute =
+  AuthenticatedAdminReviewsRouteImport.update({
+    id: '/reviews',
+    path: '/reviews',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminHotelsRoute =
   AuthenticatedAdminHotelsRouteImport.update({
     id: '/hotels',
@@ -59,6 +68,18 @@ const AuthenticatedAdminVersionIdRoute =
     path: '/$versionId',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedMerchantHotelsIndexRoute =
+  AuthenticatedMerchantHotelsIndexRouteImport.update({
+    id: '/merchant/hotels/',
+    path: '/merchant/hotels/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMerchantHotelsHotelIdRoute =
+  AuthenticatedMerchantHotelsHotelIdRouteImport.update({
+    id: '/merchant/hotels/$hotelId',
+    path: '/merchant/hotels/$hotelId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -68,6 +89,9 @@ export interface FileRoutesByFullPath {
   '/register': typeof authRegisterRoute
   '/admin/$versionId': typeof AuthenticatedAdminVersionIdRoute
   '/admin/hotels': typeof AuthenticatedAdminHotelsRoute
+  '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
+  '/merchant/hotels/$hotelId': typeof AuthenticatedMerchantHotelsHotelIdRoute
+  '/merchant/hotels/': typeof AuthenticatedMerchantHotelsIndexRoute
 }
 export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
@@ -77,6 +101,9 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/admin/$versionId': typeof AuthenticatedAdminVersionIdRoute
   '/admin/hotels': typeof AuthenticatedAdminHotelsRoute
+  '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
+  '/merchant/hotels/$hotelId': typeof AuthenticatedMerchantHotelsHotelIdRoute
+  '/merchant/hotels': typeof AuthenticatedMerchantHotelsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,6 +115,9 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/$versionId': typeof AuthenticatedAdminVersionIdRoute
   '/_authenticated/admin/hotels': typeof AuthenticatedAdminHotelsRoute
+  '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
+  '/_authenticated/merchant/hotels/$hotelId': typeof AuthenticatedMerchantHotelsHotelIdRoute
+  '/_authenticated/merchant/hotels/': typeof AuthenticatedMerchantHotelsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,6 +129,9 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin/$versionId'
     | '/admin/hotels'
+    | '/admin/reviews'
+    | '/merchant/hotels/$hotelId'
+    | '/merchant/hotels/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/admin'
@@ -108,6 +141,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/$versionId'
     | '/admin/hotels'
+    | '/admin/reviews'
+    | '/merchant/hotels/$hotelId'
+    | '/merchant/hotels'
   id:
     | '__root__'
     | '/_authenticated'
@@ -118,6 +154,9 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/admin/$versionId'
     | '/_authenticated/admin/hotels'
+    | '/_authenticated/admin/reviews'
+    | '/_authenticated/merchant/hotels/$hotelId'
+    | '/_authenticated/merchant/hotels/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/reviews': {
+      id: '/_authenticated/admin/reviews'
+      path: '/reviews'
+      fullPath: '/admin/reviews'
+      preLoaderRoute: typeof AuthenticatedAdminReviewsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/hotels': {
       id: '/_authenticated/admin/hotels'
       path: '/hotels'
@@ -185,18 +231,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminVersionIdRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/merchant/hotels/': {
+      id: '/_authenticated/merchant/hotels/'
+      path: '/merchant/hotels'
+      fullPath: '/merchant/hotels/'
+      preLoaderRoute: typeof AuthenticatedMerchantHotelsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/merchant/hotels/$hotelId': {
+      id: '/_authenticated/merchant/hotels/$hotelId'
+      path: '/merchant/hotels/$hotelId'
+      fullPath: '/merchant/hotels/$hotelId'
+      preLoaderRoute: typeof AuthenticatedMerchantHotelsHotelIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminVersionIdRoute: typeof AuthenticatedAdminVersionIdRoute
   AuthenticatedAdminHotelsRoute: typeof AuthenticatedAdminHotelsRoute
+  AuthenticatedAdminReviewsRoute: typeof AuthenticatedAdminReviewsRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
     AuthenticatedAdminVersionIdRoute: AuthenticatedAdminVersionIdRoute,
     AuthenticatedAdminHotelsRoute: AuthenticatedAdminHotelsRoute,
+    AuthenticatedAdminReviewsRoute: AuthenticatedAdminReviewsRoute,
   }
 
 const AuthenticatedAdminRouteRouteWithChildren =
@@ -207,11 +269,16 @@ const AuthenticatedAdminRouteRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedMerchantHotelsHotelIdRoute: typeof AuthenticatedMerchantHotelsHotelIdRoute
+  AuthenticatedMerchantHotelsIndexRoute: typeof AuthenticatedMerchantHotelsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedMerchantHotelsHotelIdRoute:
+    AuthenticatedMerchantHotelsHotelIdRoute,
+  AuthenticatedMerchantHotelsIndexRoute: AuthenticatedMerchantHotelsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

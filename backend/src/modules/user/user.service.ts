@@ -193,30 +193,31 @@ export class UserService {
     }
     // 创建用户
     try {
+      const targetRealm = this.getTargetRealm(from, body.isMerchant);
       const passwordHash = await this.getPasswordHash(body.password);
-      const realm = this.getTargetRealm(from, body.isMerchant);
-      const newUser = await this.prismaService.user.create({
-        data: {
-          email: body.email,
-          password: passwordHash,
-          username: body.username,
-          realm: realm,
-          ...(realm === Realm.ADMIN && {
-            adminProfile: {
-              create: {},
-            },
-          }),
-          ...(realm === Realm.MERCHANT && {
-            merchantProfile: {
-              create: {},
-            },
-          }),
-          ...(realm === Realm.MOBILE && {
-            mobileProfile: {
-              create: {},
-            },
-          }),
-        },
+      const newUser = await this.prismaService.$transaction(async (tx) => {
+        const createdUser = await tx.user.create({
+          data: {
+            email: body.email,
+            password: passwordHash,
+            username: body.username,
+            realm: targetRealm,
+          },
+        });
+        if (targetRealm === Realm.MOBILE) {
+          await tx.mobileProfile.create({
+            data: { userId: createdUser.id },
+          });
+        } else if (targetRealm === Realm.MERCHANT) {
+          await tx.merchantProfile.create({
+            data: { userId: createdUser.id },
+          });
+        } else {
+          await tx.adminProfile.create({
+            data: { userId: createdUser.id },
+          });
+        }
+        return createdUser;
       });
       return {
         ...this.generateTokenPair(newUser.id, newUser.realm, newUser.username),
