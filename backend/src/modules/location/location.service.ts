@@ -21,11 +21,11 @@ interface AmapRegeocodeData {
   regeocode: {
     formatted_address: string;
     addressComponent: {
-      province: string;
-      city: string;
-      district: string;
-      street: string;
-      adcode: string;
+      province: string | string[];
+      city: string | string[];
+      district: string | string[];
+      street: string | string[];
+      adcode: string | string[];
     };
   };
 }
@@ -135,13 +135,23 @@ export class LocationService {
       const { formatted_address, addressComponent } = regeocode;
       const [lng, lat] = location.split(',').map(Number);
 
+      // 高德地图在直辖市场景下会将 city/province/district 返回为空数组 []
+      const normalizeStr = (v: string | string[] | undefined): string | undefined => {
+        if (!v) return undefined;
+        if (Array.isArray(v)) return v.length > 0 ? v[0] : undefined;
+        return v;
+      };
+
+      const province = normalizeStr(addressComponent.province);
+      const city = normalizeStr(addressComponent.city) || province;
+
       return {
         formattedAddress: formatted_address,
-        province: addressComponent.province,
-        city: addressComponent.city,
-        district: addressComponent.district,
-        street: addressComponent.street,
-        adcode: addressComponent.adcode,
+        province,
+        city,
+        district: normalizeStr(addressComponent.district),
+        street: normalizeStr(addressComponent.street),
+        adcode: normalizeStr(addressComponent.adcode),
         location: { lng, lat },
       };
     } catch (error) {

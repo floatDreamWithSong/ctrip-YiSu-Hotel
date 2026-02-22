@@ -253,9 +253,9 @@ const HotelDetailPage = ({ hotelId }: Props) => {
   const infoItems = useMemo(() => hotelInfosQuery.data?.items ?? [], [hotelInfosQuery.data])
 
   return (
-    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={16} style={{ width: '100%' }}>
       <Card loading={loading}>
-        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={8} style={{ width: '100%' }}>
           <Button onClick={() => navigate({ to: '/merchant/hotels' })}>返回酒店列表</Button>
           <Typography.Title level={3} className="m-0!">
             {hotelDetailQuery.data?.hotelNickname ?? `酒店 #${hotelId}`}
@@ -286,7 +286,7 @@ const HotelDetailPage = ({ hotelId }: Props) => {
       </Card>
 
       <Card>
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
           <Space wrap>
             <Select
               allowClear
@@ -526,7 +526,7 @@ const HotelDetailPage = ({ hotelId }: Props) => {
           <Divider>轮播图</Divider>
           <Form.List name="images">
             {(fields, { add, remove }) => (
-              <Space direction="vertical" style={{ width: '100%' }}>
+              <Space orientation="vertical" style={{ width: '100%' }}>
                 {fields.map((field) => (
                   <Card key={field.key} size="small">
                     <Row gutter={12}>
@@ -569,7 +569,7 @@ const HotelDetailPage = ({ hotelId }: Props) => {
           <Divider>房型</Divider>
           <Form.List name="roomTypes">
             {(fields, { add, remove }) => (
-              <Space direction="vertical" style={{ width: '100%' }}>
+              <Space orientation="vertical" style={{ width: '100%' }}>
                 {fields.map((field) => (
                   <Card key={field.key} size="small">
                     <Row gutter={12}>

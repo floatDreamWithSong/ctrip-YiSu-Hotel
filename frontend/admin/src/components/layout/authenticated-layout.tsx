@@ -1,7 +1,12 @@
 import { tokenStore } from '@/lib/request'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { Button, Layout, Menu, Space, Typography } from 'antd'
-import { Building2, ClipboardCheck, LayoutDashboard, LogOut } from 'lucide-react'
+import {
+  Building2,
+  ClipboardCheck,
+  LayoutDashboard,
+  LogOut,
+} from 'lucide-react'
 import { getCurrentUserPayload } from '@/lib/auth'
 
 const { Header, Sider, Content } = Layout
