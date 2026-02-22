@@ -14,7 +14,8 @@ interface ReviewInfosFilter extends Record<string, unknown> {
  * 管理员端审核信息列表业务逻辑 Hook
  */
 export function useReviewInfos() {
-  const { page, pageSize, filters, pagination, updateFilter } = useTable<ReviewInfosFilter>()
+  const { page, pageSize, filters, pagination, updateFilter } =
+    useTable<ReviewInfosFilter>()
 
   const statusFilter = filters.reviewStatus
 
@@ -28,8 +29,14 @@ export function useReviewInfos() {
       }),
   })
 
-  const infos = useMemo(() => reviewInfosQuery.data?.items ?? [], [reviewInfosQuery.data])
-  const total = useMemo(() => reviewInfosQuery.data?.total ?? 0, [reviewInfosQuery.data])
+  const infos = useMemo(
+    () => reviewInfosQuery.data?.items ?? [],
+    [reviewInfosQuery.data],
+  )
+  const total = useMemo(
+    () => reviewInfosQuery.data?.total ?? 0,
+    [reviewInfosQuery.data],
+  )
 
   return {
     infos,
@@ -40,8 +47,9 @@ export function useReviewInfos() {
     },
     filter: {
       statusFilter,
-      setStatusFilter: (value: ApiHotelTypes['AdminReviewQuery']['reviewStatus']) =>
-        updateFilter('reviewStatus', value),
+      setStatusFilter: (
+        value: ApiHotelTypes['AdminReviewQuery']['reviewStatus'],
+      ) => updateFilter('reviewStatus', value),
     },
   }
 }

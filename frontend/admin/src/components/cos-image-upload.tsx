@@ -97,9 +97,7 @@ export function CosImageUpload({
 
           if (file.status === 'done') {
             const uploadedUrl =
-              typeof file.response === 'string'
-                ? file.response
-                : file.url
+              typeof file.response === 'string' ? file.response : file.url
             if (uploadedUrl) {
               onChange?.(uploadedUrl)
             }

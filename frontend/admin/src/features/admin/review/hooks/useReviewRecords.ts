@@ -17,7 +17,8 @@ interface ReviewRecordsFilter extends Record<string, unknown> {
  * 审核记录列表业务逻辑 Hook
  */
 export function useReviewRecords() {
-  const { page, pageSize, filters, pagination, updateFilter } = useTable<ReviewRecordsFilter>()
+  const { page, pageSize, filters, pagination, updateFilter } =
+    useTable<ReviewRecordsFilter>()
 
   const reviewRecordsQuery = useQuery({
     queryKey: [ADMIN_REVIEW_RECORDS_KEY, page, pageSize, filters],
@@ -33,8 +34,14 @@ export function useReviewRecords() {
       }),
   })
 
-  const records = useMemo(() => reviewRecordsQuery.data?.items ?? [], [reviewRecordsQuery.data])
-  const total = useMemo(() => reviewRecordsQuery.data?.total ?? 0, [reviewRecordsQuery.data])
+  const records = useMemo(
+    () => reviewRecordsQuery.data?.items ?? [],
+    [reviewRecordsQuery.data],
+  )
+  const total = useMemo(
+    () => reviewRecordsQuery.data?.total ?? 0,
+    [reviewRecordsQuery.data],
+  )
 
   return {
     records,
@@ -47,8 +54,9 @@ export function useReviewRecords() {
       ...filters,
       setAction: (value: ApiHotelTypes['ReviewRecordQuery']['action']) =>
         updateFilter('action', value),
-      setRejectReason: (value: ApiHotelTypes['ReviewRecordQuery']['rejectReason']) =>
-        updateFilter('rejectReason', value),
+      setRejectReason: (
+        value: ApiHotelTypes['ReviewRecordQuery']['rejectReason'],
+      ) => updateFilter('rejectReason', value),
       setStartAt: (value: string | undefined) => updateFilter('startAt', value),
       setEndAt: (value: string | undefined) => updateFilter('endAt', value),
     },

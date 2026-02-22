@@ -22,7 +22,8 @@ const parseDate = (value?: string) => {
   if (!year || !month || !day) return undefined
   return new Date(year, month - 1, day)
 }
-const normalizePositiveInt = (value?: number) => (Number.isInteger(value) && (value as number) >= 1 ? (value as number) : 1)
+const normalizePositiveInt = (value?: number) =>
+  Number.isInteger(value) && (value as number) >= 1 ? (value as number) : 1
 
 const HotelDetailPage = () => {
   const navigate = useNavigate()
@@ -31,21 +32,35 @@ const HotelDetailPage = () => {
   const numericHotelId = Number(hotelId)
   const [activeTab, setActiveTab] = useState('room')
   const searchStore = useHotelSearchStore()
-  const roomTypeIntent = (search.roomType ?? searchStore.roomType ?? 'HOTEL') as IntentRoomType
+  const roomTypeIntent = (search.roomType ??
+    searchStore.roomType ??
+    'HOTEL') as IntentRoomType
   const today = useMemo(() => {
     const date = new Date()
     date.setHours(0, 0, 0, 0)
     return date
   }, [])
 
-  const [checkIn, setCheckIn] = useState<string | undefined>(() => search.checkIn ?? searchStore.checkIn)
-  const [checkOut, setCheckOut] = useState<string | undefined>(() => search.checkOut ?? searchStore.checkOut)
-  const [targetDate, setTargetDate] = useState<string | undefined>(() => search.targetDate ?? searchStore.targetDate)
-  const [guestCount, setGuestCount] = useState(() => normalizePositiveInt(search.guestCount ?? searchStore.guestCount))
-  const [roomCount, setRoomCount] = useState(() => normalizePositiveInt(search.roomCount ?? searchStore.roomCount))
+  const [checkIn, setCheckIn] = useState<string | undefined>(
+    () => search.checkIn ?? searchStore.checkIn,
+  )
+  const [checkOut, setCheckOut] = useState<string | undefined>(
+    () => search.checkOut ?? searchStore.checkOut,
+  )
+  const [targetDate, setTargetDate] = useState<string | undefined>(
+    () => search.targetDate ?? searchStore.targetDate,
+  )
+  const [guestCount, setGuestCount] = useState(() =>
+    normalizePositiveInt(search.guestCount ?? searchStore.guestCount),
+  )
+  const [roomCount, setRoomCount] = useState(() =>
+    normalizePositiveInt(search.roomCount ?? searchStore.roomCount),
+  )
   const [hotelRangeVisible, setHotelRangeVisible] = useState(false)
   const [hourlyDateVisible, setHourlyDateVisible] = useState(false)
-  const [hotelCalendarValue, setHotelCalendarValue] = useState<[Date, Date] | null>(() => {
+  const [hotelCalendarValue, setHotelCalendarValue] = useState<
+    [Date, Date] | null
+  >(() => {
     const from = parseDate(search.checkIn ?? searchStore.checkIn)
     const to = parseDate(search.checkOut ?? searchStore.checkOut)
     return from && to ? [from, to] : null
@@ -59,7 +74,13 @@ const HotelDetailPage = () => {
     queryFn: () => MobileHotelRequest.getHotelDetail(numericHotelId),
   })
   const nearbyHotelsQuery = useQuery({
-    queryKey: ['mobile-nearby-hotels', numericHotelId, roomTypeIntent, guestCount, roomCount],
+    queryKey: [
+      'mobile-nearby-hotels',
+      numericHotelId,
+      roomTypeIntent,
+      guestCount,
+      roomCount,
+    ],
     queryFn: () =>
       MobileHotelRequest.getNearbyHotels({
         hotelId: numericHotelId,
@@ -83,7 +104,11 @@ const HotelDetailPage = () => {
   const roomTypes = useMemo(
     () =>
       (detailQuery.data?.roomTypes ?? [])
-        .filter((item) => (roomTypeIntent === 'HOURLY' ? item.priceMode === 'PER_HOUR' : item.priceMode === 'PER_NIGHT'))
+        .filter((item) =>
+          roomTypeIntent === 'HOURLY'
+            ? item.priceMode === 'PER_HOUR'
+            : item.priceMode === 'PER_NIGHT',
+        )
         .slice()
         .sort((a, b) => a.price - b.price),
     [detailQuery.data?.roomTypes, roomTypeIntent],
@@ -108,12 +133,17 @@ const HotelDetailPage = () => {
               window.history.back()
               return
             }
-            navigate({ to: '/list/$roomType', params: { roomType: roomTypeIntent } })
+            navigate({
+              to: '/list/$roomType',
+              params: { roomType: roomTypeIntent },
+            })
           }}
         >
           返回
         </button>
-        <div className="max-w-[220px] truncate text-sm font-medium">{detailQuery.data?.name ?? '酒店详情'}</div>
+        <div className="max-w-[220px] truncate text-sm font-medium">
+          {detailQuery.data?.name ?? '酒店详情'}
+        </div>
         <div className="w-8" />
       </div>
 
@@ -133,11 +163,18 @@ const HotelDetailPage = () => {
 
       <div className="mt-2 bg-white px-3 py-3">
         <div className="text-lg font-semibold">{detailQuery.data?.name}</div>
-        <div className="mt-1 text-xs text-gray-500">{detailQuery.data ? '★'.repeat(detailQuery.data.starLevel) : ''}</div>
-        <div className="mt-1 text-xs text-gray-500">{detailQuery.data?.address}</div>
+        <div className="mt-1 text-xs text-gray-500">
+          {detailQuery.data ? '★'.repeat(detailQuery.data.starLevel) : ''}
+        </div>
+        <div className="mt-1 text-xs text-gray-500">
+          {detailQuery.data?.address}
+        </div>
         <div className="mt-2 flex flex-wrap gap-1">
           {(detailQuery.data?.tags ?? []).slice(0, 8).map((tag) => (
-            <span key={tag} className="rounded-full bg-gray-100 px-2 py-[2px] text-[11px] text-gray-600">
+            <span
+              key={tag}
+              className="rounded-full bg-gray-100 px-2 py-[2px] text-[11px] text-gray-600"
+            >
               {tag}
             </span>
           ))}
@@ -145,7 +182,11 @@ const HotelDetailPage = () => {
       </div>
 
       <div className="mt-2 bg-white px-3 py-3">
-        <div className="mb-2 text-xs text-gray-500">{roomTypeIntent === 'HOURLY' ? '入住日期（钟点房）' : '入住信息（酒店）'}</div>
+        <div className="mb-2 text-xs text-gray-500">
+          {roomTypeIntent === 'HOURLY'
+            ? '入住日期（钟点房）'
+            : '入住信息（酒店）'}
+        </div>
         {roomTypeIntent === 'HOTEL' ? (
           <>
             <button
@@ -157,7 +198,9 @@ const HotelDetailPage = () => {
                 setHotelRangeVisible(true)
               }}
             >
-              {checkIn && checkOut ? `${checkIn} 至 ${checkOut}` : '选择入住/离店日期'}
+              {checkIn && checkOut
+                ? `${checkIn} 至 ${checkOut}`
+                : '选择入住/离店日期'}
             </button>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <div>
@@ -167,7 +210,9 @@ const HotelDetailPage = () => {
                   min={1}
                   value={guestCount}
                   onChange={(event) => {
-                    const next = normalizePositiveInt(event.target.valueAsNumber)
+                    const next = normalizePositiveInt(
+                      event.target.valueAsNumber,
+                    )
                     setGuestCount(next)
                     searchStore.setState({ guestCount: next })
                   }}
@@ -181,7 +226,9 @@ const HotelDetailPage = () => {
                   min={1}
                   value={roomCount}
                   onChange={(event) => {
-                    const next = normalizePositiveInt(event.target.valueAsNumber)
+                    const next = normalizePositiveInt(
+                      event.target.valueAsNumber,
+                    )
                     setRoomCount(next)
                     searchStore.setState({ roomCount: next })
                   }}
@@ -189,7 +236,9 @@ const HotelDetailPage = () => {
                 />
               </div>
             </div>
-            <div className="mt-2 text-xs text-gray-500">{nights ? `共 ${nights} 晚` : '请选择入住和离店日期'}</div>
+            <div className="mt-2 text-xs text-gray-500">
+              {nights ? `共 ${nights} 晚` : '请选择入住和离店日期'}
+            </div>
           </>
         ) : (
           <button
@@ -216,7 +265,11 @@ const HotelDetailPage = () => {
       <div className="px-3 py-2">
         {activeTab === 'room' && (
           <div className="space-y-2">
-            {roomTypes.length === 0 && <div className="rounded-xl bg-white p-3 text-xs text-gray-500">暂无匹配房型</div>}
+            {roomTypes.length === 0 && (
+              <div className="rounded-xl bg-white p-3 text-xs text-gray-500">
+                暂无匹配房型
+              </div>
+            )}
             {roomTypes.map((room) => (
               <div key={room.id} className="rounded-xl bg-white p-3">
                 <div className="text-sm font-medium">{room.name}</div>
@@ -231,7 +284,10 @@ const HotelDetailPage = () => {
                 {room.slots.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {room.slots.map((slot) => (
-                      <span key={slot.id} className="rounded-full bg-gray-100 px-2 py-[2px] text-[11px] text-gray-600">
+                      <span
+                        key={slot.id}
+                        className="rounded-full bg-gray-100 px-2 py-[2px] text-[11px] text-gray-600"
+                      >
                         {slot.startTime}-{slot.endTime}
                       </span>
                     ))}
@@ -241,22 +297,39 @@ const HotelDetailPage = () => {
             ))}
           </div>
         )}
-        {activeTab === 'intro' && <div className="rounded-xl bg-white p-3 text-sm text-gray-700">{intro}</div>}
+        {activeTab === 'intro' && (
+          <div className="rounded-xl bg-white p-3 text-sm text-gray-700">
+            {intro}
+          </div>
+        )}
         {activeTab === 'poi' && (
           <div className="space-y-2">
-            {(['scenic', 'food', 'entertainment', 'traffic'] as const).map((key) => (
-              <div key={key} className="rounded-xl bg-white p-3">
-                <div className="mb-2 text-sm font-medium">
-                  {key === 'scenic' ? '景点' : key === 'food' ? '餐饮' : key === 'entertainment' ? '娱乐' : '交通'}
-                </div>
-                {(poiGroups?.[key] ?? []).slice(0, 6).map((poi) => (
-                  <div key={poi.id} className="mb-1 flex items-center justify-between text-xs text-gray-600">
-                    <span className="truncate">{poi.name}</span>
-                    <span>{poi.distance ? `${Math.round(poi.distance)}m` : '-'}</span>
+            {(['scenic', 'food', 'entertainment', 'traffic'] as const).map(
+              (key) => (
+                <div key={key} className="rounded-xl bg-white p-3">
+                  <div className="mb-2 text-sm font-medium">
+                    {key === 'scenic'
+                      ? '景点'
+                      : key === 'food'
+                        ? '餐饮'
+                        : key === 'entertainment'
+                          ? '娱乐'
+                          : '交通'}
                   </div>
-                ))}
-              </div>
-            ))}
+                  {(poiGroups?.[key] ?? []).slice(0, 6).map((poi) => (
+                    <div
+                      key={poi.id}
+                      className="mb-1 flex items-center justify-between text-xs text-gray-600"
+                    >
+                      <span className="truncate">{poi.name}</span>
+                      <span>
+                        {poi.distance ? `${Math.round(poi.distance)}m` : '-'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ),
+            )}
           </div>
         )}
         {activeTab === 'nearby' && (
@@ -272,10 +345,14 @@ const HotelDetailPage = () => {
                     search: {
                       roomType: roomTypeIntent,
                       checkIn: roomTypeIntent === 'HOTEL' ? checkIn : undefined,
-                      checkOut: roomTypeIntent === 'HOTEL' ? checkOut : undefined,
-                      targetDate: roomTypeIntent === 'HOURLY' ? targetDate : undefined,
-                      guestCount: roomTypeIntent === 'HOTEL' ? guestCount : undefined,
-                      roomCount: roomTypeIntent === 'HOTEL' ? roomCount : undefined,
+                      checkOut:
+                        roomTypeIntent === 'HOTEL' ? checkOut : undefined,
+                      targetDate:
+                        roomTypeIntent === 'HOURLY' ? targetDate : undefined,
+                      guestCount:
+                        roomTypeIntent === 'HOTEL' ? guestCount : undefined,
+                      roomCount:
+                        roomTypeIntent === 'HOTEL' ? roomCount : undefined,
                     },
                   })
                 }

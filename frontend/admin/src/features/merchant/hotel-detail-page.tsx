@@ -1,5 +1,8 @@
 import { MerchantHotelRequest } from '@/apis/hotel'
-import { AddressAutoComplete, useAddressLocate } from '@/components/address-input'
+import {
+  AddressAutoComplete,
+  useAddressLocate,
+} from '@/components/address-input'
 import { CosImageUpload } from '@/components/cos-image-upload'
 import { TagInput } from '@/components/tag-input'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -32,9 +35,21 @@ import { LocateFixed } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 const HOTEL_TAG_PRESETS = [
-  '免费WiFi', '停车场', '游泳池', '健身房', '餐厅',
-  '会议室', '接送服务', '行李寄存', '24小时前台', '无烟房',
-  '空调', '洗衣服务', '商务中心', '儿童设施', '宠物友好',
+  '免费WiFi',
+  '停车场',
+  '游泳池',
+  '健身房',
+  '餐厅',
+  '会议室',
+  '接送服务',
+  '行李寄存',
+  '24小时前台',
+  '无烟房',
+  '空调',
+  '洗衣服务',
+  '商务中心',
+  '儿童设施',
+  '宠物友好',
 ]
 
 const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
@@ -72,7 +87,8 @@ const HotelDetailPage = ({ hotelId }: Props) => {
   const queryClient = useQueryClient()
   const [infoPage, setInfoPage] = useState(1)
   const [infoLimit, setInfoLimit] = useState(10)
-  const [statusFilter, setStatusFilter] = useState<ApiHotelTypes['HotelInfoQuery']['reviewStatus']>()
+  const [statusFilter, setStatusFilter] =
+    useState<ApiHotelTypes['HotelInfoQuery']['reviewStatus']>()
   const [formOpen, setFormOpen] = useState(false)
   const [editingInfoId, setEditingInfoId] = useState<number | null>(null)
   const [form] = Form.useForm<HotelInfoFormValues>()
@@ -84,7 +100,13 @@ const HotelDetailPage = ({ hotelId }: Props) => {
   })
 
   const hotelInfosQuery = useQuery({
-    queryKey: [HOTEL_INFOS_QUERY_KEY, hotelId, infoPage, infoLimit, statusFilter],
+    queryKey: [
+      HOTEL_INFOS_QUERY_KEY,
+      hotelId,
+      infoPage,
+      infoLimit,
+      statusFilter,
+    ],
     queryFn: () =>
       MerchantHotelRequest.getHotelInfos(hotelId, {
         page: infoPage,
@@ -95,14 +117,20 @@ const HotelDetailPage = ({ hotelId }: Props) => {
 
   const refresh = async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: [HOTEL_DETAIL_QUERY_KEY, hotelId] }),
-      queryClient.invalidateQueries({ queryKey: [HOTEL_INFOS_QUERY_KEY, hotelId] }),
+      queryClient.invalidateQueries({
+        queryKey: [HOTEL_DETAIL_QUERY_KEY, hotelId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [HOTEL_INFOS_QUERY_KEY, hotelId],
+      }),
     ])
   }
 
   const updateHomeAdMutation = useMutation({
-    mutationFn: (params: { hotelId: number; data: ApiHotelTypes['HotelUpdateHomeAd'] }) =>
-      MerchantHotelRequest.updateHomeAdEnabled(params.hotelId, params.data),
+    mutationFn: (params: {
+      hotelId: number
+      data: ApiHotelTypes['HotelUpdateHomeAd']
+    }) => MerchantHotelRequest.updateHomeAdEnabled(params.hotelId, params.data),
     onSuccess: () => {
       message.success('首页广告推送设置已更新')
       void refresh()
@@ -137,7 +165,8 @@ const HotelDetailPage = ({ hotelId }: Props) => {
   })
 
   const deleteInfoMutation = useMutation({
-    mutationFn: (infoId: number) => MerchantHotelRequest.deleteHotelInfo(hotelId, infoId),
+    mutationFn: (infoId: number) =>
+      MerchantHotelRequest.deleteHotelInfo(hotelId, infoId),
     onSuccess: () => {
       message.success('酒店信息已删除')
       void refresh()
@@ -146,7 +175,8 @@ const HotelDetailPage = ({ hotelId }: Props) => {
   })
 
   const duplicateInfoMutation = useMutation({
-    mutationFn: (infoId: number) => MerchantHotelRequest.duplicateHotelInfo(hotelId, infoId),
+    mutationFn: (infoId: number) =>
+      MerchantHotelRequest.duplicateHotelInfo(hotelId, infoId),
     onSuccess: () => {
       message.success('酒店信息副本创建成功')
       void refresh()
@@ -155,7 +185,8 @@ const HotelDetailPage = ({ hotelId }: Props) => {
   })
 
   const submitInfoMutation = useMutation({
-    mutationFn: (infoId: number) => MerchantHotelRequest.submitHotelInfo(hotelId, infoId),
+    mutationFn: (infoId: number) =>
+      MerchantHotelRequest.submitHotelInfo(hotelId, infoId),
     onSuccess: () => {
       message.success('已提交审核')
       void refresh()
@@ -164,7 +195,8 @@ const HotelDetailPage = ({ hotelId }: Props) => {
   })
 
   const withdrawInfoMutation = useMutation({
-    mutationFn: (infoId: number) => MerchantHotelRequest.withdrawHotelInfo(hotelId, infoId),
+    mutationFn: (infoId: number) =>
+      MerchantHotelRequest.withdrawHotelInfo(hotelId, infoId),
     onSuccess: () => {
       message.success('已撤回到待发布状态')
       void refresh()
@@ -173,7 +205,8 @@ const HotelDetailPage = ({ hotelId }: Props) => {
   })
 
   const offlineInfoMutation = useMutation({
-    mutationFn: (infoId: number) => MerchantHotelRequest.offlineHotelInfo(hotelId, infoId),
+    mutationFn: (infoId: number) =>
+      MerchantHotelRequest.offlineHotelInfo(hotelId, infoId),
     onSuccess: () => {
       message.success('已下线')
       void refresh()
@@ -250,19 +283,28 @@ const HotelDetailPage = ({ hotelId }: Props) => {
   }
 
   const loading = hotelDetailQuery.isLoading || hotelInfosQuery.isLoading
-  const infoItems = useMemo(() => hotelInfosQuery.data?.items ?? [], [hotelInfosQuery.data])
+  const infoItems = useMemo(
+    () => hotelInfosQuery.data?.items ?? [],
+    [hotelInfosQuery.data],
+  )
 
   return (
     <Space orientation="vertical" size={16} style={{ width: '100%' }}>
       <Card loading={loading}>
         <Space orientation="vertical" size={8} style={{ width: '100%' }}>
-          <Button onClick={() => navigate({ to: '/merchant/hotels' })}>返回酒店列表</Button>
+          <Button onClick={() => navigate({ to: '/merchant/hotels' })}>
+            返回酒店列表
+          </Button>
           <Typography.Title level={3} className="m-0!">
             {hotelDetailQuery.data?.hotelNickname ?? `酒店 #${hotelId}`}
           </Typography.Title>
           <Descriptions bordered size="small" column={3}>
-            <Descriptions.Item label="酒店ID">{hotelDetailQuery.data?.id}</Descriptions.Item>
-            <Descriptions.Item label="信息总数">{hotelDetailQuery.data?.infoCount ?? 0}</Descriptions.Item>
+            <Descriptions.Item label="酒店ID">
+              {hotelDetailQuery.data?.id}
+            </Descriptions.Item>
+            <Descriptions.Item label="信息总数">
+              {hotelDetailQuery.data?.infoCount ?? 0}
+            </Descriptions.Item>
             <Descriptions.Item label="当前发布信息ID">
               {hotelDetailQuery.data?.publishedInfoId ?? '暂无'}
             </Descriptions.Item>
@@ -359,7 +401,10 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                     <Button
                       size="small"
                       onClick={() => duplicateInfoMutation.mutate(record.id)}
-                      loading={duplicateInfoMutation.isPending && duplicateInfoMutation.variables === record.id}
+                      loading={
+                        duplicateInfoMutation.isPending &&
+                        duplicateInfoMutation.variables === record.id
+                      }
                     >
                       创建副本
                     </Button>
@@ -372,23 +417,36 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                         record.reviewStatus !== HotelReviewStatus.REJECTED
                       }
                       onClick={() => submitInfoMutation.mutate(record.id)}
-                      loading={submitInfoMutation.isPending && submitInfoMutation.variables === record.id}
+                      loading={
+                        submitInfoMutation.isPending &&
+                        submitInfoMutation.variables === record.id
+                      }
                     >
                       发布
                     </Button>
                     <Button
                       size="small"
-                      disabled={record.reviewStatus !== HotelReviewStatus.PENDING}
+                      disabled={
+                        record.reviewStatus !== HotelReviewStatus.PENDING
+                      }
                       onClick={() => withdrawInfoMutation.mutate(record.id)}
-                      loading={withdrawInfoMutation.isPending && withdrawInfoMutation.variables === record.id}
+                      loading={
+                        withdrawInfoMutation.isPending &&
+                        withdrawInfoMutation.variables === record.id
+                      }
                     >
                       撤回
                     </Button>
                     <Button
                       size="small"
-                      disabled={record.reviewStatus !== HotelReviewStatus.APPROVED}
+                      disabled={
+                        record.reviewStatus !== HotelReviewStatus.APPROVED
+                      }
                       onClick={() => offlineInfoMutation.mutate(record.id)}
-                      loading={offlineInfoMutation.isPending && offlineInfoMutation.variables === record.id}
+                      loading={
+                        offlineInfoMutation.isPending &&
+                        offlineInfoMutation.variables === record.id
+                      }
                     >
                       下线
                     </Button>
@@ -399,7 +457,10 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                       <Button
                         danger
                         size="small"
-                        loading={deleteInfoMutation.isPending && deleteInfoMutation.variables === record.id}
+                        loading={
+                          deleteInfoMutation.isPending &&
+                          deleteInfoMutation.variables === record.id
+                        }
                       >
                         删除
                       </Button>
@@ -414,21 +475,33 @@ const HotelDetailPage = ({ hotelId }: Props) => {
 
       <Modal
         width={1000}
-        title={editingInfoId ? `编辑酒店信息 #${editingInfoId}` : '创建酒店信息'}
+        title={
+          editingInfoId ? `编辑酒店信息 #${editingInfoId}` : '创建酒店信息'
+        }
         open={formOpen}
         onCancel={() => setFormOpen(false)}
         onOk={() => void onSubmitInfoForm()}
-        confirmLoading={createInfoMutation.isPending || updateInfoMutation.isPending}
+        confirmLoading={
+          createInfoMutation.isPending || updateInfoMutation.isPending
+        }
       >
         <Form form={form} layout="vertical">
           <Row gutter={12}>
             <Col span={8}>
-              <Form.Item name="infoNickname" label="信息昵称" rules={[{ required: true }]}>
+              <Form.Item
+                name="infoNickname"
+                label="信息昵称"
+                rules={[{ required: true }]}
+              >
                 <Input placeholder="仅商家可见" />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="name" label="酒店名称" rules={[{ required: true }]}>
+              <Form.Item
+                name="name"
+                label="酒店名称"
+                rules={[{ required: true }]}
+              >
                 <Input />
               </Form.Item>
             </Col>
@@ -438,7 +511,11 @@ const HotelDetailPage = ({ hotelId }: Props) => {
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="starLevel" label="酒店星级" rules={[{ required: true }]}>
+              <Form.Item
+                name="starLevel"
+                label="酒店星级"
+                rules={[{ required: true }]}
+              >
                 <InputNumber min={1} max={5} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
@@ -451,12 +528,17 @@ const HotelDetailPage = ({ hotelId }: Props) => {
               <Form.Item
                 name="openedAt"
                 label="开业时间"
-                getValueProps={(val) => ({ value: val ? dayjs(val) : undefined })}
+                getValueProps={(val) => ({
+                  value: val ? dayjs(val) : undefined,
+                })}
                 getValueFromEvent={(date: dayjs.Dayjs | null) =>
                   date ? date.toISOString() : undefined
                 }
               >
-                <DatePicker style={{ width: '100%' }} placeholder="请选择开业时间" />
+                <DatePicker
+                  style={{ width: '100%' }}
+                  placeholder="请选择开业时间"
+                />
               </Form.Item>
             </Col>
             <Col span={24}>
@@ -497,7 +579,11 @@ const HotelDetailPage = ({ hotelId }: Props) => {
               </Form.Item>
             </Col>
             <Col span={24}>
-              <Form.Item name="address" label="详细地址" rules={[{ required: true }]}>
+              <Form.Item
+                name="address"
+                label="详细地址"
+                rules={[{ required: true }]}
+              >
                 <AddressAutoComplete form={form} />
               </Form.Item>
             </Col>
@@ -561,7 +647,9 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                     </Row>
                   </Card>
                 ))}
-                <Button onClick={() => add({ url: '', sortOrder: 0 })}>新增轮播图</Button>
+                <Button onClick={() => add({ url: '', sortOrder: 0 })}>
+                  新增轮播图
+                </Button>
               </Space>
             )}
           </Form.List>
@@ -639,7 +727,10 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                         </Button>
                       </Col>
                       <Col span={6}>
-                        <Form.Item name={[field.name, 'bedType']} label="床型说明">
+                        <Form.Item
+                          name={[field.name, 'bedType']}
+                          label="床型说明"
+                        >
                           <Input />
                         </Form.Item>
                       </Col>
@@ -649,7 +740,10 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                         </Form.Item>
                       </Col>
                       <Col span={6}>
-                        <Form.Item name={[field.name, 'imageUrl']} label="参考图">
+                        <Form.Item
+                          name={[field.name, 'imageUrl']}
+                          label="参考图"
+                        >
                           <CosImageUpload dir="hotel-room" />
                         </Form.Item>
                       </Col>
@@ -665,7 +759,11 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                     </Row>
                     <Form.Item shouldUpdate noStyle>
                       {() => {
-                        const mode = form.getFieldValue(['roomTypes', field.name, 'priceMode']) as string | undefined
+                        const mode = form.getFieldValue([
+                          'roomTypes',
+                          field.name,
+                          'priceMode',
+                        ]) as string | undefined
                         if (mode !== PriceMode.PER_HOUR) {
                           return null
                         }
@@ -673,8 +771,14 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                           <>
                             <Divider>钟点时段</Divider>
                             <Form.List name={[field.name, 'hourlySlots']}>
-                              {(slotFields, { add: addSlot, remove: removeSlot }) => (
-                                <Space direction="vertical" style={{ width: '100%' }}>
+                              {(
+                                slotFields,
+                                { add: addSlot, remove: removeSlot },
+                              ) => (
+                                <Space
+                                  direction="vertical"
+                                  style={{ width: '100%' }}
+                                >
                                   {slotFields.map((slotField) => (
                                     <Row gutter={12} key={slotField.key}>
                                       <Col span={6}>
@@ -684,13 +788,27 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                                           rules={[
                                             { required: true },
                                             {
-                                              validator: async (_, value: string) => {
+                                              validator: async (
+                                                _,
+                                                value: string,
+                                              ) => {
                                                 if (!value) return
-                                                const duration = Number(form.getFieldValue(['roomTypes', field.name, 'duration']) ?? 0)
-                                                if (!duration || duration < 1) return
-                                                const endMinutes = parseTimeToMinutes(value) + duration * 60
+                                                const duration = Number(
+                                                  form.getFieldValue([
+                                                    'roomTypes',
+                                                    field.name,
+                                                    'duration',
+                                                  ]) ?? 0,
+                                                )
+                                                if (!duration || duration < 1)
+                                                  return
+                                                const endMinutes =
+                                                  parseTimeToMinutes(value) +
+                                                  duration * 60
                                                 if (endMinutes > 24 * 60) {
-                                                  throw new Error('时段结束时间不能超过24:00')
+                                                  throw new Error(
+                                                    '时段结束时间不能超过24:00',
+                                                  )
                                                 }
                                               },
                                             },
@@ -701,11 +819,17 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                                       </Col>
                                       <Col span={14}>
                                         <div className="pt-8 text-xs text-gray-500">
-                                          结束时间将按 房型时长单位(duration) 自动推导
+                                          结束时间将按 房型时长单位(duration)
+                                          自动推导
                                         </div>
                                       </Col>
                                       <Col span={4}>
-                                        <Button danger onClick={() => removeSlot(slotField.name)}>
+                                        <Button
+                                          danger
+                                          onClick={() =>
+                                            removeSlot(slotField.name)
+                                          }
+                                        >
                                           删
                                         </Button>
                                       </Col>

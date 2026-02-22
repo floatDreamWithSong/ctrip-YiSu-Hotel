@@ -65,9 +65,7 @@ const Register = () => {
     const email = form.getFieldValue('email')
     if (!email) {
       message.warning('请先输入邮箱地址')
-      form.setFields([
-        { name: 'email', errors: ['请输入邮箱地址'] }
-      ])
+      form.setFields([{ name: 'email', errors: ['请输入邮箱地址'] }])
       return
     }
     try {
@@ -86,7 +84,12 @@ const Register = () => {
       return
     }
 
-    if (!registerData.email || !registerData.username || !registerData.password || !registerData.verifyCode) {
+    if (
+      !registerData.email ||
+      !registerData.username ||
+      !registerData.password ||
+      !registerData.verifyCode
+    ) {
       message.error('请填写所有必填项')
       return
     }
@@ -152,10 +155,7 @@ const Register = () => {
             },
           ]}
         >
-          <Password
-            placeholder="请输入密码"
-            type="password"
-          />
+          <Password placeholder="请输入密码" type="password" />
         </Form.Item>
 
         <Form.Item<FieldType>
@@ -173,10 +173,7 @@ const Register = () => {
             }),
           ]}
         >
-          <Password
-            placeholder="请确认密码"
-            type="password"
-          />
+          <Password placeholder="请确认密码" type="password" />
         </Form.Item>
 
         <Form.Item<FieldType>

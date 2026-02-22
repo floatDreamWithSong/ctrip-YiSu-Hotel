@@ -10,7 +10,11 @@ interface HotelListFilterProps {
  * 酒店列表筛选栏组件
  * 包含搜索框和创建按钮
  */
-export function HotelListFilter({ keyword, onSearch, onOpenCreate }: HotelListFilterProps) {
+export function HotelListFilter({
+  keyword,
+  onSearch,
+  onOpenCreate,
+}: HotelListFilterProps) {
   return (
     <Space wrap>
       <Input.Search

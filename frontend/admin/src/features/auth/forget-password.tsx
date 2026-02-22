@@ -64,9 +64,7 @@ const ForgetPassword = () => {
     const email = form.getFieldValue('email')
     if (!email) {
       message.warning('请先输入邮箱地址')
-      form.setFields([
-        { name: 'email', errors: ['请输入邮箱地址'] }
-      ])
+      form.setFields([{ name: 'email', errors: ['请输入邮箱地址'] }])
       return
     }
     try {

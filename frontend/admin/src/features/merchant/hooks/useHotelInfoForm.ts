@@ -17,14 +17,23 @@ type HotelInfoFormValues = ApiHotelTypes['HotelInfoCreate']
  */
 export function useHotelInfoForm(hotelId: number) {
   const queryClient = useQueryClient()
-  const { open, data: editingInfoId, openModal, closeModal } = useModal<number>()
+  const {
+    open,
+    data: editingInfoId,
+    openModal,
+    closeModal,
+  } = useModal<number>()
   const [form] = Form.useForm<HotelInfoFormValues>()
   const { locating, handleLocate } = useAddressLocate(form)
 
   const refresh = useCallback(() => {
     void Promise.all([
-      queryClient.invalidateQueries({ queryKey: [HOTEL_DETAIL_QUERY_KEY, hotelId] }),
-      queryClient.invalidateQueries({ queryKey: [HOTEL_INFOS_QUERY_KEY, hotelId] }),
+      queryClient.invalidateQueries({
+        queryKey: [HOTEL_DETAIL_QUERY_KEY, hotelId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [HOTEL_INFOS_QUERY_KEY, hotelId],
+      }),
     ])
   }, [queryClient, hotelId])
 
@@ -109,8 +118,8 @@ export function useHotelInfoForm(hotelId: number) {
       roomTypes: values.roomTypes ?? [],
       location:
         values.location &&
-          typeof values.location.lng === 'number' &&
-          typeof values.location.lat === 'number'
+        typeof values.location.lng === 'number' &&
+        typeof values.location.lat === 'number'
           ? values.location
           : undefined,
     }

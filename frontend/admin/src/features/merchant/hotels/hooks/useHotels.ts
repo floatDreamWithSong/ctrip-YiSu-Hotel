@@ -16,7 +16,8 @@ interface HotelsFilter extends Record<string, unknown> {
  */
 export function useHotels() {
   const queryClient = useQueryClient()
-  const { page, pageSize, filters, pagination, updateFilter } = useTable<HotelsFilter>()
+  const { page, pageSize, filters, pagination, updateFilter } =
+    useTable<HotelsFilter>()
 
   const keyword = filters.keyword
 
@@ -46,7 +47,7 @@ export function useHotels() {
     (value: string) => {
       updateFilter('keyword', value)
     },
-    [updateFilter]
+    [updateFilter],
   )
 
   // 处理删除
@@ -54,7 +55,7 @@ export function useHotels() {
     (hotelId: number) => {
       deleteHotelMutation.mutate(hotelId)
     },
-    [deleteHotelMutation]
+    [deleteHotelMutation],
   )
 
   // 刷新列表
@@ -62,7 +63,10 @@ export function useHotels() {
     void queryClient.invalidateQueries({ queryKey: [HOTELS_QUERY_KEY] })
   }, [queryClient])
 
-  const hotels = useMemo(() => hotelsQuery.data?.items ?? [], [hotelsQuery.data])
+  const hotels = useMemo(
+    () => hotelsQuery.data?.items ?? [],
+    [hotelsQuery.data],
+  )
   const total = useMemo(() => hotelsQuery.data?.total ?? 0, [hotelsQuery.data])
 
   return {

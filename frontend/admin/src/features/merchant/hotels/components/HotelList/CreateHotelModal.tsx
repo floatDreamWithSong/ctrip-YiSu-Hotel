@@ -17,7 +17,11 @@ const HOTELS_QUERY_KEY = 'merchant-hotels'
 /**
  * 创建酒店模态框组件
  */
-export function CreateHotelModal({ open, onClose, onSuccess }: CreateHotelModalProps) {
+export function CreateHotelModal({
+  open,
+  onClose,
+  onSuccess,
+}: CreateHotelModalProps) {
   const queryClient = useQueryClient()
   const [form] = Form.useForm<CreateHotelFormValues>()
 

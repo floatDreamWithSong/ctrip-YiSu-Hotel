@@ -8,10 +8,8 @@ export const AuthenticatedLayout = ({
 }: React.ComponentProps<'div'>) => {
   return (
     <div {...props} className={cn('flex flex-col h-screen', className)}>
-      <div className='flex-1'>
-        {children ?? <Outlet />}
-      </div>
-      <div className='h-16 flex items-center justify-evenly'>
+      <div className="flex-1">{children ?? <Outlet />}</div>
+      <div className="h-16 flex items-center justify-evenly">
         {/* 之后再配合tantack路由匹配进行 TabBar 设置 */}
       </div>
     </div>

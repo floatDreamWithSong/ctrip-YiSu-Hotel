@@ -22,7 +22,9 @@ export function useHotelDetail(hotelId: number) {
       MerchantHotelRequest.updateHomeAdEnabled(hotelId, data),
     onSuccess: () => {
       message.success('首页广告推送设置已更新')
-      void queryClient.invalidateQueries({ queryKey: [HOTEL_DETAIL_QUERY_KEY, hotelId] })
+      void queryClient.invalidateQueries({
+        queryKey: [HOTEL_DETAIL_QUERY_KEY, hotelId],
+      })
     },
     onError: (error: Error) => message.error(error.message),
   })
@@ -31,7 +33,7 @@ export function useHotelDetail(hotelId: number) {
     (enabled: boolean) => {
       updateHomeAdMutation.mutate({ isHomeAdEnabled: enabled })
     },
-    [updateHomeAdMutation]
+    [updateHomeAdMutation],
   )
 
   const hotel = useMemo(() => hotelDetailQuery.data, [hotelDetailQuery.data])

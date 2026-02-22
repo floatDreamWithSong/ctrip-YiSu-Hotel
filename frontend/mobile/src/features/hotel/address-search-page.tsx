@@ -20,7 +20,10 @@ const AddressSearchPage = () => {
     <div className="h-full overflow-y-auto bg-white px-3 py-3">
       <div className="mb-3 flex items-center justify-between">
         <div className="text-base font-medium">地址搜索</div>
-        <button className="text-sm text-blue-600" onClick={() => navigate({ to: '/' })}>
+        <button
+          className="text-sm text-blue-600"
+          onClick={() => navigate({ to: '/' })}
+        >
           返回
         </button>
       </div>
@@ -56,7 +59,9 @@ const AddressSearchPage = () => {
             }}
           >
             <div className="text-sm font-medium">{item.name}</div>
-            <div className="mt-1 text-xs text-gray-500">{item.address ?? '-'}</div>
+            <div className="mt-1 text-xs text-gray-500">
+              {item.address ?? '-'}
+            </div>
           </div>
         ))}
       </div>
@@ -65,4 +70,3 @@ const AddressSearchPage = () => {
 }
 
 export default AddressSearchPage
-

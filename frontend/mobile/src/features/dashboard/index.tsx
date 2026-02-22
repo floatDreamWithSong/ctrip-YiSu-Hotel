@@ -1,7 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Button, CalendarPicker, Image, Selector, Slider, Swiper } from 'antd-mobile'
+import {
+  Button,
+  CalendarPicker,
+  Image,
+  Selector,
+  Slider,
+  Swiper,
+} from 'antd-mobile'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
 import { LocationInput } from '@/components/home/location-input'
 import { useLocationStore } from '@/store/location'
@@ -45,8 +52,10 @@ const parseDate = (value?: string) => {
   return new Date(year, month - 1, day)
 }
 
-const isOnOrAfter = (date: Date, target: Date) => date.getTime() >= target.getTime()
-const normalizePositiveInt = (value?: number) => (Number.isInteger(value) && (value as number) >= 1 ? (value as number) : 1)
+const isOnOrAfter = (date: Date, target: Date) =>
+  date.getTime() >= target.getTime()
+const normalizePositiveInt = (value?: number) =>
+  Number.isInteger(value) && (value as number) >= 1 ? (value as number) : 1
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -63,7 +72,9 @@ const Dashboard = () => {
   }
   const [hotelRangeVisible, setHotelRangeVisible] = useState(false)
   const [hourlyDateVisible, setHourlyDateVisible] = useState(false)
-  const [hotelCalendarValue, setHotelCalendarValue] = useState<[Date, Date] | null>(() => {
+  const [hotelCalendarValue, setHotelCalendarValue] = useState<
+    [Date, Date] | null
+  >(() => {
     const from = toValidDate(searchState.checkIn)
     const to = toValidDate(searchState.checkOut)
     return from && to ? [from, to] : null
@@ -71,7 +82,10 @@ const Dashboard = () => {
   const [hourlyCalendarValue, setHourlyCalendarValue] = useState<Date | null>(
     () => toValidDate(searchState.targetDate) ?? null,
   )
-  const sliderValue: [number, number] = [searchState.priceMin ?? 0, searchState.priceMax ?? PRICE_UNLIMITED]
+  const sliderValue: [number, number] = [
+    searchState.priceMin ?? 0,
+    searchState.priceMax ?? PRICE_UNLIMITED,
+  ]
   const tagsQuery = useQuery({
     queryKey: ['mobile-hotel-tags'],
     queryFn: () => MobileHotelRequest.getTags(),
@@ -86,7 +100,10 @@ const Dashboard = () => {
   })
 
   const tagOptions = useMemo(
-    () => (tagsQuery.data ?? []).slice(0, 8).map((item) => ({ label: item.name, value: item.id })),
+    () =>
+      (tagsQuery.data ?? [])
+        .slice(0, 8)
+        .map((item) => ({ label: item.name, value: item.id })),
     [tagsQuery.data],
   )
 
@@ -97,21 +114,34 @@ const Dashboard = () => {
     query.set('sortBy', 'price')
     query.set('sortOrder', 'asc')
     if (city) query.set('city', city)
-    if (searchState.keyword.trim()) query.set('keyword', searchState.keyword.trim())
+    if (searchState.keyword.trim())
+      query.set('keyword', searchState.keyword.trim())
     if (searchState.checkIn) query.set('checkIn', searchState.checkIn)
     if (searchState.checkOut) query.set('checkOut', searchState.checkOut)
     if (searchState.targetDate) query.set('targetDate', searchState.targetDate)
     if (searchState.roomType === 'HOTEL') {
-      query.set('guestCount', String(normalizePositiveInt(searchState.guestCount)))
-      query.set('roomCount', String(normalizePositiveInt(searchState.roomCount)))
+      query.set(
+        'guestCount',
+        String(normalizePositiveInt(searchState.guestCount)),
+      )
+      query.set(
+        'roomCount',
+        String(normalizePositiveInt(searchState.roomCount)),
+      )
     }
     if (searchState.slotId) query.set('slotId', String(searchState.slotId))
-    if (searchState.priceMin) query.set('priceMin', String(searchState.priceMin))
-    if (typeof searchState.priceMax === 'number' && searchState.priceMax < PRICE_UNLIMITED) {
+    if (searchState.priceMin)
+      query.set('priceMin', String(searchState.priceMin))
+    if (
+      typeof searchState.priceMax === 'number' &&
+      searchState.priceMax < PRICE_UNLIMITED
+    ) {
       query.set('priceMax', String(searchState.priceMax))
     }
-    if (searchState.starLevels.length > 0) query.set('starLevels', searchState.starLevels.join(','))
-    if (searchState.tagIds.length > 0) query.set('tagIds', searchState.tagIds.join(','))
+    if (searchState.starLevels.length > 0)
+      query.set('starLevels', searchState.starLevels.join(','))
+    if (searchState.tagIds.length > 0)
+      query.set('tagIds', searchState.tagIds.join(','))
     if (location) {
       query.set('userLng', String(location.lng))
       query.set('userLat', String(location.lat))
@@ -129,7 +159,15 @@ const Dashboard = () => {
       <div className="-mt-8 px-4">
         <div className="overflow-hidden rounded-2xl bg-white p-2 shadow-sm">
           {(bannersQuery.data ?? []).length > 0 ? (
-            <Swiper autoplay loop indicator={(total, current) => <div className="text-[10px] text-white/90">{current + 1}/{total}</div>}>
+            <Swiper
+              autoplay
+              loop
+              indicator={(total, current) => (
+                <div className="text-[10px] text-white/90">
+                  {current + 1}/{total}
+                </div>
+              )}
+            >
               {(bannersQuery.data ?? []).map((banner) => (
                 <Swiper.Item key={`${banner.hotelId}-${banner.infoId}`}>
                   <div
@@ -142,7 +180,12 @@ const Dashboard = () => {
                     }
                   >
                     {banner.coverImage ? (
-                      <Image src={banner.coverImage} fit="cover" width="100%" height={148} />
+                      <Image
+                        src={banner.coverImage}
+                        fit="cover"
+                        width="100%"
+                        height={148}
+                      />
                     ) : (
                       <div className="h-[148px] w-full rounded-xl bg-gray-100" />
                     )}
@@ -163,9 +206,16 @@ const Dashboard = () => {
         <div className="rounded-2xl bg-white p-4 shadow-sm">
           <div className="mb-4">
             <Selector
-              options={roomTypeOptions.map((item) => ({ label: item.label, value: item.value }))}
+              options={roomTypeOptions.map((item) => ({
+                label: item.label,
+                value: item.value,
+              }))}
               value={[searchState.roomType]}
-              onChange={(value) => searchState.setState({ roomType: (value[0] ?? 'HOTEL') as RoomTypeTab })}
+              onChange={(value) =>
+                searchState.setState({
+                  roomType: (value[0] ?? 'HOTEL') as RoomTypeTab,
+                })
+              }
             />
           </div>
           <div className="mb-3">
@@ -176,7 +226,9 @@ const Dashboard = () => {
             <div className="mb-1 text-xs text-gray-500">关键词</div>
             <input
               value={searchState.keyword}
-              onChange={(event) => searchState.setState({ keyword: event.target.value })}
+              onChange={(event) =>
+                searchState.setState({ keyword: event.target.value })
+              }
               placeholder="酒店名称、英文名、简介"
               className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
             />
@@ -207,9 +259,15 @@ const Dashboard = () => {
                 closeOnMaskClick
                 onConfirm={(value) => {
                   if (!value) {
-                    searchState.setState({ checkIn: undefined, checkOut: undefined })
+                    searchState.setState({
+                      checkIn: undefined,
+                      checkOut: undefined,
+                    })
                   } else {
-                    searchState.setState({ checkIn: formatDate(value[0]), checkOut: formatDate(value[1]) })
+                    searchState.setState({
+                      checkIn: formatDate(value[0]),
+                      checkOut: formatDate(value[1]),
+                    })
                   }
                   setHotelRangeVisible(false)
                 }}
@@ -222,7 +280,11 @@ const Dashboard = () => {
                     min={1}
                     value={searchState.guestCount}
                     onChange={(event) =>
-                      searchState.setState({ guestCount: normalizePositiveInt(event.target.valueAsNumber) })
+                      searchState.setState({
+                        guestCount: normalizePositiveInt(
+                          event.target.valueAsNumber,
+                        ),
+                      })
                     }
                     className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
                   />
@@ -234,7 +296,11 @@ const Dashboard = () => {
                     min={1}
                     value={searchState.roomCount}
                     onChange={(event) =>
-                      searchState.setState({ roomCount: normalizePositiveInt(event.target.valueAsNumber) })
+                      searchState.setState({
+                        roomCount: normalizePositiveInt(
+                          event.target.valueAsNumber,
+                        ),
+                      })
                     }
                     className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
                   />
@@ -246,7 +312,9 @@ const Dashboard = () => {
               <button
                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-left text-sm"
                 onClick={() => {
-                  setHourlyCalendarValue(toValidDate(searchState.targetDate) ?? null)
+                  setHourlyCalendarValue(
+                    toValidDate(searchState.targetDate) ?? null,
+                  )
                   setHourlyDateVisible(true)
                 }}
               >
@@ -270,7 +338,8 @@ const Dashboard = () => {
           )}
           <div className="mb-3">
             <div className="mb-1 text-xs text-gray-500">
-              价格范围：{sliderValue[0]} - {sliderValue[1] >= PRICE_UNLIMITED ? '不限' : sliderValue[1]}
+              价格范围：{sliderValue[0]} -{' '}
+              {sliderValue[1] >= PRICE_UNLIMITED ? '不限' : sliderValue[1]}
             </div>
             <Slider
               range
@@ -295,7 +364,9 @@ const Dashboard = () => {
               options={starOptions}
               value={searchState.starLevels}
               multiple
-              onChange={(value) => searchState.setState({ starLevels: value as number[] })}
+              onChange={(value) =>
+                searchState.setState({ starLevels: value as number[] })
+              }
             />
           </div>
           {tagOptions.length > 0 && (
@@ -305,11 +376,19 @@ const Dashboard = () => {
                 options={tagOptions}
                 value={searchState.tagIds}
                 multiple
-                onChange={(value) => searchState.setState({ tagIds: value as number[] })}
+                onChange={(value) =>
+                  searchState.setState({ tagIds: value as number[] })
+                }
               />
             </div>
           )}
-          <Button color="primary" block size="large" shape="rounded" onClick={handleSearch}>
+          <Button
+            color="primary"
+            block
+            size="large"
+            shape="rounded"
+            onClick={handleSearch}
+          >
             搜索酒店
           </Button>
         </div>

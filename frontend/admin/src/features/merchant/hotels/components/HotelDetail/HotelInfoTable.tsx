@@ -58,7 +58,9 @@ export function HotelInfoTable({
           {
             title: '状态',
             dataIndex: 'reviewStatus',
-            render: (status) => <ReviewStatusTag status={status} perspective="merchant" />,
+            render: (status) => (
+              <ReviewStatusTag status={status} perspective="merchant" />
+            ),
           },
           {
             title: '星级',

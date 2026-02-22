@@ -11,11 +11,7 @@ export const PasswordInput = (props: {
   const [visible, setVisible] = useState(false)
   return (
     <div className="relative w-full">
-      <Input
-        {...props}
-        type={visible ? 'text' : 'password'}
-        className="p-3"
-      />
+      <Input {...props} type={visible ? 'text' : 'password'} className="p-3" />
       <div className="absolute inset-y-0 right-0 pr-4 flex items-center text-lg text-gray-400">
         <div onClick={() => setVisible(!visible)} className="cursor-pointer">
           {visible ? <EyeOutline /> : <EyeInvisibleOutline />}

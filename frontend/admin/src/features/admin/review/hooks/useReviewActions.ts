@@ -42,7 +42,8 @@ export function useReviewActions() {
 export function useReviewInfoDetail(infoId: number | null) {
   const detailQuery = useQuery({
     queryKey: [ADMIN_REVIEW_INFO_DETAIL_KEY, infoId],
-    queryFn: () => AdminReviewRequest.getReviewHotelInfoDetail(infoId as number),
+    queryFn: () =>
+      AdminReviewRequest.getReviewHotelInfoDetail(infoId as number),
     enabled: infoId !== null,
   })
 

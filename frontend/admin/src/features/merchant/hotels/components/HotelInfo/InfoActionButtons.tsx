@@ -42,7 +42,12 @@ export function InfoActionButtons({
       {/* 待发布状态：可发布、可编辑 */}
       {reviewStatus === HotelReviewStatus.DRAFT && (
         <>
-          <Button type="primary" size="small" onClick={onSubmit} loading={submitting}>
+          <Button
+            type="primary"
+            size="small"
+            onClick={onSubmit}
+            loading={submitting}
+          >
             发布
           </Button>
           <Button size="small" onClick={onEdit}>
@@ -74,7 +79,12 @@ export function InfoActionButtons({
       {/* 待更改状态：可重新发布、可编辑 */}
       {reviewStatus === HotelReviewStatus.REJECTED && (
         <>
-          <Button type="primary" size="small" onClick={onSubmit} loading={submitting}>
+          <Button
+            type="primary"
+            size="small"
+            onClick={onSubmit}
+            loading={submitting}
+          >
             重新发布
           </Button>
           <Button size="small" onClick={onEdit}>

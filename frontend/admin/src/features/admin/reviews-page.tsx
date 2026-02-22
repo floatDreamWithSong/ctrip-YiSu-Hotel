@@ -54,15 +54,18 @@ const ReviewsPage = () => {
   const queryClient = useQueryClient()
   const [infoPage, setInfoPage] = useState(1)
   const [infoLimit, setInfoLimit] = useState(10)
-  const [statusFilter, setStatusFilter] = useState<ApiHotelTypes['AdminReviewQuery']['reviewStatus']>()
+  const [statusFilter, setStatusFilter] =
+    useState<ApiHotelTypes['AdminReviewQuery']['reviewStatus']>()
   const [detailOpen, setDetailOpen] = useState(false)
   const [currentInfoId, setCurrentInfoId] = useState<number | null>(null)
   const [actionForm] = Form.useForm<ReviewActionForm>()
 
   const [recordPage, setRecordPage] = useState(1)
   const [recordLimit, setRecordLimit] = useState(10)
-  const [recordAction, setRecordAction] = useState<ApiHotelTypes['ReviewRecordQuery']['action']>()
-  const [recordReason, setRecordReason] = useState<ApiHotelTypes['ReviewRecordQuery']['rejectReason']>()
+  const [recordAction, setRecordAction] =
+    useState<ApiHotelTypes['ReviewRecordQuery']['action']>()
+  const [recordReason, setRecordReason] =
+    useState<ApiHotelTypes['ReviewRecordQuery']['rejectReason']>()
   const [recordStartAt, setRecordStartAt] = useState<string>()
   const [recordEndAt, setRecordEndAt] = useState<string>()
 
@@ -78,7 +81,8 @@ const ReviewsPage = () => {
 
   const detailQuery = useQuery({
     queryKey: [ADMIN_REVIEW_INFO_DETAIL_KEY, currentInfoId],
-    queryFn: () => AdminReviewRequest.getReviewHotelInfoDetail(currentInfoId as number),
+    queryFn: () =>
+      AdminReviewRequest.getReviewHotelInfoDetail(currentInfoId as number),
     enabled: detailOpen && currentInfoId !== null,
   })
 
@@ -143,7 +147,10 @@ const ReviewsPage = () => {
     })
   }
 
-  const infoRows = useMemo(() => reviewInfosQuery.data?.items ?? [], [reviewInfosQuery.data])
+  const infoRows = useMemo(
+    () => reviewInfosQuery.data?.items ?? [],
+    [reviewInfosQuery.data],
+  )
   const recordRows = useMemo(
     () => reviewRecordsQuery.data?.items ?? [],
     [reviewRecordsQuery.data],
@@ -196,7 +203,15 @@ const ReviewsPage = () => {
                 title: '状态',
                 dataIndex: 'reviewStatus',
                 render: (value: string) => (
-                  <Tag color={value === HotelReviewStatus.APPROVED ? 'success' : value === HotelReviewStatus.REJECTED ? 'error' : 'processing'}>
+                  <Tag
+                    color={
+                      value === HotelReviewStatus.APPROVED
+                        ? 'success'
+                        : value === HotelReviewStatus.REJECTED
+                          ? 'error'
+                          : 'processing'
+                    }
+                  >
                     {reviewStatusText[value] ?? value}
                   </Tag>
                 ),
@@ -210,7 +225,11 @@ const ReviewsPage = () => {
                 title: '操作',
                 key: 'actions',
                 render: (_, record) => (
-                  <Button type="primary" ghost onClick={() => openDetail(record.id)}>
+                  <Button
+                    type="primary"
+                    ghost
+                    onClick={() => openDetail(record.id)}
+                  >
                     查看并审核
                   </Button>
                 ),
@@ -300,8 +319,16 @@ const ReviewsPage = () => {
                 dataIndex: 'action',
                 render: (value: string) => reviewStatusText[value] ?? value,
               },
-              { title: '原因', dataIndex: 'rejectReason', render: (value: string | null) => value ?? '-' },
-              { title: '备注', dataIndex: 'rejectDetail', render: (value: string | null) => value ?? '-' },
+              {
+                title: '原因',
+                dataIndex: 'rejectReason',
+                render: (value: string | null) => value ?? '-',
+              },
+              {
+                title: '备注',
+                dataIndex: 'rejectDetail',
+                render: (value: string | null) => value ?? '-',
+              },
               { title: '审核人', dataIndex: ['reviewer', 'username'] },
               { title: '时间', dataIndex: 'createdAt' },
             ]}
@@ -311,7 +338,9 @@ const ReviewsPage = () => {
 
       <Modal
         width={1000}
-        title={currentInfoId ? `酒店信息审核 #${currentInfoId}` : '酒店信息审核'}
+        title={
+          currentInfoId ? `酒店信息审核 #${currentInfoId}` : '酒店信息审核'
+        }
         open={detailOpen}
         onCancel={() => setDetailOpen(false)}
         onOk={() => void submitAction()}
@@ -326,9 +355,12 @@ const ReviewsPage = () => {
               <Descriptions.Item label="信息昵称">
                 {detailQuery.data?.infoNickname}
               </Descriptions.Item>
-              <Descriptions.Item label="酒店名">{detailQuery.data?.name}</Descriptions.Item>
+              <Descriptions.Item label="酒店名">
+                {detailQuery.data?.name}
+              </Descriptions.Item>
               <Descriptions.Item label="当前状态">
-                {reviewStatusText[detailQuery.data?.reviewStatus ?? ''] ?? detailQuery.data?.reviewStatus}
+                {reviewStatusText[detailQuery.data?.reviewStatus ?? ''] ??
+                  detailQuery.data?.reviewStatus}
               </Descriptions.Item>
               <Descriptions.Item label="地址" span={2}>
                 {detailQuery.data?.address}
@@ -340,7 +372,10 @@ const ReviewsPage = () => {
                 {detailQuery.data?.roomTypes.length ?? 0}
               </Descriptions.Item>
               <Descriptions.Item label="钟点时段数">
-                {(detailQuery.data?.roomTypes ?? []).reduce((total, room) => total + (room.hourlySlots?.length ?? 0), 0)}
+                {(detailQuery.data?.roomTypes ?? []).reduce(
+                  (total, room) => total + (room.hourlySlots?.length ?? 0),
+                  0,
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="轮播图数量">
                 {detailQuery.data?.images.length ?? 0}
@@ -351,14 +386,20 @@ const ReviewsPage = () => {
             <Space direction="vertical" style={{ width: '100%' }}>
               {(detailQuery.data?.roomTypes ?? []).map((room) => (
                 <Card key={room.id} size="small">
-                  <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                  <Space
+                    direction="vertical"
+                    size={4}
+                    style={{ width: '100%' }}
+                  >
                     <Typography.Text strong>{room.name}</Typography.Text>
                     <Typography.Text type="secondary">
-                      计价：{room.priceMode}，基础价：{room.price}，时长单位：{room.duration}
+                      计价：{room.priceMode}，基础价：{room.price}，时长单位：
+                      {room.duration}
                     </Typography.Text>
                     {(room.hourlySlots ?? []).map((slot) => (
                       <Typography.Text key={slot.id} type="secondary">
-                        {slot.startTime}-{deriveEndTime(slot.startTime, room.duration)}
+                        {slot.startTime}-
+                        {deriveEndTime(slot.startTime, room.duration)}
                       </Typography.Text>
                     ))}
                   </Space>
@@ -368,7 +409,11 @@ const ReviewsPage = () => {
           </Card>
           <Card>
             <Form form={actionForm} layout="vertical">
-              <Form.Item name="action" label="审核结果" rules={[{ required: true }]}>
+              <Form.Item
+                name="action"
+                label="审核结果"
+                rules={[{ required: true }]}
+              >
                 <Select
                   options={[
                     { label: '通过', value: HotelReviewStatus.APPROVED },
@@ -376,9 +421,14 @@ const ReviewsPage = () => {
                   ]}
                 />
               </Form.Item>
-              <Form.Item shouldUpdate={(prev, cur) => prev.action !== cur.action} noStyle>
+              <Form.Item
+                shouldUpdate={(prev, cur) => prev.action !== cur.action}
+                noStyle
+              >
                 {() => {
-                  const action = actionForm.getFieldValue('action') as string | undefined
+                  const action = actionForm.getFieldValue('action') as
+                    | string
+                    | undefined
                   const isReject = action === HotelReviewStatus.REJECTED
                   if (!isReject) {
                     return null
@@ -392,14 +442,24 @@ const ReviewsPage = () => {
                       >
                         <Select options={rejectReasonOptions} />
                       </Form.Item>
-                      <Form.Item shouldUpdate={(prev, cur) => prev.rejectReason !== cur.rejectReason} noStyle>
+                      <Form.Item
+                        shouldUpdate={(prev, cur) =>
+                          prev.rejectReason !== cur.rejectReason
+                        }
+                        noStyle
+                      >
                         {() => {
-                          const reason = actionForm.getFieldValue('rejectReason') as string | undefined
+                          const reason = actionForm.getFieldValue(
+                            'rejectReason',
+                          ) as string | undefined
                           if (reason !== RejectReasonType.OTHER) {
                             return null
                           }
                           return (
-                            <Form.Item name="rejectDetail" label="审核备注(可选)">
+                            <Form.Item
+                              name="rejectDetail"
+                              label="审核备注(可选)"
+                            >
                               <Input.TextArea rows={3} maxLength={1000} />
                             </Form.Item>
                           )

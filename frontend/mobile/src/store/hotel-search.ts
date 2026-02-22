@@ -15,7 +15,9 @@ export interface HotelSearchState {
   priceMax?: number
   starLevels: number[]
   tagIds: number[]
-  setState: (next: Partial<Omit<HotelSearchState, 'setState' | 'reset'>>) => void
+  setState: (
+    next: Partial<Omit<HotelSearchState, 'setState' | 'reset'>>,
+  ) => void
   reset: () => void
 }
 

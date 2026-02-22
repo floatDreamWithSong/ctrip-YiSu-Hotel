@@ -55,7 +55,11 @@ export function HotelListTable({
             title: '广告推送',
             key: 'isHomeAdEnabled',
             render: (_, record) =>
-              record.isHomeAdEnabled ? <Tag color="blue">开启</Tag> : <Tag>关闭</Tag>,
+              record.isHomeAdEnabled ? (
+                <Tag color="blue">开启</Tag>
+              ) : (
+                <Tag>关闭</Tag>
+              ),
           },
           {
             title: '信息数量',

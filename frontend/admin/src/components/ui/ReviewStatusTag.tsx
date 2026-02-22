@@ -43,9 +43,14 @@ const statusColor: Record<HotelReviewStatus, string> = {
  * 审核状态标签组件
  * 根据不同视角（商家/管理员）显示不同的文本
  */
-export function ReviewStatusTag({ status, perspective = 'merchant' }: ReviewStatusTagProps) {
+export function ReviewStatusTag({
+  status,
+  perspective = 'merchant',
+}: ReviewStatusTagProps) {
   const text =
-    perspective === 'admin' ? adminStatusText[status] : merchantStatusText[status]
+    perspective === 'admin'
+      ? adminStatusText[status]
+      : merchantStatusText[status]
 
   return <Tag color={statusColor[status]}>{text ?? status}</Tag>
 }

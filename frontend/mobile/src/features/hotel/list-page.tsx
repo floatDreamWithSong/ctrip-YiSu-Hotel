@@ -1,7 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { CalendarPicker, Dropdown, InfiniteScroll, Selector, Slider, Toast } from 'antd-mobile'
+import {
+  CalendarPicker,
+  Dropdown,
+  InfiniteScroll,
+  Selector,
+  Slider,
+  Toast,
+} from 'antd-mobile'
 import { LocationOutline } from 'antd-mobile-icons'
 import { useRequest } from 'ahooks'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
@@ -32,7 +39,8 @@ const parseNumber = (value?: string) => {
   const num = Number(value)
   return Number.isFinite(num) ? num : undefined
 }
-const normalizePositiveInt = (value?: number) => (Number.isInteger(value) && (value as number) >= 1 ? (value as number) : 1)
+const normalizePositiveInt = (value?: number) =>
+  Number.isInteger(value) && (value as number) >= 1 ? (value as number) : 1
 
 const getSearchParams = () => {
   const params = new URLSearchParams(window.location.search)
@@ -62,7 +70,9 @@ const calcNights = (checkIn?: string, checkOut?: string) => {
   if (!checkIn || !checkOut) return undefined
   const start = new Date(checkIn)
   const end = new Date(checkOut)
-  const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  const diff = Math.ceil(
+    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+  )
   if (!Number.isFinite(diff) || diff <= 0) return undefined
   return diff
 }
@@ -82,7 +92,8 @@ const parseDate = (value?: string) => {
   return new Date(year, month - 1, day)
 }
 
-const isOnOrAfter = (date: Date, target: Date) => date.getTime() >= target.getTime()
+const isOnOrAfter = (date: Date, target: Date) =>
+  date.getTime() >= target.getTime()
 
 const HotelListPage = () => {
   const navigate = useNavigate()
@@ -120,8 +131,12 @@ const HotelListPage = () => {
     const date = toValidDate(search.targetDate)
     return date ? formatDate(date) : undefined
   })
-  const [guestCount, setGuestCount] = useState(() => normalizePositiveInt(parseNumber(search.guestCount)))
-  const [roomCount, setRoomCount] = useState(() => normalizePositiveInt(parseNumber(search.roomCount)))
+  const [guestCount, setGuestCount] = useState(() =>
+    normalizePositiveInt(parseNumber(search.guestCount)),
+  )
+  const [roomCount, setRoomCount] = useState(() =>
+    normalizePositiveInt(parseNumber(search.roomCount)),
+  )
   const [starLevels, setStarLevels] = useState<number[]>(
     search.starLevels
       ? search.starLevels
@@ -139,16 +154,22 @@ const HotelListPage = () => {
       : [],
   )
   const [sortBy, setSortBy] = useState(search.sortBy ?? 'price')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>((search.sortOrder as 'asc' | 'desc') ?? 'asc')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+    (search.sortOrder as 'asc' | 'desc') ?? 'asc',
+  )
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [hotelRangeVisible, setHotelRangeVisible] = useState(false)
   const [hourlyDateVisible, setHourlyDateVisible] = useState(false)
-  const [hotelCalendarValue, setHotelCalendarValue] = useState<[Date, Date] | null>(() => {
+  const [hotelCalendarValue, setHotelCalendarValue] = useState<
+    [Date, Date] | null
+  >(() => {
     const from = toValidDate(checkIn)
     const to = toValidDate(checkOut)
     return from && to ? [from, to] : null
   })
-  const [hourlyCalendarValue, setHourlyCalendarValue] = useState<Date | null>(() => toValidDate(targetDate) ?? null)
+  const [hourlyCalendarValue, setHourlyCalendarValue] = useState<Date | null>(
+    () => toValidDate(targetDate) ?? null,
+  )
   const currentCity = city ?? search.city ?? '未定位'
   const { run: handleRelocate, loading: relocating } = useRequest(
     async () => {
@@ -231,7 +252,10 @@ const HotelListPage = () => {
     },
   })
 
-  const data = useMemo(() => queryResult.data?.pages.flatMap((page) => page.items) ?? [], [queryResult.data])
+  const data = useMemo(
+    () => queryResult.data?.pages.flatMap((page) => page.items) ?? [],
+    [queryResult.data],
+  )
   const hasMore = queryResult.hasNextPage
   const canUseDistance = Boolean(location?.lng && location?.lat)
   const nights = calcNights(checkIn, checkOut)
@@ -240,8 +264,13 @@ const HotelListPage = () => {
     <div className="h-full overflow-y-auto bg-[#f4f4f2] px-3 pb-4">
       <div className="sticky top-0 z-10 mb-3 bg-[#f4f4f2] py-3">
         <div className="mb-2 flex items-center justify-between">
-          <div className="text-base font-semibold">{params.roomType === 'HOURLY' ? '钟点房列表' : '酒店列表'}</div>
-          <button onClick={() => navigate({ to: '/' })} className="text-sm text-blue-600">
+          <div className="text-base font-semibold">
+            {params.roomType === 'HOURLY' ? '钟点房列表' : '酒店列表'}
+          </div>
+          <button
+            onClick={() => navigate({ to: '/' })}
+            className="text-sm text-blue-600"
+          >
             返回首页
           </button>
         </div>
@@ -271,7 +300,9 @@ const HotelListPage = () => {
               <div className="p-3">
                 {(tagsQuery.data ?? []).length > 0 ? (
                   <Selector
-                    options={(tagsQuery.data ?? []).slice(0, 12).map((item) => ({ label: item.name, value: item.id }))}
+                    options={(tagsQuery.data ?? [])
+                      .slice(0, 12)
+                      .map((item) => ({ label: item.name, value: item.id }))}
                     value={tagIds}
                     multiple
                     onChange={(value) => setTagIds(value as number[])}
@@ -294,7 +325,9 @@ const HotelListPage = () => {
                       setHotelRangeVisible(true)
                     }}
                   >
-                    {checkIn && checkOut ? `${checkIn} 至 ${checkOut}` : '选择入住/离店日期'}
+                    {checkIn && checkOut
+                      ? `${checkIn} 至 ${checkOut}`
+                      : '选择入住/离店日期'}
                   </button>
                 ) : (
                   <button
@@ -321,7 +354,11 @@ const HotelListPage = () => {
                         type="number"
                         min={1}
                         value={guestCount}
-                        onChange={(event) => setGuestCount(normalizePositiveInt(event.target.valueAsNumber))}
+                        onChange={(event) =>
+                          setGuestCount(
+                            normalizePositiveInt(event.target.valueAsNumber),
+                          )
+                        }
                         className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm"
                       />
                     </div>
@@ -331,7 +368,11 @@ const HotelListPage = () => {
                         type="number"
                         min={1}
                         value={roomCount}
-                        onChange={(event) => setRoomCount(normalizePositiveInt(event.target.valueAsNumber))}
+                        onChange={(event) =>
+                          setRoomCount(
+                            normalizePositiveInt(event.target.valueAsNumber),
+                          )
+                        }
                         className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm"
                       />
                     </div>
@@ -342,7 +383,8 @@ const HotelListPage = () => {
             <Dropdown.Item key="price-star" title="价格/星级">
               <div className="space-y-3 p-3">
                 <div className="text-xs text-gray-500">
-                  价格：{priceRange[0]} - {priceRange[1] >= PRICE_UNLIMITED ? '不限' : priceRange[1]}
+                  价格：{priceRange[0]} -{' '}
+                  {priceRange[1] >= PRICE_UNLIMITED ? '不限' : priceRange[1]}
                 </div>
                 <Slider
                   range
@@ -370,9 +412,13 @@ const HotelListPage = () => {
             <Dropdown.Item key="sort" title="排序">
               <div className="space-y-3 p-3">
                 <Selector
-                  options={sortOptions.filter((item) => canUseDistance || item.value !== 'distance')}
+                  options={sortOptions.filter(
+                    (item) => canUseDistance || item.value !== 'distance',
+                  )}
                   value={[sortBy]}
-                  onChange={(value) => setSortBy((value[0] as string) ?? 'price')}
+                  onChange={(value) =>
+                    setSortBy((value[0] as string) ?? 'price')
+                  }
                 />
                 <div className="flex gap-2">
                   <button
@@ -396,7 +442,11 @@ const HotelListPage = () => {
                     降序
                   </button>
                 </div>
-                {!canUseDistance && <div className="text-xs text-orange-500">开启定位后可按距离排序</div>}
+                {!canUseDistance && (
+                  <div className="text-xs text-orange-500">
+                    开启定位后可按距离排序
+                  </div>
+                )}
               </div>
             </Dropdown.Item>
           </Dropdown>
@@ -451,9 +501,16 @@ const HotelListPage = () => {
                 keyword,
                 checkIn: currentRoomType === 'HOTEL' ? checkIn : undefined,
                 checkOut: currentRoomType === 'HOTEL' ? checkOut : undefined,
-                targetDate: currentRoomType === 'HOURLY' ? targetDate : undefined,
-                guestCount: currentRoomType === 'HOTEL' ? guestCount : searchStore.guestCount,
-                roomCount: currentRoomType === 'HOTEL' ? roomCount : searchStore.roomCount,
+                targetDate:
+                  currentRoomType === 'HOURLY' ? targetDate : undefined,
+                guestCount:
+                  currentRoomType === 'HOTEL'
+                    ? guestCount
+                    : searchStore.guestCount,
+                roomCount:
+                  currentRoomType === 'HOTEL'
+                    ? roomCount
+                    : searchStore.roomCount,
               })
               navigate({
                 to: '/hotel/$hotelId',
@@ -462,9 +519,12 @@ const HotelListPage = () => {
                   roomType: currentRoomType,
                   checkIn: currentRoomType === 'HOTEL' ? checkIn : undefined,
                   checkOut: currentRoomType === 'HOTEL' ? checkOut : undefined,
-                  targetDate: currentRoomType === 'HOURLY' ? targetDate : undefined,
-                  guestCount: currentRoomType === 'HOTEL' ? guestCount : undefined,
-                  roomCount: currentRoomType === 'HOTEL' ? roomCount : undefined,
+                  targetDate:
+                    currentRoomType === 'HOURLY' ? targetDate : undefined,
+                  guestCount:
+                    currentRoomType === 'HOTEL' ? guestCount : undefined,
+                  roomCount:
+                    currentRoomType === 'HOTEL' ? roomCount : undefined,
                 },
               })
             }}

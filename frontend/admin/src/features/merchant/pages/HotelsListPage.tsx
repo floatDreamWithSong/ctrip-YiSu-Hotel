@@ -10,8 +10,15 @@ import { useHotels } from '../hooks/useHotels'
  * 重构后的版本：页面组件只负责布局和组合特性组件
  */
 export default function HotelsListPage() {
-  const { hotels, loading, pagination, keyword, handleSearch, handleDelete, deleting } =
-    useHotels()
+  const {
+    hotels,
+    loading,
+    pagination,
+    keyword,
+    handleSearch,
+    handleDelete,
+    deleting,
+  } = useHotels()
   const createModal = useModal()
 
   return (
@@ -40,7 +47,10 @@ export default function HotelsListPage() {
       />
 
       {/* 创建酒店模态框 */}
-      <CreateHotelModal open={createModal.open} onClose={createModal.closeModal} />
+      <CreateHotelModal
+        open={createModal.open}
+        onClose={createModal.closeModal}
+      />
     </Space>
   )
 }

@@ -24,7 +24,11 @@ const rejectReasonOptions = [
 export function ReviewActionForm({ form }: ReviewActionFormProps) {
   return (
     <Form form={form} layout="vertical">
-      <Form.Item name="action" label="审核结果" rules={[{ required: true, message: '请选择审核结果' }]}>
+      <Form.Item
+        name="action"
+        label="审核结果"
+        rules={[{ required: true, message: '请选择审核结果' }]}
+      >
         <Select
           options={[
             { label: '通过', value: HotelReviewStatus.APPROVED },
@@ -33,7 +37,10 @@ export function ReviewActionForm({ form }: ReviewActionFormProps) {
         />
       </Form.Item>
 
-      <Form.Item shouldUpdate={(prev, cur) => prev.action !== cur.action} noStyle>
+      <Form.Item
+        shouldUpdate={(prev, cur) => prev.action !== cur.action}
+        noStyle
+      >
         {() => {
           const action = form.getFieldValue('action') as string | undefined
           const isReject = action === HotelReviewStatus.REJECTED
@@ -50,9 +57,16 @@ export function ReviewActionForm({ form }: ReviewActionFormProps) {
                 <Select options={rejectReasonOptions} />
               </Form.Item>
 
-              <Form.Item shouldUpdate={(prev, cur) => prev.rejectReason !== cur.rejectReason} noStyle>
+              <Form.Item
+                shouldUpdate={(prev, cur) =>
+                  prev.rejectReason !== cur.rejectReason
+                }
+                noStyle
+              >
                 {() => {
-                  const reason = form.getFieldValue('rejectReason') as string | undefined
+                  const reason = form.getFieldValue('rejectReason') as
+                    | string
+                    | undefined
                   const isOther = reason === RejectReasonType.OTHER
                   if (!isOther) {
                     return null
@@ -63,7 +77,11 @@ export function ReviewActionForm({ form }: ReviewActionFormProps) {
                       label="审核备注"
                       rules={[{ required: true, message: '请填写详细说明' }]}
                     >
-                      <Input.TextArea rows={3} maxLength={1000} placeholder="请详细说明拒绝原因" />
+                      <Input.TextArea
+                        rows={3}
+                        maxLength={1000}
+                        placeholder="请详细说明拒绝原因"
+                      />
                     </Form.Item>
                   )
                 }}

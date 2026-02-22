@@ -29,8 +29,14 @@ export function useHotelInfos(hotelId: number) {
       }),
   })
 
-  const infos = useMemo(() => hotelInfosQuery.data?.items ?? [], [hotelInfosQuery.data])
-  const total = useMemo(() => hotelInfosQuery.data?.total ?? 0, [hotelInfosQuery.data])
+  const infos = useMemo(
+    () => hotelInfosQuery.data?.items ?? [],
+    [hotelInfosQuery.data],
+  )
+  const total = useMemo(
+    () => hotelInfosQuery.data?.total ?? 0,
+    [hotelInfosQuery.data],
+  )
 
   return {
     infos,
@@ -41,8 +47,9 @@ export function useHotelInfos(hotelId: number) {
     },
     filter: {
       statusFilter,
-      setStatusFilter: (value: ApiHotelTypes['HotelInfoQuery']['reviewStatus']) =>
-        updateFilter('reviewStatus', value),
+      setStatusFilter: (
+        value: ApiHotelTypes['HotelInfoQuery']['reviewStatus'],
+      ) => updateFilter('reviewStatus', value),
       resetFilters,
     },
   }

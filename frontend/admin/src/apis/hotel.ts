@@ -56,7 +56,10 @@ export const MerchantHotelRequest = {
       method: 'GET',
     })
   },
-  updateHomeAdEnabled: (hotelId: number, data: ApiHotelTypes['HotelUpdateHomeAd']) => {
+  updateHomeAdEnabled: (
+    hotelId: number,
+    data: ApiHotelTypes['HotelUpdateHomeAd'],
+  ) => {
     return request({
       url: `/merchant/hotels/${hotelId}/home-ad-enabled`,
       method: 'PUT',
@@ -83,7 +86,10 @@ export const MerchantHotelRequest = {
       method: 'GET',
     })
   },
-  createHotelInfo: (hotelId: number, data: ApiHotelTypes['HotelInfoCreate']) => {
+  createHotelInfo: (
+    hotelId: number,
+    data: ApiHotelTypes['HotelInfoCreate'],
+  ) => {
     return request({
       url: `/merchant/hotels/${hotelId}/infos`,
       method: 'POST',
@@ -94,7 +100,7 @@ export const MerchantHotelRequest = {
   updateHotelInfo: (
     hotelId: number,
     infoId: number,
-    data: ApiHotelTypes['HotelInfoUpdate']
+    data: ApiHotelTypes['HotelInfoUpdate'],
   ) => {
     return request({
       url: `/merchant/hotels/${hotelId}/infos/${infoId}`,
@@ -150,7 +156,10 @@ export const AdminReviewRequest = {
       method: 'GET',
     })
   },
-  reviewHotelInfo: (infoId: number, data: ApiHotelTypes['AdminReviewAction']) => {
+  reviewHotelInfo: (
+    infoId: number,
+    data: ApiHotelTypes['AdminReviewAction'],
+  ) => {
     return request<null>({
       url: `/admin/reviews/hotel-infos/${infoId}/action`,
       method: 'POST',

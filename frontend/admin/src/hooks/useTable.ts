@@ -4,9 +4,9 @@ import { useCallback, useMemo, useState } from 'react'
  * 通用表格状态管理 Hook
  * 封装分页、筛选、排序等常见表格逻辑
  */
-export function useTable<F extends Record<string, unknown> = Record<string, unknown>>(
-  initialPageSize = 10
-) {
+export function useTable<
+  F extends Record<string, unknown> = Record<string, unknown>,
+>(initialPageSize = 10) {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(initialPageSize)
   const [filters, setFilters] = useState<F>({} as F)
@@ -23,7 +23,7 @@ export function useTable<F extends Record<string, unknown> = Record<string, unkn
         }
       },
     }),
-    [page, pageSize]
+    [page, pageSize],
   )
 
   const updateFilter = useCallback(<K extends keyof F>(key: K, value: F[K]) => {

@@ -40,11 +40,17 @@ export function useAddressLocate(form: FormInstance) {
   return { locating, handleLocate }
 }
 
-interface AddressAutoCompleteProps extends Omit<AutoCompleteProps, 'options' | 'onSelect' | 'onSearch'> {
+interface AddressAutoCompleteProps extends Omit<
+  AutoCompleteProps,
+  'options' | 'onSelect' | 'onSearch'
+> {
   form: FormInstance
 }
 
-export function AddressAutoComplete({ form, ...rest }: AddressAutoCompleteProps) {
+export function AddressAutoComplete({
+  form,
+  ...rest
+}: AddressAutoCompleteProps) {
   const [options, setOptions] = useState<AutoCompleteProps['options']>([])
   const [tipsMap, setTipsMap] = useState<Map<string, TipOption>>(new Map())
 
@@ -57,13 +63,17 @@ export function AddressAutoComplete({ form, ...rest }: AddressAutoCompleteProps)
       try {
         const city = form.getFieldValue('city') as string | undefined
         console.log('搜索参数:', { keywords, city })
-        const tips = await LocationRequest.inputTips(keywords, city || undefined)
+        const tips = await LocationRequest.inputTips(
+          keywords,
+          city || undefined,
+        )
         console.log('搜索结果:', tips)
         const map = new Map<string, TipOption>()
         const opts = tips
           .filter((tip) => tip.location)
           .map((tip) => {
-            const key = `${tip.name} ${tip.district} ${tip.address || ''}`.trim()
+            const key =
+              `${tip.name} ${tip.district} ${tip.address || ''}`.trim()
             map.set(key, tip)
             return {
               value: key,
@@ -75,7 +85,9 @@ export function AddressAutoComplete({ form, ...rest }: AddressAutoCompleteProps)
         setOptions(opts)
       } catch (error) {
         console.error('地址搜索失败:', error)
-        void message.error(error instanceof Error ? error.message : '地址搜索失败')
+        void message.error(
+          error instanceof Error ? error.message : '地址搜索失败',
+        )
         setOptions([])
       }
     },
@@ -127,12 +139,10 @@ export function AddressAutoComplete({ form, ...rest }: AddressAutoCompleteProps)
     <AutoComplete
       {...rest}
       options={options}
-      showSearch={
-        {
-          filterOption: false,
-          onSearch: (text) => void debouncedSearch(text),
-        }
-      }
+      showSearch={{
+        filterOption: false,
+        onSearch: (text) => void debouncedSearch(text),
+      }}
       onSelect={(key) => void onSelect(key as string)}
       placeholder="输入地址搜索"
     />

@@ -24,9 +24,21 @@ import { LocateFixed } from 'lucide-react'
 type HotelInfoFormValues = ApiHotelTypes['HotelInfoCreate']
 
 const HOTEL_TAG_PRESETS = [
-  '免费WiFi', '停车场', '游泳池', '健身房', '餐厅',
-  '会议室', '接送服务', '行李寄存', '24小时前台', '无烟房',
-  '空调', '洗衣服务', '商务中心', '儿童设施', '宠物友好',
+  '免费WiFi',
+  '停车场',
+  '游泳池',
+  '健身房',
+  '餐厅',
+  '会议室',
+  '接送服务',
+  '行李寄存',
+  '24小时前台',
+  '无烟房',
+  '空调',
+  '洗衣服务',
+  '商务中心',
+  '儿童设施',
+  '宠物友好',
 ]
 
 interface HotelInfoFormModalProps {
@@ -68,12 +80,20 @@ export function HotelInfoFormModal({
         {/* 基本信息 */}
         <Row gutter={12}>
           <Col span={8}>
-            <Form.Item name="infoNickname" label="信息昵称" rules={[{ required: true }]}>
+            <Form.Item
+              name="infoNickname"
+              label="信息昵称"
+              rules={[{ required: true }]}
+            >
               <Input placeholder="仅商家可见" />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="name" label="酒店名称" rules={[{ required: true }]}>
+            <Form.Item
+              name="name"
+              label="酒店名称"
+              rules={[{ required: true }]}
+            >
               <Input />
             </Form.Item>
           </Col>
@@ -83,7 +103,11 @@ export function HotelInfoFormModal({
             </Form.Item>
           </Col>
           <Col span={6}>
-            <Form.Item name="starLevel" label="酒店星级" rules={[{ required: true }]}>
+            <Form.Item
+              name="starLevel"
+              label="酒店星级"
+              rules={[{ required: true }]}
+            >
               <InputNumber min={1} max={5} style={{ width: '100%' }} />
             </Form.Item>
           </Col>
@@ -101,7 +125,10 @@ export function HotelInfoFormModal({
                 date ? date.toISOString() : undefined
               }
             >
-              <DatePicker style={{ width: '100%' }} placeholder="请选择开业时间" />
+              <DatePicker
+                style={{ width: '100%' }}
+                placeholder="请选择开业时间"
+              />
             </Form.Item>
           </Col>
           <Col span={24}>
@@ -143,7 +170,11 @@ export function HotelInfoFormModal({
             </Form.Item>
           </Col>
           <Col span={24}>
-            <Form.Item name="address" label="详细地址" rules={[{ required: true }]}>
+            <Form.Item
+              name="address"
+              label="详细地址"
+              rules={[{ required: true }]}
+            >
               <AddressAutoComplete form={form} />
             </Form.Item>
           </Col>
@@ -209,7 +240,9 @@ export function HotelInfoFormModal({
                   </Row>
                 </Card>
               ))}
-              <Button onClick={() => add({ url: '', sortOrder: 0 })}>新增轮播图</Button>
+              <Button onClick={() => add({ url: '', sortOrder: 0 })}>
+                新增轮播图
+              </Button>
             </Space>
           )}
         </Form.List>
@@ -279,7 +312,10 @@ export function HotelInfoFormModal({
                       </Button>
                     </Col>
                     <Col span={6}>
-                      <Form.Item name={[field.name, 'bedType']} label="床型说明">
+                      <Form.Item
+                        name={[field.name, 'bedType']}
+                        label="床型说明"
+                      >
                         <Input />
                       </Form.Item>
                     </Col>
