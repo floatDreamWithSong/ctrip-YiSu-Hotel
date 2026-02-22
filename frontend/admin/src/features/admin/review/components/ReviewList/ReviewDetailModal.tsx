@@ -1,13 +1,24 @@
 import type { AdminReviewHotelInfoDetail } from '@/apis/hotel'
 import type { ApiHotelTypes } from '@yisu/shared'
-import { HotelReviewStatus } from '@yisu/shared'
-import { Card, Descriptions, Form, Modal, Space, Spin } from 'antd'
+import { HotelReviewStatus, PriceMode } from '@yisu/shared'
+import {
+  Card,
+  Descriptions,
+  Form,
+  Image,
+  Modal,
+  Space,
+  Spin,
+  Table,
+  Tag,
+} from 'antd'
 import { useEffect } from 'react'
 import {
   useReviewActions,
   useReviewInfoDetail,
 } from '../../hooks/useReviewActions'
 import { ReviewActionForm } from '../ReviewForm/ReviewActionForm'
+import dayjs from 'dayjs'
 
 function HotelInfoCard({
   info,
@@ -47,19 +58,70 @@ function HotelInfoCard({
         <Descriptions.Item label="简介" span={2}>
           {info.description ?? '-'}
         </Descriptions.Item>
-        <Descriptions.Item label="房型数量">
-          {info.roomTypes.length ?? 0}
-        </Descriptions.Item>
-        <Descriptions.Item label="轮播图数量">
-          {info.images.length ?? 0}
+        <Descriptions.Item label="标签" span={2}>
+          {(info.tags ?? []).map((tag) => (
+            <Tag key={tag}>{tag}</Tag>
+          ))}
         </Descriptions.Item>
         <Descriptions.Item label="商家">
           {info.hotel.merchant.username}
         </Descriptions.Item>
         <Descriptions.Item label="开业时间">
-          {info.openedAt ?? '-'}
+          {info.openedAt ? dayjs(info.openedAt).format('YYYY-MM-DD') : '-'}
+        </Descriptions.Item>
+        <Descriptions.Item label="广告图" span={2}>
+          {info.homeAdImage ? (
+            <Image src={info.homeAdImage} width={200} />
+          ) : (
+            '-'
+          )}
+        </Descriptions.Item>
+        <Descriptions.Item label="轮播图" span={2}>
+          <Image.PreviewGroup>
+            {info.images.map((image) => (
+              <Image key={image.id} src={image.url} width={120} />
+            ))}
+          </Image.PreviewGroup>
         </Descriptions.Item>
       </Descriptions>
+      <Table
+        size="small"
+        className="mt-4"
+        bordered
+        pagination={false}
+        rowKey="id"
+        dataSource={info.roomTypes}
+        columns={[
+          { title: '房型名', dataIndex: 'name' },
+          { title: '价格', dataIndex: 'price' },
+          {
+            title: '房型',
+            dataIndex: 'priceMode',
+            render: (mode: PriceMode) => {
+              if (mode === PriceMode.PER_NIGHT) {
+                return '酒店'
+              }
+              if (mode === PriceMode.PER_HOUR) {
+                return '钟点房'
+              }
+              return mode
+            },
+          },
+          { title: '床型', dataIndex: 'bedType' },
+          {
+            title: '面积',
+            dataIndex: 'area',
+            render: (area: number | null) => (area ? `${area} m²` : '-'),
+          },
+          {
+            title: '参考图',
+            dataIndex: 'imageUrl',
+            render: (url: string | null) =>
+              url ? <Image src={url} width={80} /> : '-',
+          },
+          { title: '入住人数', dataIndex: 'maxGuests' },
+        ]}
+      />
     </Card>
   )
 }
