@@ -7,7 +7,7 @@ import Input from 'antd/es/input/Input'
 import Password from 'antd/es/input/Password'
 import { useMutation } from '@tanstack/react-query'
 import { AuthRequest } from '@yisu/front-utils/apis/auth'
-import { tokenStore } from '@/lib/request'
+import { tokenStore, refreshTokenStore } from '@/lib/request'
 import { useState } from 'react'
 
 type FieldType = Partial<ApiUserTypes['UserRegister']> & {
@@ -26,6 +26,7 @@ const Register = () => {
     mutationFn: AuthRequest.register,
     onSuccess: (data) => {
       tokenStore.set(data.accessToken)
+      refreshTokenStore.set(data.refreshToken)
       message.success('注册成功，正在跳转...')
       navigate({ to: '/' })
     },
@@ -64,9 +65,7 @@ const Register = () => {
     const email = form.getFieldValue('email')
     if (!email) {
       message.warning('请先输入邮箱地址')
-      form.setFields([
-        { name: 'email', errors: ['请输入邮箱地址'] }
-      ])
+      form.setFields([{ name: 'email', errors: ['请输入邮箱地址'] }])
       return
     }
     try {
@@ -85,7 +84,12 @@ const Register = () => {
       return
     }
 
-    if (!registerData.email || !registerData.username || !registerData.password || !registerData.verifyCode) {
+    if (
+      !registerData.email ||
+      !registerData.username ||
+      !registerData.password ||
+      !registerData.verifyCode
+    ) {
       message.error('请填写所有必填项')
       return
     }
@@ -151,10 +155,7 @@ const Register = () => {
             },
           ]}
         >
-          <Password
-            placeholder="请输入密码"
-            type="password"
-          />
+          <Password placeholder="请输入密码" type="password" />
         </Form.Item>
 
         <Form.Item<FieldType>
@@ -172,10 +173,7 @@ const Register = () => {
             }),
           ]}
         >
-          <Password
-            placeholder="请确认密码"
-            type="password"
-          />
+          <Password placeholder="请确认密码" type="password" />
         </Form.Item>
 
         <Form.Item<FieldType>

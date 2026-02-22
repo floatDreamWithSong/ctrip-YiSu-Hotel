@@ -6,7 +6,7 @@ import Input from 'antd/es/input/Input'
 import Password from 'antd/es/input/Password'
 import { useMutation } from '@tanstack/react-query'
 import { AuthRequest } from '@yisu/front-utils/apis/auth'
-import { tokenStore } from '@/lib/request'
+import { tokenStore, refreshTokenStore } from '@/lib/request'
 
 type FieldType = Partial<ApiUserTypes['UserLogin']>
 
@@ -19,6 +19,7 @@ const Login = () => {
     mutationFn: AuthRequest.login,
     onSuccess: (data) => {
       tokenStore.set(data.accessToken)
+      refreshTokenStore.set(data.refreshToken)
       message.success('登录成功，正在跳转...')
       navigate({ to: '/' })
     },

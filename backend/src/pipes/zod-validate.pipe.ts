@@ -1,5 +1,12 @@
 import { PipeTransform, Injectable, ArgumentMetadata, BadRequestException } from '@nestjs/common';
-import { ApiUserSchemas, ApiLocationSchemas, emailSchema, pageQuerySchema } from '@yisu/shared';
+import {
+  ApiHotelSchemas,
+  ApiLocationSchemas,
+  ApiMobileHotelSchemas,
+  ApiUserSchemas,
+  emailSchema,
+  pageQuerySchema,
+} from '@yisu/shared';
 import { ZodType } from 'zod';
 
 @Injectable()
@@ -27,4 +34,17 @@ export class ZodValidationPipe<T> implements PipeTransform {
   static regeocodeRequestSchema = new ZodValidationPipe(ApiLocationSchemas.regeocodeRequest);
   static inputTipsRequestSchema = new ZodValidationPipe(ApiLocationSchemas.inputTipsRequest);
   static geocodeRequestSchema = new ZodValidationPipe(ApiLocationSchemas.geocodeRequest);
+  static hotelQuerySchema = new ZodValidationPipe(ApiHotelSchemas.hotelQuery);
+  static hotelCreateSchema = new ZodValidationPipe(ApiHotelSchemas.hotelCreate);
+  static hotelUpdateHomeAdSchema = new ZodValidationPipe(ApiHotelSchemas.hotelUpdateHomeAd);
+  static hotelInfoQuerySchema = new ZodValidationPipe(ApiHotelSchemas.hotelInfoQuery);
+  static hotelInfoCreateSchema = new ZodValidationPipe(ApiHotelSchemas.hotelInfoCreate);
+  static hotelInfoUpdateSchema = new ZodValidationPipe(ApiHotelSchemas.hotelInfoUpdate);
+  static adminReviewQuerySchema = new ZodValidationPipe(ApiHotelSchemas.adminReviewQuery);
+  static adminReviewActionSchema = new ZodValidationPipe(ApiHotelSchemas.adminReviewAction);
+  static reviewRecordQuerySchema = new ZodValidationPipe(ApiHotelSchemas.reviewRecordQuery);
+  static mobileHomeBannerQuerySchema = new ZodValidationPipe(ApiMobileHotelSchemas.mobileHomeBannerQuery);
+  static mobileHotelSearchQuerySchema = new ZodValidationPipe(ApiMobileHotelSchemas.mobileHotelSearchQuery);
+  static mobileNearbyHotelsQuerySchema = new ZodValidationPipe(ApiMobileHotelSchemas.mobileNearbyHotelsQuery);
+  static mobileNearbyPoisQuerySchema = new ZodValidationPipe(ApiMobileHotelSchemas.mobileNearbyPoisQuery);
 }

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { Configurations } from '@/config';
 import { firstValueFrom } from 'rxjs';
-import type { ApiLocationTypes } from '@yisu/shared';
+import type { ApiLocationTypes, PoiCategory } from '@yisu/shared';
 
 interface AmapApiResponse<T> {
   status: string;
@@ -21,11 +21,11 @@ interface AmapRegeocodeData {
   regeocode: {
     formatted_address: string;
     addressComponent: {
-      province: string;
-      city: string;
-      district: string;
-      street: string;
-      adcode: string;
+      province: string | string[];
+      city: string | string[];
+      district: string | string[];
+      street: string | string[];
+      adcode: string | string[];
     };
   };
 }
@@ -47,15 +47,24 @@ interface AmapIpLocateResponse extends AmapApiResponse<never> {
 interface AmapGeocodeResponse extends AmapApiResponse<never> {
   geocodes?: AmapGeocodeData['geocodes'];
 }
+interface AmapNearbyPoiResponse extends AmapApiResponse<never> {
+  pois?: Array<{
+    id: string;
+    name: string;
+    address?: string;
+    location?: string;
+    distance?: string;
+  }>;
+}
 
 interface AmapInputTipsData {
   tips: Array<{
     name: string;
-    address?: string;
-    location?: string;
-    adcode?: string;
-    district?: string;
-    city?: string;
+    address?: string | string[];
+    location?: string | string[];
+    adcode?: string | string[];
+    district?: string | string[];
+    city?: string | string[];
     type?: string;
   }>;
 }
@@ -126,13 +135,23 @@ export class LocationService {
       const { formatted_address, addressComponent } = regeocode;
       const [lng, lat] = location.split(',').map(Number);
 
+      // 高德地图在直辖市场景下会将 city/province/district 返回为空数组 []
+      const normalizeStr = (v: string | string[] | undefined): string | undefined => {
+        if (!v) return undefined;
+        if (Array.isArray(v)) return v.length > 0 ? v[0] : undefined;
+        return v;
+      };
+
+      const province = normalizeStr(addressComponent.province);
+      const city = normalizeStr(addressComponent.city) || province;
+
       return {
         formattedAddress: formatted_address,
-        province: addressComponent.province,
-        city: addressComponent.city,
-        district: addressComponent.district,
-        street: addressComponent.street,
-        adcode: addressComponent.adcode,
+        province,
+        city,
+        district: normalizeStr(addressComponent.district),
+        street: normalizeStr(addressComponent.street),
+        adcode: normalizeStr(addressComponent.adcode),
         location: { lng, lat },
       };
     } catch (error) {
@@ -175,13 +194,22 @@ export class LocationService {
 
       const tips = responseTips || [];
 
+      // 辅助函数：将字符串或数组转换为字符串
+      const normalizeField = (value: string | string[] | undefined): string | undefined => {
+        if (!value) return undefined;
+        if (Array.isArray(value)) {
+          return value.length > 0 ? value[0] : undefined;
+        }
+        return value;
+      };
+
       return tips.map((tip) => ({
         name: tip.name,
-        address: tip.address,
-        location: tip.location,
-        adcode: tip.adcode,
-        district: tip.district,
-        city: tip.city,
+        address: normalizeField(tip.address),
+        location: normalizeField(tip.location),
+        adcode: normalizeField(tip.adcode),
+        district: normalizeField(tip.district),
+        city: normalizeField(tip.city),
         type: tip.type,
       }));
     } catch (error) {
@@ -239,5 +267,43 @@ export class LocationService {
       this.logger.error('地理编码异常', error);
       throw error;
     }
+  }
+
+  /**
+   * 周边 POI 检索
+   */
+  async nearbySearch(params: {
+    location: string;
+    radiusMeters: number;
+    limit: number;
+    keywords: string;
+    category: PoiCategory;
+  }) {
+    const response = await firstValueFrom(
+      this.httpService.get<AmapNearbyPoiResponse>(`${this.baseUrl}/place/around`, {
+        params: {
+          key: this.key,
+          location: params.location,
+          radius: params.radiusMeters,
+          keywords: params.keywords,
+          page_size: params.limit,
+          sortrule: 'distance',
+          output: 'JSON',
+        },
+      }),
+    )
+    const { status, info, pois } = response.data
+    if (status !== '1') {
+      this.logger.error(`周边检索失败: status=${status}, info=${info}`)
+      return []
+    }
+    return (pois ?? []).map((poi) => ({
+      id: poi.id,
+      name: poi.name,
+      address: poi.address ?? null,
+      location: poi.location ?? null,
+      distance: poi.distance ? Number(poi.distance) : null,
+      category: params.category,
+    }))
   }
 }
