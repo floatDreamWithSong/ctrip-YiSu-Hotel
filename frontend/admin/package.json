@@ -8,7 +8,8 @@
     "start": "vite preview --port 7100",
     "test": "vitest run",
     "lint": "eslint",
-    "format": "prettier src/**/*.{js,jsx,ts,tsx}",
+    "format": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
+    "type-check": "tsc --noEmit",
     "check": "prettier src/**/*.{js,jsx,ts,tsx} --write . && eslint --fix"
   },
   "dependencies": {

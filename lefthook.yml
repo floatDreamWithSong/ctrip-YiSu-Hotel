@@ -1,0 +1,21 @@
+pre-push:
+  parallel: true
+  commands:
+    admin-format:
+      glob: "frontend/admin/**"
+      run: pnpm --filter admin format
+    admin-lint:
+      glob: "frontend/admin/**"
+      run: pnpm --filter admin lint
+    admin-type-check:
+      glob: "frontend/admin/**"
+      run: pnpm --filter admin type-check
+    mobile-format:
+      glob: "frontend/mobile/**"
+      run: pnpm --filter mobile format
+    mobile-lint:
+      glob: "frontend/mobile/**"
+      run: pnpm --filter mobile lint
+    mobile-type-check:
+      glob: "frontend/mobile/**"
+      run: pnpm --filter mobile type-check
