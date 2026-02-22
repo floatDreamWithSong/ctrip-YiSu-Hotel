@@ -2,32 +2,34 @@ import { request } from '@yisu/front-utils/request'
 import { ApiHotelSchemas } from '@yisu/shared'
 import type { ApiHotelTypes } from '@yisu/shared'
 
-export interface PaginatedResult<T> {
-  total: number
-  page: number
-  limit: number
-  items: T[]
-}
+// 从 shared 包导入响应类型
+export type {
+  PaginatedResult,
+  MerchantHotelItem,
+  MerchantHotelDetail,
+  HotelInfoItem,
+  HotelInfoDetail,
+  AdminReviewHotelInfoItem,
+  AdminReviewHotelInfoDetail,
+  ReviewRecordItem,
+  HotelImage,
+  RoomType,
+  Location,
+} from '@yisu/shared'
+
+import type {
+  PaginatedResult,
+  MerchantHotelItem,
+  MerchantHotelDetail,
+  HotelInfoItem,
+  AdminReviewHotelInfoItem,
+  AdminReviewHotelInfoDetail,
+  ReviewRecordItem,
+} from '@yisu/shared'
 
 export const MerchantHotelRequest = {
   getHotels: (params: ApiHotelTypes['HotelQuery']) => {
-    return request<PaginatedResult<{
-      id: number
-      hotelNickname: string
-      isHomeAdEnabled: boolean
-      publishedInfoId: number | null
-      publishedInfo: null | {
-        id: number
-        infoNickname: string
-        name: string
-        reviewStatus: string
-      }
-      _count: {
-        infos: number
-      }
-      createdAt: string
-      updatedAt: string
-    }>>({
+    return request<PaginatedResult<MerchantHotelItem>>({
       url: '/merchant/hotels',
       method: 'GET',
       params,
@@ -35,16 +37,7 @@ export const MerchantHotelRequest = {
     })
   },
   createHotel: (data: ApiHotelTypes['HotelCreate']) => {
-    return request<{
-      id: number
-      hotelNickname: string
-      isHomeAdEnabled: boolean
-      merchantId: number
-      publishedInfoId: number | null
-      isDeleted: boolean
-      createdAt: string
-      updatedAt: string
-    }>({
+    return request<MerchantHotelItem>({
       url: '/merchant/hotels',
       method: 'POST',
       data,
@@ -58,24 +51,12 @@ export const MerchantHotelRequest = {
     })
   },
   getHotelDetail: (hotelId: number) => {
-    return request<{
-      id: number
-      hotelNickname: string
-      isHomeAdEnabled: boolean
-      merchantId: number
-      publishedInfoId: number | null
-      createdAt: string
-      updatedAt: string
-      infoCount: number
-    }>({
+    return request<MerchantHotelDetail>({
       url: `/merchant/hotels/${hotelId}`,
       method: 'GET',
     })
   },
-  updateHomeAdEnabled: (
-    hotelId: number,
-    data: ApiHotelTypes['HotelUpdateHomeAd'],
-  ) => {
+  updateHomeAdEnabled: (hotelId: number, data: ApiHotelTypes['HotelUpdateHomeAd']) => {
     return request({
       url: `/merchant/hotels/${hotelId}/home-ad-enabled`,
       method: 'PUT',
@@ -84,14 +65,7 @@ export const MerchantHotelRequest = {
     })
   },
   getHotelInfos: (hotelId: number, params: ApiHotelTypes['HotelInfoQuery']) => {
-    return request<PaginatedResult<{
-      id: number
-      infoNickname: string
-      name: string
-      reviewStatus: string
-      createdAt: string
-      updatedAt: string
-    }>>({
+    return request<PaginatedResult<HotelInfoItem>>({
       url: `/merchant/hotels/${hotelId}/infos`,
       method: 'GET',
       params,
@@ -99,10 +73,12 @@ export const MerchantHotelRequest = {
     })
   },
   getHotelInfoDetail: (hotelId: number, infoId: number) => {
-    return request<ApiHotelTypes['HotelInfoCreate'] & {
-      id: number
-      reviewStatus: string
-    }>({
+    return request<
+      ApiHotelTypes['HotelInfoCreate'] & {
+        id: number
+        reviewStatus: string
+      }
+    >({
       url: `/merchant/hotels/${hotelId}/infos/${infoId}`,
       method: 'GET',
     })
@@ -118,7 +94,7 @@ export const MerchantHotelRequest = {
   updateHotelInfo: (
     hotelId: number,
     infoId: number,
-    data: ApiHotelTypes['HotelInfoUpdate'],
+    data: ApiHotelTypes['HotelInfoUpdate']
   ) => {
     return request({
       url: `/merchant/hotels/${hotelId}/infos/${infoId}`,
@@ -161,25 +137,7 @@ export const MerchantHotelRequest = {
 
 export const AdminReviewRequest = {
   getReviewHotelInfos: (params: ApiHotelTypes['AdminReviewQuery']) => {
-    return request<PaginatedResult<{
-      id: number
-      infoNickname: string
-      name: string
-      reviewStatus: string
-      createdAt: string
-      updatedAt: string
-      hotel: {
-        id: number
-        hotelNickname: string
-        merchant: {
-          user: {
-            id: number
-            username: string
-            email: string
-          }
-        }
-      }
-    }>>({
+    return request<PaginatedResult<AdminReviewHotelInfoItem>>({
       url: '/admin/reviews/hotel-infos',
       method: 'GET',
       params,
@@ -187,65 +145,7 @@ export const AdminReviewRequest = {
     })
   },
   getReviewHotelInfoDetail: (infoId: number) => {
-    return request<{
-      id: number
-      hotelId: number
-      infoNickname: string
-      name: string
-      enName?: string
-      starLevel: number
-      phone?: string
-      description?: string
-      province?: string
-      city?: string
-      district?: string
-      address: string
-      openedAt?: string
-      homeAdImage?: string
-      reviewStatus: string
-      images: Array<{
-        id: number
-        url: string
-        sortOrder: number
-        caption?: string
-      }>
-      roomTypes: Array<{
-        id: number
-        name: string
-        count: number
-        price: number
-        priceMode: string
-        duration: number
-        bedType?: string
-        maxGuests: number
-        area?: number
-        imageUrl?: string
-        sortOrder: number
-        hourlySlots: Array<{
-          id: number
-          startTime: string
-        }>
-      }>
-      tags: string[]
-      location: null | { lng: number; lat: number }
-      hotel: {
-        id: number
-        hotelNickname: string
-        merchant: {
-          id: number
-          username: string
-          email: string
-        }
-      }
-      reviewRecords: Array<{
-        id: number
-        action: string
-        rejectReason: string | null
-        rejectDetail: string | null
-        createdAt: string
-        reviewerName: string
-      }>
-    }>({
+    return request<AdminReviewHotelInfoDetail>({
       url: `/admin/reviews/hotel-infos/${infoId}`,
       method: 'GET',
     })
@@ -259,27 +159,7 @@ export const AdminReviewRequest = {
     })
   },
   getReviewRecords: (params: ApiHotelTypes['ReviewRecordQuery']) => {
-    return request<PaginatedResult<{
-      id: number
-      action: string
-      rejectReason: string | null
-      rejectDetail: string | null
-      createdAt: string
-      reviewer: {
-        id: number
-        username: string
-        email: string
-      }
-      hotel: {
-        id: number
-        hotelNickname: string
-      }
-      info: {
-        id: number
-        infoNickname: string
-        name: string
-      }
-    }>>({
+    return request<PaginatedResult<ReviewRecordItem>>({
       url: '/admin/reviews/records',
       method: 'GET',
       params,

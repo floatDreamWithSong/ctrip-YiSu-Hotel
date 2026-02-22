@@ -1,4 +1,4 @@
-import HotelDetailPage from '@/features/merchant/hotel-detail-page'
+import HotelDetailPage from '@/features/merchant/pages/HotelDetailPage'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_authenticated/merchant/hotels/$hotelId')(

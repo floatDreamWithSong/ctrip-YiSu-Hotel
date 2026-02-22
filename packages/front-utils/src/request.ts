@@ -167,6 +167,7 @@ export async function request<DATA>(
     }
     return result.data;
   } catch (error) {
+    console.error(error)
     throw error instanceof Error ? error : new Error("未知错误");
   }
 }
