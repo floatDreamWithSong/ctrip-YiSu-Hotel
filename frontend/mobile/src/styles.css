@@ -24,6 +24,6 @@ code {
   height: 100%;
 }
 
-html {
+html, .no-scrollbar>* {
   scrollbar-width: none;
 }

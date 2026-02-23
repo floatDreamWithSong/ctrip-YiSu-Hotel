@@ -6,6 +6,7 @@ import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
 import { NumberKeyboardInput } from '@/components/common/number-keyboard-input'
 import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
+import { CalendarIcon } from 'lucide-react'
 
 type IntentRoomType = 'HOTEL' | 'HOURLY'
 
@@ -191,7 +192,7 @@ const HotelDetailPage = () => {
         {roomTypeIntent === 'HOTEL' ? (
           <>
             <button
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-left text-xs"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-left text-xs flex items-center gap-2"
               onClick={() => {
                 const from = parseDate(checkIn)
                 const to = parseDate(checkOut)
@@ -199,6 +200,7 @@ const HotelDetailPage = () => {
                 setHotelRangeVisible(true)
               }}
             >
+              <CalendarIcon size={16} />
               {checkIn && checkOut
                 ? `${checkIn} 至 ${checkOut}`
                 : '选择入住/离店日期'}

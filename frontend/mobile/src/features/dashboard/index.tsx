@@ -16,6 +16,7 @@ import { NumberKeyboardInput } from '@/components/common/number-keyboard-input'
 import { useLocationStore } from '@/store/location'
 import { useHotelSearchStore, type RoomTypeTab } from '@/store/hotel-search'
 import dayjs from 'dayjs'
+import { CalendarIcon } from 'lucide-react'
 
 const roomTypeOptions = [
   { label: '酒店', value: 'HOTEL' },
@@ -231,7 +232,7 @@ const Dashboard = () => {
           {searchState.roomType === 'HOTEL' ? (
             <div className="mb-3">
               <button
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-left text-sm"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-left text-sm flex items-center gap-2"
                 onClick={() => {
                   const from = toValidDate(searchState.checkIn)
                   const to = toValidDate(searchState.checkOut)
@@ -239,6 +240,7 @@ const Dashboard = () => {
                   setHotelRangeVisible(true)
                 }}
               >
+                <CalendarIcon size={16} />
                 {searchState.checkIn && searchState.checkOut
                   ? `${searchState.checkIn} 至 ${searchState.checkOut}，共 ${dayjs(searchState.checkOut).diff(dayjs(searchState.checkIn), 'day')} 晚`
                   : '选择入住/离店日期'}
