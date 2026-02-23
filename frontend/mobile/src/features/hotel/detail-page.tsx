@@ -232,7 +232,7 @@ const HotelDetailPage = () => {
         </Tabs>
       </div>
 
-      <div className="px-3 py-2">
+      <div className="px-3 py-2 pb-8">
         {activeTab === 'room' && (
           <div className="space-y-2">
             {roomTypes.length === 0 && (
@@ -241,28 +241,110 @@ const HotelDetailPage = () => {
               </div>
             )}
             {roomTypes.map((room) => (
-              <div key={room.id} className="rounded-xl bg-white p-3">
-                <div className="text-sm font-medium">{room.name}</div>
-                <div className="mt-1 text-xs text-gray-500">
-                  {room.priceMode === 'PER_NIGHT'
-                    ? `￥${room.price.toFixed(0)} / ${room.duration}晚`
-                    : `￥${room.price.toFixed(0)} / ${room.duration}小时`}
-                </div>
-                <div className="mt-1 text-xs text-gray-500">
-                  剩余{room.count}间
-                </div>
-                {room.slots.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {room.slots.map((slot) => (
-                      <span
-                        key={slot.id}
-                        className="rounded-full bg-gray-100 px-2 py-[2px] text-[11px] text-gray-600"
-                      >
-                        {slot.startTime}-{slot.endTime}
-                      </span>
-                    ))}
+              <div
+                key={room.id}
+                className="overflow-hidden rounded-2xl bg-white shadow-sm"
+              >
+                <div className="flex gap-3 p-3">
+                  <div className="h-24 w-28 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                    {room.imageUrl ? (
+                      <img
+                        src={room.imageUrl}
+                        alt={room.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-[11px] text-gray-400">
+                        暂无图片
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-gray-900">
+                          {room.name}
+                        </div>
+                        <div className="mt-1 text-[11px] text-gray-500">
+                          {room.priceMode === 'PER_NIGHT'
+                            ? '按晚预订'
+                            : '钟点房'}
+                        </div>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-1 text-[11px] ${
+                          room.count > 0
+                            ? 'bg-gray-100 text-gray-500'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}
+                      >
+                        {room.count > 0 ? `剩余 ${room.count} 间` : '已售罄'}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {room.bedType && (
+                        <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] text-gray-600">
+                          床型：{room.bedType}
+                        </span>
+                      )}
+                      {room.area !== null && (
+                        <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] text-gray-600">
+                          面积：
+                          {Number.isInteger(room.area)
+                            ? `${room.area}㎡`
+                            : `${room.area.toFixed(1)}㎡`}
+                        </span>
+                      )}
+                      <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] text-gray-600">
+                        {room.maxGuests}人/间
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-dashed border-gray-100 px-3 py-2.5">
+                  <div className="flex items-end justify-between gap-2">
+                    <div>
+                      <div className="text-[11px] text-gray-500">
+                        {room.priceMode === 'PER_NIGHT'
+                          ? '房型价格'
+                          : '钟点房价格'}
+                      </div>
+                      <div className="mt-0.5 flex items-baseline gap-1">
+                        <span className="text-xs font-medium text-orange-500">
+                          ￥
+                        </span>
+                        <span className="text-xl font-semibold leading-none text-orange-600">
+                          {room.price.toFixed(0)}
+                        </span>
+                        <span className="text-[11px] text-gray-500">
+                          / {room.duration}
+                          {room.priceMode === 'PER_NIGHT' ? '夜' : '小时'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {room.slots.length > 0 && (
+                    <div className="mt-2.5 rounded-xl bg-gray-50 p-2">
+                      <div className="mb-1.5 text-[11px] text-gray-500">
+                        可预约时段
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {room.slots.map((slot) => (
+                          <span
+                            key={slot.id}
+                            className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-[11px] text-gray-700"
+                          >
+                            {slot.startTime}-{slot.endTime}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
