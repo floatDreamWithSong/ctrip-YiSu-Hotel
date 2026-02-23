@@ -31,6 +31,7 @@ export const NumberKeyboardInput = ({
   disabled,
 }: NumberKeyboardInputProps) => {
   const inputIdRef = useRef<number>(++keyboardIdSeed)
+  const replaceOnNextInputRef = useRef(false)
   const safeValue = useMemo(() => toPositiveInt(value, min), [value, min])
   const [visible, setVisible] = useState(false)
   const [draft, setDraft] = useState(String(safeValue))
@@ -72,13 +73,17 @@ export const NumberKeyboardInput = ({
   const openKeyboard = useCallback(() => {
     if (disabled) return
     setDraft(String(safeValue))
+    replaceOnNextInputRef.current = true
     setActiveKeyboardId(inputIdRef.current)
     setVisible(true)
   }, [disabled, safeValue])
 
   const handleInput = (key: string) => {
     if (!/^\d$/.test(key)) return
-    const raw = `${draft}${key}`.replace(/\D/g, '')
+    const raw = (
+      replaceOnNextInputRef.current ? key : `${draft}${key}`
+    ).replace(/\D/g, '')
+    replaceOnNextInputRef.current = false
     const nextDraft = raw.replace(/^0+/, '')
     setDraft(nextDraft)
     if (nextDraft) {
@@ -87,6 +92,7 @@ export const NumberKeyboardInput = ({
   }
 
   const handleDelete = () => {
+    replaceOnNextInputRef.current = false
     if (!draft) return
     const nextDraft = draft.slice(0, -1)
     setDraft(nextDraft)
