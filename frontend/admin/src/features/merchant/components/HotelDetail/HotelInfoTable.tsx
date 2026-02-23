@@ -43,9 +43,9 @@ export function HotelInfoTable({
         pagination={pagination}
         columns={[
           {
-            title: '信息ID',
+            title: 'ID',
             dataIndex: 'id',
-            width: 90,
+            width: 70,
           },
           {
             title: '信息昵称',
@@ -63,9 +63,15 @@ export function HotelInfoTable({
             ),
           },
           {
+            title: '更新时间',
+            dataIndex: 'updatedAt',
+            width: 210,
+            render: (val: string) => val,
+          },
+          {
             title: '操作',
             key: 'actions',
-            width: 360,
+            width: 340,
             render: (_, record) => (
               <InfoActionButtons
                 info={record}

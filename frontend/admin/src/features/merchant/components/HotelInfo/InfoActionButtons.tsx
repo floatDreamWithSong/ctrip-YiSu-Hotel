@@ -37,34 +37,48 @@ export function InfoActionButtons({
 }: InfoActionButtonsProps) {
   const { reviewStatus } = info
 
+  const isDraft = reviewStatus === HotelReviewStatus.DRAFT
+  const isPending = reviewStatus === HotelReviewStatus.PENDING
+  const isApproved = reviewStatus === HotelReviewStatus.APPROVED
+  const isRejected = reviewStatus === HotelReviewStatus.REJECTED
+  const canEdit = isDraft || isRejected
+  const canSubmit = isDraft || isRejected
+
   return (
     <Space>
-      {/* 待发布状态：可发布、可编辑 */}
-      {reviewStatus === HotelReviewStatus.DRAFT && (
-        <>
-          <Button
-            type="primary"
-            size="small"
-            onClick={onSubmit}
-            loading={submitting}
-          >
-            发布
-          </Button>
-          <Button size="small" onClick={onEdit}>
-            编辑
-          </Button>
-        </>
-      )}
+      {/* 编辑：待发布/待更改时可用 */}
+      <Button size="small" disabled={!canEdit} onClick={onEdit}>
+        编辑
+      </Button>
 
-      {/* 审核中状态：可撤回 */}
-      {reviewStatus === HotelReviewStatus.PENDING && (
-        <Button size="small" onClick={onWithdraw} loading={withdrawing}>
-          撤回
-        </Button>
-      )}
+      {/* 创建副本：始终可用 */}
+      <Button size="small" onClick={onDuplicate} loading={duplicating}>
+        创建副本
+      </Button>
 
-      {/* 已发布状态：可下线 */}
-      {reviewStatus === HotelReviewStatus.APPROVED && (
+      {/* 发布：待发布/待更改时高亮可用 */}
+      <Button
+        size="small"
+        type={canSubmit ? 'primary' : 'default'}
+        disabled={!canSubmit}
+        onClick={onSubmit}
+        loading={submitting}
+      >
+        发布
+      </Button>
+
+      {/* 撤回：审核中时可用 */}
+      <Button
+        size="small"
+        disabled={!isPending}
+        onClick={onWithdraw}
+        loading={withdrawing}
+      >
+        撤回
+      </Button>
+
+      {/* 下线：已发布时可用 */}
+      {isApproved ? (
         <Popconfirm
           title="确认下线？"
           description="下线后将与酒店的已发布信息解除关联"
@@ -74,30 +88,13 @@ export function InfoActionButtons({
             下线
           </Button>
         </Popconfirm>
+      ) : (
+        <Button size="small" disabled>
+          下线
+        </Button>
       )}
 
-      {/* 待更改状态：可重新发布、可编辑 */}
-      {reviewStatus === HotelReviewStatus.REJECTED && (
-        <>
-          <Button
-            type="primary"
-            size="small"
-            onClick={onSubmit}
-            loading={submitting}
-          >
-            重新发布
-          </Button>
-          <Button size="small" onClick={onEdit}>
-            编辑
-          </Button>
-        </>
-      )}
-
-      {/* 通用操作：创建副本、删除 */}
-      <Button size="small" onClick={onDuplicate} loading={duplicating}>
-        创建副本
-      </Button>
-
+      {/* 删除：始终可用 */}
       <Popconfirm
         title="确认删除？"
         description="删除后将不能被查询到"
