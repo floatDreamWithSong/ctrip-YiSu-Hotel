@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import {
   CalendarPicker,
@@ -10,7 +10,6 @@ import {
   Toast,
 } from 'antd-mobile'
 import { LocationOutline } from 'antd-mobile-icons'
-import { useRequest } from 'ahooks'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
 import { LocationRequest } from '@yisu/front-utils/apis/location'
 import { getCurrentPosition } from '@yisu/front-utils/geolocation'
@@ -171,32 +170,29 @@ const HotelListPage = () => {
     () => toValidDate(targetDate) ?? null,
   )
   const currentCity = city ?? search.city ?? '未定位'
-  const { run: handleRelocate, loading: relocating } = useRequest(
-    async () => {
+  const relocateMutation = useMutation({
+    mutationFn: async () => {
       const pos = await getCurrentPosition()
       return LocationRequest.regeocode(`${pos.lng},${pos.lat}`)
     },
-    {
-      manual: true,
-      onSuccess: (data) => {
-        updateLocation({
-          city: data.city || data.province,
-          address: data.formattedAddress,
-          location: data.location,
-        })
-        Toast.show({
-          icon: 'success',
-          content: '定位成功',
-        })
-      },
-      onError: (error: Error) => {
-        Toast.show({
-          icon: 'fail',
-          content: error.message || '定位失败，请重试',
-        })
-      },
+    onSuccess: (data) => {
+      updateLocation({
+        city: data.city || data.province,
+        address: data.formattedAddress,
+        location: data.location,
+      })
+      Toast.show({
+        icon: 'success',
+        content: '定位成功',
+      })
     },
-  )
+    onError: (error: Error) => {
+      Toast.show({
+        icon: 'fail',
+        content: error.message || '定位失败，请重试',
+      })
+    },
+  })
 
   const queryResult = useInfiniteQuery({
     queryKey: [
@@ -281,8 +277,8 @@ const HotelListPage = () => {
               type="button"
               aria-label="重新定位"
               className="text-gray-500"
-              disabled={relocating}
-              onClick={handleRelocate}
+              disabled={relocateMutation.isPending}
+              onClick={() => relocateMutation.mutate()}
             >
               <LocationOutline />
             </button>
