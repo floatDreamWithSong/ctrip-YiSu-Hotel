@@ -3,6 +3,7 @@ import { useAddressLocate } from '@/components/address-input'
 import { useModal } from '@/hooks/useModal'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ApiHotelTypes } from '@yisu/shared'
+import { PriceMode } from '@yisu/shared'
 import { Form, Modal, message } from 'antd'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
@@ -10,6 +11,56 @@ import { useCallback, useState } from 'react'
 
 // 扩展 dayjs 支持 UTC
 dayjs.extend(utc)
+
+/**
+ * 商户端表单校验规则
+ * 仅在商户端前端执行，不涉及后端与其他端
+ */
+const MERCHANT_VALIDATION_RULES = {
+  /**
+   * 酒店轮播图必填校验
+   * @param images 轮播图数组
+   * @returns { valid: boolean, message?: string } 校验结果
+   */
+  carouselImagesRequired: (
+    images: unknown,
+  ): { valid: boolean; message?: string } => {
+    if (!Array.isArray(images) || images.length === 0) {
+      return { valid: false, message: '请至少上传一张酒店轮播图' }
+    }
+    return { valid: true }
+  },
+
+  /**
+   * 钟点房时段必填校验
+   * @param roomTypes 房型数组
+   * @returns { valid: boolean, message?: string } 校验结果
+   */
+  hourlySlotsRequired: (
+    roomTypes: unknown,
+  ): { valid: boolean; message?: string } => {
+    if (!Array.isArray(roomTypes)) {
+      return { valid: true }
+    }
+
+    // 查找所有钟点房
+    const hourlyRooms = roomTypes.filter(
+      (room) => room && room.priceMode === PriceMode.PER_HOUR,
+    )
+
+    // 检查每个钟点房是否至少有一个时段
+    for (const room of hourlyRooms) {
+      if (!room.hourlySlots || room.hourlySlots.length === 0) {
+        return {
+          valid: false,
+          message: '钟点房至少需要设置一个可用时段',
+        }
+      }
+    }
+
+    return { valid: true }
+  },
+}
 
 /**
  * 对对象键排序后进行字符串化，用于对象比较
@@ -227,6 +278,27 @@ export function useHotelInfoForm(hotelId: number) {
   /** 校验表单并提交（创建或更新） */
   const onSubmit = async () => {
     const values = await form.validateFields()
+
+    // === 商户端前置校验 ===
+    // 1. 酒店轮播图必填校验
+    const carouselValidation = MERCHANT_VALIDATION_RULES.carouselImagesRequired(
+      values.images,
+    )
+    if (!carouselValidation.valid) {
+      message.warning(carouselValidation.message)
+      return // 阻止提交
+    }
+
+    // 2. 钟点房时段必填校验
+    const hourlyValidation = MERCHANT_VALIDATION_RULES.hourlySlotsRequired(
+      values.roomTypes,
+    )
+    if (!hourlyValidation.valid) {
+      message.warning(hourlyValidation.message)
+      return // 阻止提交
+    }
+
+    // 校验通过，准备提交数据
     const payload: HotelInfoFormValues = {
       ...values,
       tags: (values.tags ?? []).filter(Boolean),
