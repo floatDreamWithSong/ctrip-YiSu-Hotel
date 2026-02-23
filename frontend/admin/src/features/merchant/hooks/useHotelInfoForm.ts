@@ -3,8 +3,8 @@ import { useAddressLocate } from '@/components/address-input'
 import { useModal } from '@/hooks/useModal'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ApiHotelTypes } from '@yisu/shared'
-import { Form, message } from 'antd'
-import { useCallback } from 'react'
+import { Form, Modal, message } from 'antd'
+import { useCallback, useState } from 'react'
 
 const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
 const HOTEL_INFOS_QUERY_KEY = 'merchant-hotel-infos'
@@ -14,6 +14,7 @@ type HotelInfoFormValues = ApiHotelTypes['HotelInfoCreate']
 /**
  * 酒店信息表单 Hook
  * 封装表单状态、打开/关闭、提交以及创建/更新 mutation
+ * 新增：脏表单警告功能
  */
 export function useHotelInfoForm(hotelId: number) {
   const queryClient = useQueryClient()
@@ -25,6 +26,70 @@ export function useHotelInfoForm(hotelId: number) {
   } = useModal<number>()
   const [form] = Form.useForm<HotelInfoFormValues>()
   const { locating, handleLocate } = useAddressLocate(form)
+
+  // 脏表单相关状态
+  const [initialValues, setInitialValues] =
+    useState<HotelInfoFormValues | null>(null) // 初始值（基准值）
+
+  // 监听表单所有字段变化
+  const watchedValues = Form.useWatch([], form)
+
+  // 判断表单是否为脏数据（与初始值不一致）
+  const isDirty =
+    initialValues &&
+    watchedValues &&
+    JSON.stringify(normalizeValues(initialValues)) !==
+      JSON.stringify(normalizeValues(watchedValues))
+
+  /**
+   * 数据规范化：处理 undefined/空值，确保对比一致性
+   * 将空数组、空字符串等统一规范化
+   */
+  function normalizeValues(
+    values: HotelInfoFormValues,
+  ): Partial<HotelInfoFormValues> {
+    return {
+      ...values,
+      tags: values.tags ?? [],
+      images: values.images ?? [],
+      roomTypes: values.roomTypes ?? [],
+      homeAdImage: values.homeAdImage ?? undefined,
+      location: values.location ?? undefined,
+      openedAt: values.openedAt ?? undefined,
+      enName: values.enName ?? undefined,
+      phone: values.phone ?? undefined,
+      description: values.description ?? undefined,
+      province: values.province ?? undefined,
+      city: values.city ?? undefined,
+      district: values.district ?? undefined,
+    }
+  }
+
+  /**
+   * 关闭前检查：显示脏表单警告
+   * @param readOnly 是否为只读模式
+   * @returns Promise<boolean> 返回 true 表示允许关闭，false 表示拦截关闭
+   */
+  const handleBeforeClose = (readOnly: boolean): Promise<boolean> => {
+    return new Promise((resolve) => {
+      // 只读模式或非脏数据：直接允许关闭
+      if (readOnly || !isDirty) {
+        resolve(true)
+        return
+      }
+
+      // 脏数据 + 可编辑状态：显示警告弹窗
+      Modal.confirm({
+        title: '提示',
+        content:
+          '当前酒店信息内容未保存，确认退出将丢失已编辑内容，是否确认退出？',
+        okText: '确认退出',
+        cancelText: '取消',
+        onOk: () => resolve(true), // 确认退出：允许关闭
+        onCancel: () => resolve(false), // 取消：拦截关闭
+      })
+    })
+  }
 
   const refresh = useCallback(() => {
     void Promise.all([
@@ -42,6 +107,8 @@ export function useHotelInfoForm(hotelId: number) {
       MerchantHotelRequest.createHotelInfo(hotelId, data),
     onSuccess: () => {
       message.success('酒店信息创建成功')
+      // 保存成功后：重置脏数据状态
+      setInitialValues(null)
       closeModal()
       form.resetFields()
       refresh()
@@ -54,6 +121,8 @@ export function useHotelInfoForm(hotelId: number) {
       MerchantHotelRequest.updateHotelInfo(hotelId, params.infoId, params.data),
     onSuccess: () => {
       message.success('酒店信息更新成功')
+      // 保存成功后：重置脏数据状态
+      setInitialValues(null)
       closeModal()
       form.resetFields()
       refresh()
@@ -63,7 +132,7 @@ export function useHotelInfoForm(hotelId: number) {
 
   /** 打开「新建」弹窗并重置表单 */
   const openCreate = () => {
-    form.setFieldsValue({
+    const defaultValues: HotelInfoFormValues = {
       infoNickname: '',
       name: '',
       enName: '',
@@ -80,14 +149,17 @@ export function useHotelInfoForm(hotelId: number) {
       tags: [],
       images: [],
       roomTypes: [],
-    })
+    }
+    form.setFieldsValue(defaultValues)
+    // 保存初始值作为基准
+    setInitialValues(defaultValues)
     openModal()
   }
 
   /** 打开「编辑」弹窗并加载已有数据 */
   const openEdit = async (infoId: number) => {
     const data = await MerchantHotelRequest.getHotelInfoDetail(hotelId, infoId)
-    form.setFieldsValue({
+    const formValues: HotelInfoFormValues = {
       infoNickname: data.infoNickname,
       name: data.name,
       enName: data.enName ?? undefined,
@@ -104,7 +176,10 @@ export function useHotelInfoForm(hotelId: number) {
       tags: data.tags ?? [],
       images: data.images ?? [],
       roomTypes: data.roomTypes ?? [],
-    })
+    }
+    form.setFieldsValue(formValues)
+    // 保存初始值作为基准
+    setInitialValues(formValues)
     openModal(infoId)
   }
 
@@ -130,10 +205,20 @@ export function useHotelInfoForm(hotelId: number) {
     createInfoMutation.mutate(payload)
   }
 
-  /** 关闭弹窗并重置表单状态 */
-  const onClose = () => {
-    closeModal()
-    form.resetFields()
+  /**
+   * 关闭弹窗并重置表单状态（带脏数据检查）
+   * @param readOnly 是否为只读模式
+   */
+  const onClose = async (readOnly: boolean = false) => {
+    // 先检查是否允许关闭
+    const shouldClose = await handleBeforeClose(readOnly)
+
+    if (shouldClose) {
+      closeModal()
+      form.resetFields()
+      // 关闭后清空脏数据状态
+      setInitialValues(null)
+    }
   }
 
   return {

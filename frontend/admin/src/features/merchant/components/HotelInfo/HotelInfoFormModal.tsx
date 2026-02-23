@@ -52,7 +52,8 @@ interface HotelInfoFormModalProps {
   locating: boolean
   handleLocate: () => Promise<void>
   onSubmit: () => Promise<void>
-  onClose: () => void
+  /** 关闭弹窗，支持脏表单检查（传入 readOnly 参数） */
+  onClose: (readOnly: boolean) => Promise<void>
   submitting: boolean
 }
 
@@ -82,12 +83,12 @@ export function HotelInfoFormModal({
           : '新建酒店信息'
       }
       open={open}
-      onCancel={onClose}
+      onCancel={() => void onClose(readOnly)}
       // 只读模式隐藏保存按钮，仅显示关闭按钮
       footer={
         readOnly
           ? [
-              <Button key="close" onClick={onClose}>
+              <Button key="close" onClick={() => void onClose(readOnly)}>
                 关闭
               </Button>,
             ]

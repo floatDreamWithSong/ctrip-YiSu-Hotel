@@ -82,7 +82,7 @@ export function HotelInfoList({ hotelId }: HotelInfoListProps) {
           locating={formHook.locating}
           handleLocate={formHook.handleLocate}
           onSubmit={formHook.onSubmit}
-          onClose={formHook.onClose}
+          onClose={async () => await formHook.onClose(isReadOnly)}
           submitting={formHook.submitting}
         />
       </Space>
