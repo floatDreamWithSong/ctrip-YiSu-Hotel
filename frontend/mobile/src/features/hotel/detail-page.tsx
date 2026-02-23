@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { CalendarPicker, Swiper, Tabs } from 'antd-mobile'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
+import { NumberKeyboardInput } from '@/components/common/number-keyboard-input'
 import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
 
@@ -205,14 +206,10 @@ const HotelDetailPage = () => {
             <div className="mt-2 grid grid-cols-2 gap-2">
               <div>
                 <div className="mb-1 text-xs text-gray-500">入住人数</div>
-                <input
-                  type="number"
-                  min={1}
+                <NumberKeyboardInput
                   value={guestCount}
-                  onChange={(event) => {
-                    const next = normalizePositiveInt(
-                      event.target.valueAsNumber,
-                    )
+                  onChange={(value) => {
+                    const next = normalizePositiveInt(value)
                     setGuestCount(next)
                     searchStore.setState({ guestCount: next })
                   }}
@@ -221,14 +218,10 @@ const HotelDetailPage = () => {
               </div>
               <div>
                 <div className="mb-1 text-xs text-gray-500">房间数量</div>
-                <input
-                  type="number"
-                  min={1}
+                <NumberKeyboardInput
                   value={roomCount}
-                  onChange={(event) => {
-                    const next = normalizePositiveInt(
-                      event.target.valueAsNumber,
-                    )
+                  onChange={(value) => {
+                    const next = normalizePositiveInt(value)
                     setRoomCount(next)
                     searchStore.setState({ roomCount: next })
                   }}
@@ -337,7 +330,6 @@ const HotelDetailPage = () => {
             {(nearbyHotelsQuery.data ?? []).map((hotel) => (
               <HotelListCard
                 key={`${hotel.hotelId}-${hotel.infoId}`}
-                className="rounded-2xl bg-white p-3 shadow-sm"
                 onClick={() =>
                   navigate({
                     to: '/hotel/$hotelId',

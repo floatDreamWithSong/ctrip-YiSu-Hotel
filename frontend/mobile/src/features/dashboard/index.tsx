@@ -5,14 +5,17 @@ import {
   Button,
   CalendarPicker,
   Image,
+  Input,
   Selector,
   Slider,
   Swiper,
 } from 'antd-mobile'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
 import { LocationInput } from '@/components/home/location-input'
+import { NumberKeyboardInput } from '@/components/common/number-keyboard-input'
 import { useLocationStore } from '@/store/location'
 import { useHotelSearchStore, type RoomTypeTab } from '@/store/hotel-search'
+import dayjs from 'dayjs'
 
 const roomTypeOptions = [
   { label: '酒店', value: 'HOTEL' },
@@ -159,15 +162,7 @@ const Dashboard = () => {
       <div className="-mt-8 px-4">
         <div className="overflow-hidden rounded-2xl bg-white p-2 shadow-sm">
           {(bannersQuery.data ?? []).length > 0 ? (
-            <Swiper
-              autoplay
-              loop
-              indicator={(total, current) => (
-                <div className="text-[10px] text-white/90">
-                  {current + 1}/{total}
-                </div>
-              )}
-            >
+            <Swiper autoplay loop>
               {(bannersQuery.data ?? []).map((banner) => (
                 <Swiper.Item key={`${banner.hotelId}-${banner.infoId}`}>
                   <div
@@ -185,6 +180,7 @@ const Dashboard = () => {
                         fit="cover"
                         width="100%"
                         height={148}
+                        className="rounded-xl"
                       />
                     ) : (
                       <div className="h-[148px] w-full rounded-xl bg-gray-100" />
@@ -224,13 +220,12 @@ const Dashboard = () => {
           </div>
           <div className="mb-3">
             <div className="mb-1 text-xs text-gray-500">关键词</div>
-            <input
+            <Input
               value={searchState.keyword}
-              onChange={(event) =>
-                searchState.setState({ keyword: event.target.value })
-              }
+              onChange={(value) => searchState.setState({ keyword: value })}
+              clearable
               placeholder="酒店名称、英文名、简介"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              className="w-full "
             />
           </div>
           {searchState.roomType === 'HOTEL' ? (
@@ -245,7 +240,7 @@ const Dashboard = () => {
                 }}
               >
                 {searchState.checkIn && searchState.checkOut
-                  ? `${searchState.checkIn} 至 ${searchState.checkOut}`
+                  ? `${searchState.checkIn} 至 ${searchState.checkOut}，共 ${dayjs(searchState.checkOut).diff(dayjs(searchState.checkIn), 'day')} 晚`
                   : '选择入住/离店日期'}
               </button>
               <CalendarPicker
@@ -275,15 +270,11 @@ const Dashboard = () => {
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <div>
                   <div className="mb-1 text-xs text-gray-500">入住人数</div>
-                  <input
-                    type="number"
-                    min={1}
+                  <NumberKeyboardInput
                     value={searchState.guestCount}
-                    onChange={(event) =>
+                    onChange={(value) =>
                       searchState.setState({
-                        guestCount: normalizePositiveInt(
-                          event.target.valueAsNumber,
-                        ),
+                        guestCount: normalizePositiveInt(value),
                       })
                     }
                     className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
@@ -291,15 +282,11 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <div className="mb-1 text-xs text-gray-500">房间数量</div>
-                  <input
-                    type="number"
-                    min={1}
+                  <NumberKeyboardInput
                     value={searchState.roomCount}
-                    onChange={(event) =>
+                    onChange={(value) =>
                       searchState.setState({
-                        roomCount: normalizePositiveInt(
-                          event.target.valueAsNumber,
-                        ),
+                        roomCount: normalizePositiveInt(value),
                       })
                     }
                     className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
@@ -371,7 +358,7 @@ const Dashboard = () => {
           </div>
           {tagOptions.length > 0 && (
             <div className="mb-4">
-              <div className="mb-1 text-xs text-gray-500">酒店标签</div>
+              <div className="mb-1 text-xs text-gray-500">快捷标签</div>
               <Selector
                 options={tagOptions}
                 value={searchState.tagIds}
