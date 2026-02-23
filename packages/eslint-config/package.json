@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Eslint配置",
   "exports": {
-    "./*": "./*.ts"
+    "./*": "./*.mjs"
   },
   "scripts": {},
   "keywords": [],
