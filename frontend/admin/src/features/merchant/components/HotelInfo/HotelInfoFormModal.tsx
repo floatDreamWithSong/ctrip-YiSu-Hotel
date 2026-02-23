@@ -16,6 +16,8 @@ import {
   Row,
   Select,
   Space,
+  TimePicker,
+  Typography,
 } from 'antd'
 import type { FormInstance } from 'antd'
 import dayjs from 'dayjs'
@@ -74,7 +76,7 @@ export function HotelInfoFormModal({
       onCancel={onClose}
       onOk={() => void onSubmit()}
       confirmLoading={submitting}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form form={form} layout="vertical">
         {/* 基本信息 */}
@@ -254,7 +256,8 @@ export function HotelInfoFormModal({
             <Space direction="vertical" style={{ width: '100%' }}>
               {fields.map((field) => (
                 <Card key={field.key} size="small">
-                  <Row gutter={12}>
+                  {/* 第一行：房型名 | 数量 | 价格 | 计价方式 | 购买时长（钟点房专属） */}
+                  <Row gutter={12} align="bottom">
                     <Col span={6}>
                       <Form.Item
                         name={[field.name, 'name']}
@@ -292,11 +295,54 @@ export function HotelInfoFormModal({
                         <Select
                           options={[
                             { label: '按晚', value: PriceMode.PER_NIGHT },
-                            { label: '按小时', value: PriceMode.PER_HOUR },
+                            { label: '钟点房', value: PriceMode.PER_HOUR },
                           ]}
                         />
                       </Form.Item>
                     </Col>
+                    {/* 购买时长：仅钟点房显示 */}
+                    <Form.Item
+                      noStyle
+                      shouldUpdate={(prev, cur) =>
+                        prev.roomTypes?.[field.name]?.priceMode !==
+                        cur.roomTypes?.[field.name]?.priceMode
+                      }
+                    >
+                      {({ getFieldValue }) =>
+                        getFieldValue([
+                          'roomTypes',
+                          field.name,
+                          'priceMode',
+                        ]) === PriceMode.PER_HOUR ? (
+                          <Col span={6}>
+                            <Form.Item
+                              name={[field.name, 'duration']}
+                              label="购买时长：小时"
+                              rules={[
+                                { required: true, message: '请输入购买时长' },
+                                {
+                                  type: 'integer',
+                                  min: 1,
+                                  message: '请输入正整数',
+                                },
+                              ]}
+                            >
+                              <InputNumber
+                                min={1}
+                                max={24}
+                                precision={0}
+                                style={{ width: '100%' }}
+                                placeholder="如：4"
+                              />
+                            </Form.Item>
+                          </Col>
+                        ) : null
+                      }
+                    </Form.Item>
+                  </Row>
+
+                  {/* 第二行：入住人数 | 删除按钮 | 床型说明 | 房间面积 | 参考图 */}
+                  <Row gutter={12}>
                     <Col span={4}>
                       <Form.Item
                         name={[field.name, 'maxGuests']}
@@ -307,9 +353,11 @@ export function HotelInfoFormModal({
                       </Form.Item>
                     </Col>
                     <Col span={2}>
-                      <Button danger onClick={() => remove(field.name)}>
-                        删除
-                      </Button>
+                      <Form.Item label=" ">
+                        <Button danger onClick={() => remove(field.name)}>
+                          删除
+                        </Button>
+                      </Form.Item>
                     </Col>
                     <Col span={6}>
                       <Form.Item
@@ -329,6 +377,10 @@ export function HotelInfoFormModal({
                         <CosImageUpload dir="hotel-room" />
                       </Form.Item>
                     </Col>
+                  </Row>
+
+                  {/* 第三行：排序 */}
+                  <Row gutter={12}>
                     <Col span={6}>
                       <Form.Item
                         name={[field.name, 'sortOrder']}
@@ -339,6 +391,134 @@ export function HotelInfoFormModal({
                       </Form.Item>
                     </Col>
                   </Row>
+
+                  {/* 钟点时段：仅钟点房显示 */}
+                  <Form.Item
+                    noStyle
+                    shouldUpdate={(prev, cur) =>
+                      prev.roomTypes?.[field.name]?.priceMode !==
+                        cur.roomTypes?.[field.name]?.priceMode ||
+                      prev.roomTypes?.[field.name]?.duration !==
+                        cur.roomTypes?.[field.name]?.duration
+                    }
+                  >
+                    {({ getFieldValue }) => {
+                      const priceMode = getFieldValue([
+                        'roomTypes',
+                        field.name,
+                        'priceMode',
+                      ])
+                      const duration: number =
+                        getFieldValue(['roomTypes', field.name, 'duration']) ??
+                        0
+                      if (priceMode !== PriceMode.PER_HOUR) return null
+                      return (
+                        <>
+                          <Divider style={{ margin: '12px 0' }}>
+                            钟点时段
+                          </Divider>
+                          <Form.List name={[field.name, 'hourlySlots']}>
+                            {(
+                              slotFields,
+                              { add: addSlot, remove: removeSlot },
+                            ) => (
+                              <Space
+                                direction="vertical"
+                                style={{ width: '100%' }}
+                              >
+                                {slotFields.map((slotField) => (
+                                  <Row
+                                    key={slotField.key}
+                                    gutter={12}
+                                    align="middle"
+                                  >
+                                    <Col span={6}>
+                                      <Form.Item
+                                        name={[slotField.name, 'startTime']}
+                                        label="开始时间"
+                                        style={{ marginBottom: 0 }}
+                                        getValueProps={(val) => ({
+                                          value: val
+                                            ? dayjs(val, 'HH:mm')
+                                            : undefined,
+                                        })}
+                                        getValueFromEvent={(
+                                          time: dayjs.Dayjs | null,
+                                        ) =>
+                                          time
+                                            ? time.format('HH:mm')
+                                            : undefined
+                                        }
+                                        rules={[
+                                          {
+                                            required: true,
+                                            message: '请选择开始时间',
+                                          },
+                                          {
+                                            validator: (_, value: string) => {
+                                              if (!value || !duration)
+                                                return Promise.resolve()
+                                              const [h, m] = value
+                                                .split(':')
+                                                .map(Number)
+                                              const endMinutes =
+                                                h * 60 + m + duration * 60
+                                              if (endMinutes > 24 * 60) {
+                                                return Promise.reject(
+                                                  new Error(
+                                                    '时段结束时间不能超过24:00',
+                                                  ),
+                                                )
+                                              }
+                                              return Promise.resolve()
+                                            },
+                                          },
+                                        ]}
+                                      >
+                                        <TimePicker
+                                          format="HH:mm"
+                                          minuteStep={30}
+                                          style={{ width: '100%' }}
+                                        />
+                                      </Form.Item>
+                                    </Col>
+                                    <Col span={14}>
+                                      <Typography.Text type="secondary">
+                                        结束时间将按 房型时长单位(duration)
+                                        自动推导
+                                      </Typography.Text>
+                                    </Col>
+                                    <Col
+                                      span={4}
+                                      style={{ textAlign: 'right' }}
+                                    >
+                                      <Button
+                                        danger
+                                        size="small"
+                                        disabled={slotFields.length <= 1}
+                                        onClick={() =>
+                                          removeSlot(slotField.name)
+                                        }
+                                      >
+                                        删
+                                      </Button>
+                                    </Col>
+                                  </Row>
+                                ))}
+                                <Button
+                                  size="small"
+                                  style={{ marginTop: 8 }}
+                                  onClick={() => addSlot({ startTime: '' })}
+                                >
+                                  新增时段
+                                </Button>
+                              </Space>
+                            )}
+                          </Form.List>
+                        </>
+                      )
+                    }}
+                  </Form.Item>
                 </Card>
               ))}
               <Button
