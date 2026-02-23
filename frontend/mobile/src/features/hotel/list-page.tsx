@@ -14,7 +14,16 @@ import { LocationFill } from 'antd-mobile-icons'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
 import { LocationRequest } from '@yisu/front-utils/apis/location'
 import { getCurrentPosition } from '@yisu/front-utils/geolocation'
-import { NumberKeyboardInput } from '@/components/common/number-keyboard-input'
+import { DateTriggerButton } from '@/components/common/date-trigger-button'
+import { GuestRoomCountFields } from '@/components/common/guest-room-count-fields'
+import {
+  calcNightsFromYmd,
+  formatYmdDate,
+  getStartOfToday,
+  isOnOrAfterDate,
+  normalizePositiveInt,
+  parseYmdDate,
+} from '@/lib/hotel-search-form'
 import { useLocationStore } from '@/store/location'
 import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
@@ -41,9 +50,6 @@ const parseNumber = (value?: string) => {
   const num = Number(value)
   return Number.isFinite(num) ? num : undefined
 }
-const normalizePositiveInt = (value?: number) =>
-  Number.isInteger(value) && (value as number) >= 1 ? (value as number) : 1
-
 const getSearchParams = () => {
   const params = new URLSearchParams(window.location.search)
   return {
@@ -68,35 +74,6 @@ const getSearchParams = () => {
   }
 }
 
-const calcNights = (checkIn?: string, checkOut?: string) => {
-  if (!checkIn || !checkOut) return undefined
-  const start = new Date(checkIn)
-  const end = new Date(checkOut)
-  const diff = Math.ceil(
-    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
-  )
-  if (!Number.isFinite(diff) || diff <= 0) return undefined
-  return diff
-}
-
-const formatDate = (date?: Date | null) => {
-  if (!date) return undefined
-  const year = date.getFullYear()
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-const parseDate = (value?: string) => {
-  if (!value) return undefined
-  const [year, month, day] = value.split('-').map((item) => Number(item))
-  if (!year || !month || !day) return undefined
-  return new Date(year, month - 1, day)
-}
-
-const isOnOrAfter = (date: Date, target: Date) =>
-  date.getTime() >= target.getTime()
-
 const HotelListPage = () => {
   const navigate = useNavigate()
   const params = useParams({ from: '/_authenticated/list/$roomType' })
@@ -113,25 +90,23 @@ const HotelListPage = () => {
     Number(search.priceMax ?? PRICE_UNLIMITED),
   ])
   const today = useMemo(() => {
-    const date = new Date()
-    date.setHours(0, 0, 0, 0)
-    return date
+    return getStartOfToday()
   }, [])
   const toValidDate = (value?: string) => {
-    const date = parseDate(value)
-    return date && isOnOrAfter(date, today) ? date : undefined
+    const date = parseYmdDate(value)
+    return date && isOnOrAfterDate(date, today) ? date : undefined
   }
   const [checkIn, setCheckIn] = useState<string | undefined>(() => {
     const date = toValidDate(search.checkIn)
-    return date ? formatDate(date) : undefined
+    return date ? formatYmdDate(date) : undefined
   })
   const [checkOut, setCheckOut] = useState<string | undefined>(() => {
     const date = toValidDate(search.checkOut)
-    return date ? formatDate(date) : undefined
+    return date ? formatYmdDate(date) : undefined
   })
   const [targetDate, setTargetDate] = useState<string | undefined>(() => {
     const date = toValidDate(search.targetDate)
-    return date ? formatDate(date) : undefined
+    return date ? formatYmdDate(date) : undefined
   })
   const [guestCount, setGuestCount] = useState(() =>
     normalizePositiveInt(parseNumber(search.guestCount)),
@@ -257,7 +232,7 @@ const HotelListPage = () => {
   )
   const hasMore = queryResult.hasNextPage
   const canUseDistance = Boolean(location?.lng && location?.lat)
-  const nights = calcNights(checkIn, checkOut)
+  const nights = calcNightsFromYmd(checkIn, checkOut)
 
   return (
     <div className="h-full min-h-0 overflow-y-auto bg-[#f4f4f2] [&>div]:px-3 pb-4">
@@ -314,8 +289,9 @@ const HotelListPage = () => {
             <Dropdown.Item key="date" title="日期">
               <div className="p-3">
                 {params.roomType === 'HOTEL' ? (
-                  <button
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-left text-sm flex items-center gap-2"
+                  <DateTriggerButton
+                    className="rounded-lg text-sm"
+                    icon={<CalendarIcon size={16} />}
                     onClick={() => {
                       setActiveDropdown(null)
                       const from = toValidDate(checkIn)
@@ -323,23 +299,22 @@ const HotelListPage = () => {
                       setHotelCalendarValue(from && to ? [from, to] : null)
                       setHotelRangeVisible(true)
                     }}
-                  >
-                    <CalendarIcon size={16} />
-                    {checkIn && checkOut
-                      ? `${checkIn} 至 ${checkOut}`
-                      : '选择入住/离店日期'}
-                  </button>
+                    text={
+                      checkIn && checkOut
+                        ? `${checkIn} 至 ${checkOut}`
+                        : '选择入住/离店日期'
+                    }
+                  />
                 ) : (
-                  <button
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-left text-sm"
+                  <DateTriggerButton
+                    className="rounded-lg text-sm"
                     onClick={() => {
                       setActiveDropdown(null)
                       setHourlyCalendarValue(toValidDate(targetDate) ?? null)
                       setHourlyDateVisible(true)
                     }}
-                  >
-                    {targetDate ?? '选择日期'}
-                  </button>
+                    text={targetDate ?? '选择日期'}
+                  />
                 )}
                 <div className="mt-2 text-xs text-gray-500">
                   {params.roomType === 'HOTEL'
@@ -347,28 +322,18 @@ const HotelListPage = () => {
                     : `日期：${targetDate ?? '-'}`}
                 </div>
                 {params.roomType === 'HOTEL' && (
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <div>
-                      <div className="mb-1 text-xs text-gray-500">入住人数</div>
-                      <NumberKeyboardInput
-                        value={guestCount}
-                        onChange={(value) =>
-                          setGuestCount(normalizePositiveInt(value))
-                        }
-                        className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <div className="mb-1 text-xs text-gray-500">房间数量</div>
-                      <NumberKeyboardInput
-                        value={roomCount}
-                        onChange={(value) =>
-                          setRoomCount(normalizePositiveInt(value))
-                        }
-                        className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm"
-                      />
-                    </div>
-                  </div>
+                  <GuestRoomCountFields
+                    containerClassName="mt-3 grid grid-cols-2 gap-2"
+                    guestCount={guestCount}
+                    roomCount={roomCount}
+                    onGuestCountChange={(value) =>
+                      setGuestCount(normalizePositiveInt(value))
+                    }
+                    onRoomCountChange={(value) =>
+                      setRoomCount(normalizePositiveInt(value))
+                    }
+                    inputClassName="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm"
+                  />
                 )}
               </div>
             </Dropdown.Item>
@@ -455,8 +420,8 @@ const HotelListPage = () => {
         closeOnMaskClick
         onConfirm={(value) => {
           if (value) {
-            setCheckIn(formatDate(value[0]))
-            setCheckOut(formatDate(value[1]))
+            setCheckIn(formatYmdDate(value[0]))
+            setCheckOut(formatYmdDate(value[1]))
           } else {
             setCheckIn(undefined)
             setCheckOut(undefined)
@@ -475,7 +440,7 @@ const HotelListPage = () => {
         onMaskClick={() => setHourlyDateVisible(false)}
         closeOnMaskClick
         onConfirm={(value) => {
-          setTargetDate(formatDate(value))
+          setTargetDate(formatYmdDate(value))
           setHourlyDateVisible(false)
           setActiveDropdown(null)
         }}
