@@ -1,14 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { LocationRequest } from '@yisu/front-utils/apis/location'
 import { useLocationStore } from '@/store/location'
+import { SpinLoading } from 'antd-mobile'
 
 const AddressSearchPage = () => {
   const navigate = useNavigate()
   const { city, updateLocation } = useLocationStore()
   const [keyword, setKeyword] = useState('')
   const [submittedKeyword, setSubmittedKeyword] = useState('')
+
+  useEffect(() => {
+    const trimmedKeyword = keyword.trim()
+    const timer = window.setTimeout(() => {
+      setSubmittedKeyword(trimmedKeyword)
+    }, 300)
+
+    return () => window.clearTimeout(timer)
+  }, [keyword])
+
   const tipsQuery = useQuery({
     queryKey: ['mobile-address-tips', city, submittedKeyword],
     queryFn: async () => {
@@ -45,6 +56,11 @@ const AddressSearchPage = () => {
         </button>
       </div>
       <div className="space-y-2">
+        {tipsQuery.isFetching ? (
+          <div className="flex justify-center">
+            <SpinLoading />
+          </div>
+        ) : null}
         {(tipsQuery.data ?? []).map((item) => (
           <div
             key={`${item.name}-${item.location}`}
