@@ -4,7 +4,30 @@ import { useModal } from '@/hooks/useModal'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ApiHotelTypes } from '@yisu/shared'
 import { Form, Modal, message } from 'antd'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
 import { useCallback, useState } from 'react'
+
+// 扩展 dayjs 支持 UTC
+dayjs.extend(utc)
+
+/**
+ * 对对象键排序后进行字符串化，用于对象比较
+ * 避免 JSON.stringify 键顺序不同导致的误判
+ */
+const sortAndStringify = (obj: unknown): string => {
+  if (typeof obj !== 'object' || obj === null) {
+    return JSON.stringify(obj)
+  }
+  return JSON.stringify(
+    Object.keys(obj)
+      .sort()
+      .reduce((result: Record<string, unknown>, key) => {
+        result[key] = (obj as Record<string, unknown>)[key]
+        return result
+      }, {}),
+  )
+}
 
 const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
 const HOTEL_INFOS_QUERY_KEY = 'merchant-hotel-infos'
@@ -35,11 +58,19 @@ export function useHotelInfoForm(hotelId: number) {
   const watchedValues = Form.useWatch([], form)
 
   // 判断表单是否为脏数据（与初始值不一致）
+  // 添加 open && 条件：确保只在模态框打开时才进行脏数据判断
+  // 避免 watchedValues 延迟更新导致的误判（form.resetFields 后 watchedValues 可能还未清空）
+  const normalizedInitial = initialValues
+    ? normalizeValues(initialValues)
+    : null
+  const normalizedWatched = watchedValues
+    ? normalizeValues(watchedValues)
+    : null
   const isDirty =
+    open &&
     initialValues &&
     watchedValues &&
-    JSON.stringify(normalizeValues(initialValues)) !==
-      JSON.stringify(normalizeValues(watchedValues))
+    sortAndStringify(normalizedInitial) !== sortAndStringify(normalizedWatched)
 
   /**
    * 数据规范化：处理 undefined/空值，确保对比一致性
@@ -48,6 +79,11 @@ export function useHotelInfoForm(hotelId: number) {
   function normalizeValues(
     values: HotelInfoFormValues,
   ): Partial<HotelInfoFormValues> {
+    // 使用 dayjs.utc() 解析 UTC 时间字符串，避免时区偏移导致的日期错误
+    const openedAtNormalized = values.openedAt
+      ? dayjs.utc(values.openedAt).format('YYYY-MM-DD')
+      : undefined
+
     return {
       ...values,
       tags: values.tags ?? [],
@@ -55,7 +91,8 @@ export function useHotelInfoForm(hotelId: number) {
       roomTypes: values.roomTypes ?? [],
       homeAdImage: values.homeAdImage ?? undefined,
       location: values.location ?? undefined,
-      openedAt: values.openedAt ?? undefined,
+      // 统一截取 YYYY-MM-DD 日期部分再比较，避免时区差异导致的误判
+      openedAt: openedAtNormalized,
       enName: values.enName ?? undefined,
       phone: values.phone ?? undefined,
       description: values.description ?? undefined,
@@ -78,7 +115,7 @@ export function useHotelInfoForm(hotelId: number) {
         return
       }
 
-      // 脏数据 + 可编辑状态：显示警告弹窗
+      // 显示警告弹窗
       Modal.confirm({
         title: '提示',
         content:
@@ -159,6 +196,7 @@ export function useHotelInfoForm(hotelId: number) {
   /** 打开「编辑」弹窗并加载已有数据 */
   const openEdit = async (infoId: number) => {
     const data = await MerchantHotelRequest.getHotelInfoDetail(hotelId, infoId)
+
     const formValues: HotelInfoFormValues = {
       infoNickname: data.infoNickname,
       name: data.name,
@@ -170,13 +208,16 @@ export function useHotelInfoForm(hotelId: number) {
       city: data.city ?? undefined,
       district: data.district ?? undefined,
       address: data.address,
-      openedAt: data.openedAt ?? undefined,
+      // data.openedAt 可能为 null/undefined，必须判断后再转换
+      // 否则 dayjs(null/undefined).toISOString() 会返回当前时间，导致脏检测误判
+      openedAt: data.openedAt ? dayjs(data.openedAt).toISOString() : undefined,
       homeAdImage: data.homeAdImage ?? undefined,
       location: data.location ?? undefined,
       tags: data.tags ?? [],
       images: data.images ?? [],
       roomTypes: data.roomTypes ?? [],
     }
+
     form.setFieldsValue(formValues)
     // 保存初始值作为基准
     setInitialValues(formValues)
