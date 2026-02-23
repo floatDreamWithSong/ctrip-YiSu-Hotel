@@ -15,9 +15,7 @@ services:
       - backend 
 
   app:
-    build:
-      context: ..  # monorepo 根目录（从 backend/ 目录执行时，.. 即为根）
-      dockerfile: backend/Dockerfile
+    image: ${APP_IMAGE:-ghcr.io/floatdreamwithsong/ctrip-yisu-hotel-backend:latest}
     container_name: ctrip-yisu-hotel-be
     restart: always
     env_file:
