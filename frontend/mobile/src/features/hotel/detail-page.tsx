@@ -3,27 +3,20 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { CalendarPicker, Swiper, Tabs } from 'antd-mobile'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
+import { DateTriggerButton } from '@/components/common/date-trigger-button'
+import { GuestRoomCountFields } from '@/components/common/guest-room-count-fields'
+import {
+  calcNightsFromYmd,
+  formatYmdDate,
+  getStartOfToday,
+  normalizePositiveInt,
+  parseYmdDate,
+} from '@/lib/hotel-search-form'
 import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
+import { CalendarIcon } from 'lucide-react'
 
 type IntentRoomType = 'HOTEL' | 'HOURLY'
-
-const formatDate = (date?: Date | null) => {
-  if (!date) return undefined
-  const year = date.getFullYear()
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-const parseDate = (value?: string) => {
-  if (!value) return undefined
-  const [year, month, day] = value.split('-').map((item) => Number(item))
-  if (!year || !month || !day) return undefined
-  return new Date(year, month - 1, day)
-}
-const normalizePositiveInt = (value?: number) =>
-  Number.isInteger(value) && (value as number) >= 1 ? (value as number) : 1
 
 const HotelDetailPage = () => {
   const navigate = useNavigate()
@@ -36,9 +29,7 @@ const HotelDetailPage = () => {
     searchStore.roomType ??
     'HOTEL') as IntentRoomType
   const today = useMemo(() => {
-    const date = new Date()
-    date.setHours(0, 0, 0, 0)
-    return date
+    return getStartOfToday()
   }, [])
 
   const [checkIn, setCheckIn] = useState<string | undefined>(
@@ -61,12 +52,12 @@ const HotelDetailPage = () => {
   const [hotelCalendarValue, setHotelCalendarValue] = useState<
     [Date, Date] | null
   >(() => {
-    const from = parseDate(search.checkIn ?? searchStore.checkIn)
-    const to = parseDate(search.checkOut ?? searchStore.checkOut)
+    const from = parseYmdDate(search.checkIn ?? searchStore.checkIn)
+    const to = parseYmdDate(search.checkOut ?? searchStore.checkOut)
     return from && to ? [from, to] : null
   })
   const [hourlyCalendarValue, setHourlyCalendarValue] = useState<Date | null>(
-    () => parseDate(search.targetDate ?? searchStore.targetDate) ?? null,
+    () => parseYmdDate(search.targetDate ?? searchStore.targetDate) ?? null,
   )
 
   const detailQuery = useQuery({
@@ -115,13 +106,10 @@ const HotelDetailPage = () => {
   )
   const intro = detailQuery.data?.description || '暂无介绍'
   const poiGroups = useMemo(() => nearbyPoisQuery.data, [nearbyPoisQuery.data])
-  const nights = useMemo(() => {
-    if (!checkIn || !checkOut) return undefined
-    const start = new Date(checkIn).getTime()
-    const end = new Date(checkOut).getTime()
-    const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24))
-    return Number.isFinite(diff) && diff > 0 ? diff : undefined
-  }, [checkIn, checkOut])
+  const nights = useMemo(
+    () => calcNightsFromYmd(checkIn, checkOut),
+    [checkIn, checkOut],
+  )
 
   return (
     <div className="h-full overflow-y-auto bg-[#f8f8f6]">
@@ -189,67 +177,49 @@ const HotelDetailPage = () => {
         </div>
         {roomTypeIntent === 'HOTEL' ? (
           <>
-            <button
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-left text-xs"
+            <DateTriggerButton
+              className="rounded-xl text-xs"
+              icon={<CalendarIcon size={16} />}
               onClick={() => {
-                const from = parseDate(checkIn)
-                const to = parseDate(checkOut)
+                const from = parseYmdDate(checkIn)
+                const to = parseYmdDate(checkOut)
                 setHotelCalendarValue(from && to ? [from, to] : null)
                 setHotelRangeVisible(true)
               }}
-            >
-              {checkIn && checkOut
-                ? `${checkIn} 至 ${checkOut}`
-                : '选择入住/离店日期'}
-            </button>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <div>
-                <div className="mb-1 text-xs text-gray-500">入住人数</div>
-                <input
-                  type="number"
-                  min={1}
-                  value={guestCount}
-                  onChange={(event) => {
-                    const next = normalizePositiveInt(
-                      event.target.valueAsNumber,
-                    )
-                    setGuestCount(next)
-                    searchStore.setState({ guestCount: next })
-                  }}
-                  className="w-full rounded-xl border border-gray-200 px-2 py-2 text-xs"
-                />
-              </div>
-              <div>
-                <div className="mb-1 text-xs text-gray-500">房间数量</div>
-                <input
-                  type="number"
-                  min={1}
-                  value={roomCount}
-                  onChange={(event) => {
-                    const next = normalizePositiveInt(
-                      event.target.valueAsNumber,
-                    )
-                    setRoomCount(next)
-                    searchStore.setState({ roomCount: next })
-                  }}
-                  className="w-full rounded-xl border border-gray-200 px-2 py-2 text-xs"
-                />
-              </div>
-            </div>
+              text={
+                checkIn && checkOut
+                  ? `${checkIn} 至 ${checkOut}`
+                  : '选择入住/离店日期'
+              }
+            />
+            <GuestRoomCountFields
+              guestCount={guestCount}
+              roomCount={roomCount}
+              onGuestCountChange={(value) => {
+                const next = normalizePositiveInt(value)
+                setGuestCount(next)
+                searchStore.setState({ guestCount: next })
+              }}
+              onRoomCountChange={(value) => {
+                const next = normalizePositiveInt(value)
+                setRoomCount(next)
+                searchStore.setState({ roomCount: next })
+              }}
+              inputClassName="w-full rounded-xl border border-gray-200 px-2 py-2 text-xs"
+            />
             <div className="mt-2 text-xs text-gray-500">
               {nights ? `共 ${nights} 晚` : '请选择入住和离店日期'}
             </div>
           </>
         ) : (
-          <button
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-left text-xs"
+          <DateTriggerButton
+            className="rounded-xl text-xs"
             onClick={() => {
-              setHourlyCalendarValue(parseDate(targetDate) ?? null)
+              setHourlyCalendarValue(parseYmdDate(targetDate) ?? null)
               setHourlyDateVisible(true)
             }}
-          >
-            {targetDate ?? '选择入住日期'}
-          </button>
+            text={targetDate ?? '选择入住日期'}
+          />
         )}
       </div>
 
@@ -262,7 +232,7 @@ const HotelDetailPage = () => {
         </Tabs>
       </div>
 
-      <div className="px-3 py-2">
+      <div className="px-3 py-2 pb-8">
         {activeTab === 'room' && (
           <div className="space-y-2">
             {roomTypes.length === 0 && (
@@ -271,28 +241,110 @@ const HotelDetailPage = () => {
               </div>
             )}
             {roomTypes.map((room) => (
-              <div key={room.id} className="rounded-xl bg-white p-3">
-                <div className="text-sm font-medium">{room.name}</div>
-                <div className="mt-1 text-xs text-gray-500">
-                  {room.priceMode === 'PER_NIGHT'
-                    ? `￥${room.price.toFixed(0)} / ${room.duration}晚`
-                    : `￥${room.price.toFixed(0)} / ${room.duration}小时`}
-                </div>
-                <div className="mt-1 text-xs text-gray-500">
-                  剩余{room.count}间
-                </div>
-                {room.slots.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {room.slots.map((slot) => (
-                      <span
-                        key={slot.id}
-                        className="rounded-full bg-gray-100 px-2 py-[2px] text-[11px] text-gray-600"
-                      >
-                        {slot.startTime}-{slot.endTime}
-                      </span>
-                    ))}
+              <div
+                key={room.id}
+                className="overflow-hidden rounded-2xl bg-white shadow-sm"
+              >
+                <div className="flex gap-3 p-3">
+                  <div className="h-24 w-28 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                    {room.imageUrl ? (
+                      <img
+                        src={room.imageUrl}
+                        alt={room.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-[11px] text-gray-400">
+                        暂无图片
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-gray-900">
+                          {room.name}
+                        </div>
+                        <div className="mt-1 text-[11px] text-gray-500">
+                          {room.priceMode === 'PER_NIGHT'
+                            ? '按晚预订'
+                            : '钟点房'}
+                        </div>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-1 text-[11px] ${
+                          room.count > 0
+                            ? 'bg-gray-100 text-gray-500'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}
+                      >
+                        {room.count > 0 ? `剩余 ${room.count} 间` : '已售罄'}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {room.bedType && (
+                        <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] text-gray-600">
+                          床型：{room.bedType}
+                        </span>
+                      )}
+                      {room.area !== null && (
+                        <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] text-gray-600">
+                          面积：
+                          {Number.isInteger(room.area)
+                            ? `${room.area}㎡`
+                            : `${room.area.toFixed(1)}㎡`}
+                        </span>
+                      )}
+                      <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] text-gray-600">
+                        {room.maxGuests}人/间
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-dashed border-gray-100 px-3 py-2.5">
+                  <div className="flex items-end justify-between gap-2">
+                    <div>
+                      <div className="text-[11px] text-gray-500">
+                        {room.priceMode === 'PER_NIGHT'
+                          ? '房型价格'
+                          : '钟点房价格'}
+                      </div>
+                      <div className="mt-0.5 flex items-baseline gap-1">
+                        <span className="text-xs font-medium text-orange-500">
+                          ￥
+                        </span>
+                        <span className="text-xl font-semibold leading-none text-orange-600">
+                          {room.price.toFixed(0)}
+                        </span>
+                        <span className="text-[11px] text-gray-500">
+                          / {room.duration}
+                          {room.priceMode === 'PER_NIGHT' ? '夜' : '小时'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {room.slots.length > 0 && (
+                    <div className="mt-2.5 rounded-xl bg-gray-50 p-2">
+                      <div className="mb-1.5 text-[11px] text-gray-500">
+                        可预约时段
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {room.slots.map((slot) => (
+                          <span
+                            key={slot.id}
+                            className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-[11px] text-gray-700"
+                          >
+                            {slot.startTime}-{slot.endTime}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -337,7 +389,6 @@ const HotelDetailPage = () => {
             {(nearbyHotelsQuery.data ?? []).map((hotel) => (
               <HotelListCard
                 key={`${hotel.hotelId}-${hotel.infoId}`}
-                className="rounded-2xl bg-white p-3 shadow-sm"
                 onClick={() =>
                   navigate({
                     to: '/hotel/$hotelId',
@@ -385,8 +436,8 @@ const HotelDetailPage = () => {
               roomCount,
             })
           } else {
-            const nextCheckIn = formatDate(value[0])
-            const nextCheckOut = formatDate(value[1])
+            const nextCheckIn = formatYmdDate(value[0])
+            const nextCheckOut = formatYmdDate(value[1])
             setCheckIn(nextCheckIn)
             setCheckOut(nextCheckOut)
             searchStore.setState({
@@ -411,7 +462,7 @@ const HotelDetailPage = () => {
         onMaskClick={() => setHourlyDateVisible(false)}
         closeOnMaskClick
         onConfirm={(value) => {
-          const nextDate = formatDate(value)
+          const nextDate = formatYmdDate(value)
           setTargetDate(nextDate)
           searchStore.setState({
             roomType: 'HOURLY',

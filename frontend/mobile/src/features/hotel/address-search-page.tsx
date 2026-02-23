@@ -1,20 +1,33 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { useRequest } from 'ahooks'
 import { LocationRequest } from '@yisu/front-utils/apis/location'
 import { useLocationStore } from '@/store/location'
+import { SpinLoading } from 'antd-mobile'
 
 const AddressSearchPage = () => {
   const navigate = useNavigate()
   const { city, updateLocation } = useLocationStore()
   const [keyword, setKeyword] = useState('')
-  const { data, run, loading } = useRequest(
-    async (value: string) => {
-      if (!value.trim()) return []
-      return LocationRequest.inputTips(value, city)
+  const [submittedKeyword, setSubmittedKeyword] = useState('')
+
+  useEffect(() => {
+    const trimmedKeyword = keyword.trim()
+    const timer = window.setTimeout(() => {
+      setSubmittedKeyword(trimmedKeyword)
+    }, 300)
+
+    return () => window.clearTimeout(timer)
+  }, [keyword])
+
+  const tipsQuery = useQuery({
+    queryKey: ['mobile-address-tips', city, submittedKeyword],
+    queryFn: async () => {
+      if (!submittedKeyword) return []
+      return LocationRequest.inputTips(submittedKeyword, city)
     },
-    { manual: true },
-  )
+    enabled: Boolean(submittedKeyword),
+  })
 
   return (
     <div className="h-full overflow-y-auto bg-white px-3 py-3">
@@ -36,14 +49,27 @@ const AddressSearchPage = () => {
         />
         <button
           className="min-w-fit rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
-          onClick={() => run(keyword)}
-          disabled={loading}
+          onClick={() => {
+            // Re-run address lookup when clicking search with same term
+            const trimmedKeyword = keyword.trim()
+            if (trimmedKeyword === submittedKeyword && trimmedKeyword) {
+              void tipsQuery.refetch()
+              return
+            }
+            setSubmittedKeyword(trimmedKeyword)
+          }}
+          disabled={tipsQuery.isFetching}
         >
           搜索
         </button>
       </div>
       <div className="space-y-2">
-        {(data ?? []).map((item) => (
+        {tipsQuery.isFetching ? (
+          <div className="flex justify-center">
+            <SpinLoading />
+          </div>
+        ) : null}
+        {(tipsQuery.data ?? []).map((item) => (
           <div
             key={`${item.name}-${item.location}`}
             className="rounded-xl border border-gray-100 p-3"
