@@ -49,7 +49,15 @@ const AddressSearchPage = () => {
         />
         <button
           className="min-w-fit rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
-          onClick={() => setSubmittedKeyword(keyword.trim())}
+          onClick={() => {
+            // Re-run address lookup when clicking search with same term
+            const trimmedKeyword = keyword.trim()
+            if (trimmedKeyword === submittedKeyword && trimmedKeyword) {
+              void tipsQuery.refetch()
+              return
+            }
+            setSubmittedKeyword(trimmedKeyword)
+          }}
           disabled={tipsQuery.isFetching}
         >
           搜索
