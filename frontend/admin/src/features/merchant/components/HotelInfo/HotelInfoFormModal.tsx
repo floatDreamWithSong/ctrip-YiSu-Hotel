@@ -46,6 +46,8 @@ const HOTEL_TAG_PRESETS = [
 interface HotelInfoFormModalProps {
   open: boolean
   editingInfoId: number | null
+  /** 只读模式：已发布/审核中状态时为 true，隐藏保存按钮，仅供查看 */
+  readOnly?: boolean
   form: FormInstance<HotelInfoFormValues>
   locating: boolean
   handleLocate: () => Promise<void>
@@ -61,6 +63,7 @@ interface HotelInfoFormModalProps {
 export function HotelInfoFormModal({
   open,
   editingInfoId,
+  readOnly = false,
   form,
   locating,
   handleLocate,
@@ -71,14 +74,64 @@ export function HotelInfoFormModal({
   return (
     <Modal
       width={1000}
-      title={editingInfoId ? `编辑酒店信息 #${editingInfoId}` : '新建酒店信息'}
+      title={
+        editingInfoId
+          ? readOnly
+            ? `查看酒店信息 #${editingInfoId}`
+            : `编辑酒店信息 #${editingInfoId}`
+          : '新建酒店信息'
+      }
       open={open}
       onCancel={onClose}
+      // 只读模式隐藏保存按钮，仅显示关闭按钮
+      footer={
+        readOnly
+          ? [
+              <Button key="close" onClick={onClose}>
+                关闭
+              </Button>,
+            ]
+          : undefined
+      }
       onOk={() => void onSubmit()}
       confirmLoading={submitting}
       destroyOnHidden
     >
-      <Form form={form} layout="vertical">
+      {readOnly && (
+        <style>{`
+          .ant-input-disabled,
+          .ant-input-number-disabled,
+          .ant-input-number-disabled input,
+          .ant-select-disabled .ant-select-selector,
+          .ant-picker-disabled,
+          .ant-picker-disabled input,
+          .ant-input-affix-wrapper-disabled,
+          .ant-input-affix-wrapper-disabled input,
+          .ant-input-textarea-disabled,
+          .ant-input-textarea-disabled textarea,
+          .ant-form-item-disabled .ant-form-item-label > label,
+          .ant-form-item-disabled .ant-form-item-control-input input,
+          .ant-form-item-disabled .ant-form-item-control-input textarea,
+          .ant-form-item-disabled .ant-form-item-control-input .ant-input-number-input {
+            color: rgba(0, 0, 0, 0.88) !important;
+          }
+        `}</style>
+      )}
+      {/* readOnly 时：disabled 禁用所有交互，variant borderless 去掉输入框边框呈现纯文本效果 */}
+      <Form
+        form={form}
+        layout="vertical"
+        disabled={readOnly}
+        variant={readOnly ? 'borderless' : undefined}
+        style={
+          readOnly
+            ? ({
+                '--ant-color-text': 'rgba(0, 0, 0, 0.88)',
+                '--ant-color-text-disabled': 'rgba(0, 0, 0, 0.88) !important',
+              } as React.CSSProperties)
+            : undefined
+        }
+      >
         {/* 基本信息 */}
         <Row gutter={12}>
           <Col span={8}>
@@ -144,15 +197,18 @@ export function HotelInfoFormModal({
         <Divider>
           <Space>
             地址信息
-            <Button
-              size="small"
-              type="link"
-              icon={<LocateFixed size={14} />}
-              onClick={() => void handleLocate()}
-              loading={locating}
-            >
-              自动定位
-            </Button>
+            {/* 只读模式隐藏自动定位按钮 */}
+            {!readOnly && (
+              <Button
+                size="small"
+                type="link"
+                icon={<LocateFixed size={14} />}
+                onClick={() => void handleLocate()}
+                loading={locating}
+              >
+                自动定位
+              </Button>
+            )}
           </Space>
         </Divider>
         <Row gutter={12}>
@@ -235,16 +291,22 @@ export function HotelInfoFormModal({
                       </Form.Item>
                     </Col>
                     <Col span={2}>
-                      <Button danger onClick={() => remove(field.name)}>
-                        删除
-                      </Button>
+                      {/* 只读模式隐藏轮播图删除按钮 */}
+                      {!readOnly && (
+                        <Button danger onClick={() => remove(field.name)}>
+                          删除
+                        </Button>
+                      )}
                     </Col>
                   </Row>
                 </Card>
               ))}
-              <Button onClick={() => add({ url: '', sortOrder: 0 })}>
-                新增轮播图
-              </Button>
+              {/* 只读模式隐藏新增轮播图按钮 */}
+              {!readOnly && (
+                <Button onClick={() => add({ url: '', sortOrder: 0 })}>
+                  新增轮播图
+                </Button>
+              )}
             </Space>
           )}
         </Form.List>
@@ -384,9 +446,12 @@ export function HotelInfoFormModal({
                     </Col>
                     <Col span={2}>
                       <Form.Item label=" ">
-                        <Button danger onClick={() => remove(field.name)}>
-                          删除
-                        </Button>
+                        {/* 只读模式隐藏房型删除按钮 */}
+                        {!readOnly && (
+                          <Button danger onClick={() => remove(field.name)}>
+                            删除
+                          </Button>
+                        )}
                       </Form.Item>
                     </Col>
                     <Col span={6}>
@@ -522,26 +587,32 @@ export function HotelInfoFormModal({
                                       span={4}
                                       style={{ textAlign: 'right' }}
                                     >
-                                      <Button
-                                        danger
-                                        size="small"
-                                        disabled={slotFields.length <= 1}
-                                        onClick={() =>
-                                          removeSlot(slotField.name)
-                                        }
-                                      >
-                                        删
-                                      </Button>
+                                      {/* 只读模式隐藏时段删除按钮 */}
+                                      {!readOnly && (
+                                        <Button
+                                          danger
+                                          size="small"
+                                          disabled={slotFields.length <= 1}
+                                          onClick={() =>
+                                            removeSlot(slotField.name)
+                                          }
+                                        >
+                                          删
+                                        </Button>
+                                      )}
                                     </Col>
                                   </Row>
                                 ))}
-                                <Button
-                                  size="small"
-                                  style={{ marginTop: 8 }}
-                                  onClick={() => addSlot({ startTime: '' })}
-                                >
-                                  新增时段
-                                </Button>
+                                {/* 只读模式隐藏新增时段按钮 */}
+                                {!readOnly && (
+                                  <Button
+                                    size="small"
+                                    style={{ marginTop: 8 }}
+                                    onClick={() => addSlot({ startTime: '' })}
+                                  >
+                                    新增时段
+                                  </Button>
+                                )}
                               </Space>
                             )}
                           </Form.List>
@@ -551,20 +622,23 @@ export function HotelInfoFormModal({
                   </Form.Item>
                 </Card>
               ))}
-              <Button
-                onClick={() =>
-                  add({
-                    name: '',
-                    count: 0,
-                    price: 0,
-                    priceMode: PriceMode.PER_NIGHT,
-                    maxGuests: 1,
-                    sortOrder: 0,
-                  })
-                }
-              >
-                新增房型
-              </Button>
+              {/* 只读模式隐藏新增房型按钮 */}
+              {!readOnly && (
+                <Button
+                  onClick={() =>
+                    add({
+                      name: '',
+                      count: 0,
+                      price: 0,
+                      priceMode: PriceMode.PER_NIGHT,
+                      maxGuests: 1,
+                      sortOrder: 0,
+                    })
+                  }
+                >
+                  新增房型
+                </Button>
+              )}
             </Space>
           )}
         </Form.List>

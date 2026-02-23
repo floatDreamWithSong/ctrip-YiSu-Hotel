@@ -41,14 +41,15 @@ export function InfoActionButtons({
   const isPending = reviewStatus === HotelReviewStatus.PENDING
   const isApproved = reviewStatus === HotelReviewStatus.APPROVED
   const isRejected = reviewStatus === HotelReviewStatus.REJECTED
-  const canEdit = isDraft || isRejected
   const canSubmit = isDraft || isRejected
+  // 已发布/审核中：可查看但不可编辑，按钮文字改为「查看」
+  const isReadOnly = isPending || isApproved
 
   return (
     <Space>
-      {/* 编辑：待发布/待更改时可用 */}
-      <Button size="small" disabled={!canEdit} onClick={onEdit}>
-        编辑
+      {/* 草稿/驳回：「编辑」；已发布/审核中：「查看」（始终可点击） */}
+      <Button size="small" onClick={onEdit}>
+        {isReadOnly ? '查看' : '编辑'}
       </Button>
 
       {/* 创建副本：始终可用 */}
