@@ -207,7 +207,7 @@ export function HotelInfoFormModal({
         <Divider>轮播图</Divider>
         <Form.List name="images">
           {(fields, { add, remove }) => (
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation="vertical" style={{ width: '100%' }}>
               {fields.map((field) => (
                 <Card key={field.key} size="small">
                   <Row gutter={12}>
@@ -253,7 +253,7 @@ export function HotelInfoFormModal({
         <Divider>房型</Divider>
         <Form.List name="roomTypes">
           {(fields, { add, remove }) => (
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation="vertical" style={{ width: '100%' }}>
               {fields.map((field) => (
                 <Card key={field.key} size="small">
                   {/* 第一行：房型名 | 数量 | 价格 | 计价方式 | 购买时长（钟点房专属） */}
@@ -294,13 +294,13 @@ export function HotelInfoFormModal({
                       >
                         <Select
                           options={[
-                            { label: '按晚', value: PriceMode.PER_NIGHT },
+                            { label: '标准住宿', value: PriceMode.PER_NIGHT },
                             { label: '钟点房', value: PriceMode.PER_HOUR },
                           ]}
                         />
                       </Form.Item>
                     </Col>
-                    {/* 购买时长：仅钟点房显示 */}
+                    {/* 购买时长：钟点房和标准住宿 */}
                     <Form.Item
                       noStyle
                       shouldUpdate={(prev, cur) =>
@@ -308,36 +308,66 @@ export function HotelInfoFormModal({
                         cur.roomTypes?.[field.name]?.priceMode
                       }
                     >
-                      {({ getFieldValue }) =>
-                        getFieldValue([
+                      {({ getFieldValue }) => {
+                        const priceMode = getFieldValue([
                           'roomTypes',
                           field.name,
                           'priceMode',
-                        ]) === PriceMode.PER_HOUR ? (
-                          <Col span={6}>
-                            <Form.Item
-                              name={[field.name, 'duration']}
-                              label="购买时长：小时"
-                              rules={[
-                                { required: true, message: '请输入购买时长' },
-                                {
-                                  type: 'integer',
-                                  min: 1,
-                                  message: '请输入正整数',
-                                },
-                              ]}
-                            >
-                              <InputNumber
-                                min={1}
-                                max={24}
-                                precision={0}
-                                style={{ width: '100%' }}
-                                placeholder="如：4"
-                              />
-                            </Form.Item>
-                          </Col>
-                        ) : null
-                      }
+                        ])
+                        if (priceMode === PriceMode.PER_NIGHT) {
+                          return (
+                            <Col span={6}>
+                              <Form.Item
+                                name={[field.name, 'duration']}
+                                label="购买时长：夜晚"
+                                rules={[
+                                  { required: true, message: '请输入购买时长' },
+                                  {
+                                    type: 'integer',
+                                    min: 1,
+                                    message: '请输入正整数',
+                                  },
+                                ]}
+                              >
+                                <InputNumber
+                                  min={1}
+                                  max={30}
+                                  precision={0}
+                                  style={{ width: '100%' }}
+                                  placeholder="如：1"
+                                />
+                              </Form.Item>
+                            </Col>
+                          )
+                        }
+                        if (priceMode === PriceMode.PER_HOUR) {
+                          return (
+                            <Col span={6}>
+                              <Form.Item
+                                name={[field.name, 'duration']}
+                                label="购买时长：小时"
+                                rules={[
+                                  { required: true, message: '请输入购买时长' },
+                                  {
+                                    type: 'integer',
+                                    min: 1,
+                                    message: '请输入正整数',
+                                  },
+                                ]}
+                              >
+                                <InputNumber
+                                  min={1}
+                                  max={24}
+                                  precision={0}
+                                  style={{ width: '100%' }}
+                                  placeholder="如：4"
+                                />
+                              </Form.Item>
+                            </Col>
+                          )
+                        }
+                        return null
+                      }}
                     </Form.Item>
                   </Row>
 
@@ -423,7 +453,7 @@ export function HotelInfoFormModal({
                               { add: addSlot, remove: removeSlot },
                             ) => (
                               <Space
-                                direction="vertical"
+                                orientation="vertical"
                                 style={{ width: '100%' }}
                               >
                                 {slotFields.map((slotField) => (
