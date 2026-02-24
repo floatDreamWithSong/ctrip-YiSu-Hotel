@@ -10,6 +10,12 @@ const isNativeCapacitor = () => {
   return Capacitor.isNativePlatform()
 }
 
+const isTimeoutError = (error: unknown) => {
+  if (!(error instanceof Error)) return false
+  const message = error.message.toLowerCase()
+  return message.includes('timeout') || message.includes('in time')
+}
+
 export async function getCurrentPosition(
   options: GeolocationOptions = {},
 ): Promise<GeolocationPosition> {
@@ -26,17 +32,38 @@ export async function getCurrentPosition(
   }
 
   try {
-    const position = await Geolocation.getCurrentPosition({
-      timeout: options.timeout,
-      maximumAge: options.maximumAge,
-      enableHighAccuracy: options.enableHighAccuracy,
-    })
+    const primaryOptions = {
+      timeout: options.timeout ?? 30_000,
+      maximumAge: options.maximumAge ?? 60_000,
+      enableHighAccuracy: options.enableHighAccuracy ?? true,
+    }
+    const position = await Geolocation.getCurrentPosition(primaryOptions)
 
     return {
       lng: position.coords.longitude,
       lat: position.coords.latitude,
     }
   } catch (error) {
+    if (isTimeoutError(error)) {
+      try {
+        // Fallback to a faster/less strict request and allow recent cached location.
+        const fallbackPosition = await Geolocation.getCurrentPosition({
+          timeout: Math.max(options.timeout ?? 30_000, 45_000),
+          maximumAge: Math.max(options.maximumAge ?? 60_000, 300_000),
+          enableHighAccuracy: false,
+        })
+
+        return {
+          lng: fallbackPosition.coords.longitude,
+          lat: fallbackPosition.coords.latitude,
+        }
+      } catch {
+        throw new Error(
+          '定位超时，请确认系统定位已开启，并为应用授予“精确位置”权限后重试',
+        )
+      }
+    }
+
     if (error instanceof Error && error.message) {
       throw error
     }
