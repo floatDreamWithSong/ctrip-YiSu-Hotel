@@ -1,7 +1,7 @@
 import { env } from '@/env'
+import { redirectForAuth } from '@/integrations/tanstack-query/root-provider'
 import { createAxiosInstance } from '@yisu/front-utils/request'
 import { USER_FROM_HEADER, userFrom } from '@yisu/shared'
-import { redirect } from '@tanstack/react-router'
 
 const tokenKey = 'token'
 
@@ -21,6 +21,6 @@ createAxiosInstance({
   onTokenGet: tokenStore.get,
   onTokenRemove: () => {
     tokenStore.remove()
-    redirect({ to: '/login' })
+    redirectForAuth()
   },
 })
