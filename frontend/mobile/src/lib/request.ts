@@ -1,6 +1,7 @@
 import { env } from '@/env'
 import { createAxiosInstance } from '@yisu/front-utils/request'
 import { USER_FROM_HEADER, userFrom } from '@yisu/shared'
+import { redirect } from '@tanstack/react-router'
 
 const tokenKey = 'token'
 
@@ -18,5 +19,8 @@ createAxiosInstance({
   },
   timeout: 10000,
   onTokenGet: tokenStore.get,
-  onTokenRemove: tokenStore.remove,
+  onTokenRemove: () => {
+    tokenStore.remove()
+    redirect({ to: '/login' })
+  },
 })

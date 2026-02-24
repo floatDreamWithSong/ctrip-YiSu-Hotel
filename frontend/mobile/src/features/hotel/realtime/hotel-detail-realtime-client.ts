@@ -94,7 +94,8 @@ class HotelDetailRealtimeClient {
       this.handleServerMessage(event.data)
     })
 
-    socket.addEventListener('close', () => {
+    socket.addEventListener('close', (event) => {
+      const wasAuthed = this.isAuthed
       if (this.socket === socket) {
         this.socket = null
       }
@@ -103,7 +104,8 @@ class HotelDetailRealtimeClient {
       if (
         !this.isManualClose &&
         this.shouldReconnect &&
-        this.viewingHotelRefCounts.size > 0
+        this.viewingHotelRefCounts.size > 0 &&
+        this.shouldReconnectAfterClose(event, wasAuthed)
       ) {
         this.reconnectTimer = window.setTimeout(() => {
           this.ensureConnected()
@@ -199,6 +201,15 @@ class HotelDetailRealtimeClient {
       window.clearTimeout(this.reconnectTimer)
       this.reconnectTimer = null
     }
+  }
+
+  private shouldReconnectAfterClose(event: CloseEvent, wasAuthed: boolean) {
+    // Policy-violation during pre-auth indicates token/auth failure (invalid, missing, forbidden).
+    if (!wasAuthed && event.code === 1008) {
+      return false
+    }
+
+    return true
   }
 
   private createWebSocketUrl() {
