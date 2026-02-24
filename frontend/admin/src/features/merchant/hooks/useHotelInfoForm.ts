@@ -63,56 +63,61 @@ const MERCHANT_VALIDATION_RULES = {
 }
 
 /**
- * 深度比较函数：支持嵌套对象、数组，并自动过滤 AntD 干扰字段
+ * 深度对比函数（带调试日志版）
  */
-export const isFormDeepEqual = (obj1: unknown, obj2: unknown): boolean => {
-  // 1. 基本类型判断（如果引用相同，或者都是 string/number 等且值相等）
-  if (obj1 === obj2) return true
-  // 2. 如果其中有一个不是对象（或者是 null），既然引用不等，值肯定不等
-  if (
-    typeof obj1 !== 'object' ||
-    obj1 === null ||
-    typeof obj2 !== 'object' ||
-    obj2 === null
-  ) {
-    return obj1 === obj2
+/**
+ * 深度对比函数 - 性能优化生产版
+ * 解决了基本类型、数组、嵌套对象的深度对比
+ */
+export const isFormDeepEqual = (
+  initial: unknown,
+  current: unknown,
+): boolean => {
+  // 1. 引用一致或基本类型相等，直接返回 true
+  if (initial === current) return true
+
+  // 2. 处理 null 或 undefined 的特殊情况
+  // 如果其中一个是空，另一个不是空，直接判定为不等
+  if (!initial || !current) {
+    return initial === current
   }
-  // 3. 数组处理：如果是数组，必须逐个元素递归比较
-  if (Array.isArray(obj1) && Array.isArray(obj2)) {
-    if (obj1.length !== obj2.length) return false
-    // 每一个元素都得过一遍 isFormDeepEqual
-    return obj1.every((item, index) => isFormDeepEqual(item, obj2[index]))
-  }
-  // 如果一个是数组一个不是，直接返回 false
-  if (Array.isArray(obj1) !== Array.isArray(obj2)) return false
-  // 4. 对象处理
-  // 定义干扰项黑名单（AntD Upload 产生的动态字段）
-  const ignoreKeys = [
-    'uid',
-    'status',
-    'percent',
-    'originFileObj',
-    'response',
-    'xhr',
-  ]
-  const keys1 = Object.keys(obj1).filter((key) => !ignoreKeys.includes(key))
-  const keys2 = Object.keys(obj2).filter((key) => !ignoreKeys.includes(key))
-  // 有效字段数量不一致，说明内容变了
-  if (keys1.length !== keys2.length) return false
-  // 递归比较每一个有效 Key 的内容
-  for (const key of keys1) {
-    // 只要有一个 Key 的内容深度比较不一致，整体就是不等的
-    if (
-      !Object.prototype.hasOwnProperty.call(obj2, key) ||
-      !isFormDeepEqual(obj1[key], obj2[key])
-    ) {
-      return false
+
+  // 3. 处理数组对比
+  if (Array.isArray(initial) && Array.isArray(current)) {
+    if (initial.length !== current.length) return false
+    for (let i = 0; i < initial.length; i++) {
+      if (!isFormDeepEqual(initial[i], current[i])) return false
     }
+    return true
   }
 
-  return true
-}
+  // 4. 处理对象对比
+  if (typeof initial === 'object' && typeof current === 'object') {
+    // 排除 null 的干扰（虽然前面判断过了，TS 需要明确类型）
+    if (initial === null || current === null) return initial === current
 
+    const keys1 = Object.keys(initial as object)
+    const keys2 = Object.keys(current as object)
+
+    // 过滤掉 AntD 内部字段后再比较键值数量
+    const filteredKeys1 = keys1.filter((k) => !k.startsWith('_'))
+    const filteredKeys2 = keys2.filter((k) => !k.startsWith('_'))
+
+    // 如果键的数量都不对，肯定不相等
+    if (filteredKeys1.length !== filteredKeys2.length) return false
+
+    for (const key of filteredKeys1) {
+      const val1 = initial[key]
+      const val2 = current[key]
+
+      if (!isFormDeepEqual(val1, val2)) return false
+    }
+    return true
+  }
+
+  // 5. 兜底处理
+  return initial === current
+}
 const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
 const HOTEL_INFOS_QUERY_KEY = 'merchant-hotel-infos'
 
@@ -177,7 +182,37 @@ export function useHotelInfoForm(hotelId: number) {
         sortOrder,
         caption,
       })),
-      roomTypes: values.roomTypes ?? [],
+      // 处理房型：移除后端返回的 id 字段，仅保留表单实际绑定的字段
+      roomTypes: (values.roomTypes ?? []).map(
+        ({
+          name,
+          count,
+          price,
+          priceMode,
+          duration,
+          bedType,
+          maxGuests,
+          area,
+          imageUrl,
+          sortOrder,
+          hourlySlots,
+        }) => ({
+          name,
+          count,
+          price,
+          priceMode,
+          duration,
+          bedType,
+          maxGuests,
+          area,
+          imageUrl,
+          sortOrder,
+          // hourlySlots 同样只保留 startTime，移除后端的 id
+          hourlySlots: (hourlySlots ?? []).map(({ startTime }) => ({
+            startTime,
+          })),
+        }),
+      ),
       homeAdImage: values.homeAdImage ?? undefined,
       location: values.location ?? undefined,
       // 统一截取 YYYY-MM-DD 日期部分再比较，避免时区差异导致的误判

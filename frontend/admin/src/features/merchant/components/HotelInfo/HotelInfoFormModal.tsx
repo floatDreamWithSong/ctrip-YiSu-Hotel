@@ -295,7 +295,8 @@ export function HotelInfoFormModal({
                       <Form.Item
                         name={[field.name, 'caption']}
                         label="描述"
-                        rules={[{ required: true }]}
+                        rules={[{ required: true, message: '请输入描述' }]}
+                        validateTrigger="onSubmit"
                       >
                         <Input />
                       </Form.Item>
