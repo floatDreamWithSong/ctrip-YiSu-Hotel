@@ -35,7 +35,7 @@ services:
     entrypoint: ['/bin/sh', 'docker-entrypoint.sh']
 
   db:
-    image: postgres:15-alpine
+    image: postgis/postgis
     container_name: ctrip-yisu-hotel-db
     restart: always
     environment:
