@@ -135,9 +135,16 @@ const Register = () => {
           <Form.Item
             name="verifyCode"
             label="验证码"
-            className="rounded-xl bg-gray-50 w-full mt-4"
+            className="rounded-xl bg-gray-50 w-full mt-4 "
             rules={[{ required: true, message: '请输入验证码' }]}
-            extra={
+          >
+            <div className="flex justify-between items-center">
+              <Input
+                placeholder="请输入6位验证码"
+                maxLength={6}
+                clearable
+                className="p-3"
+              />
               <Button
                 size="small"
                 color="primary"
@@ -145,18 +152,11 @@ const Register = () => {
                 disabled={countdown > 0}
                 loading={sendCodeMutation.isPending}
                 onClick={handleSendCode}
-                className="text-gray-600"
+                className="text-gray-600 text-nowrap"
               >
                 {countdown > 0 ? `${countdown}秒` : '获取验证码'}
               </Button>
-            }
-          >
-            <Input
-              placeholder="请输入6位验证码"
-              maxLength={6}
-              clearable
-              className="p-3"
-            />
+            </div>
           </Form.Item>
 
           <Form.Item
