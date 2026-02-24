@@ -156,16 +156,16 @@ export function StaticSection({
             <AddressAutoComplete form={form} />
           </Form.Item>
         </Col>
-        <Col span={12}>
-          <Form.Item name={['location', 'lng']} label="经度">
-            <InputNumber style={{ width: '100%' }} />
+        {/* <Col span={12}>
+          <Form.Item name={['location', 'lng']} label="经度" noStyle>
+            <InputNumber style={{ width: '100%' }} type='hidden' />
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name={['location', 'lat']} label="纬度">
-            <InputNumber style={{ width: '100%' }} />
+          <Form.Item name={['location', 'lat']} label="纬度" noStyle>
+            <InputNumber style={{ width: '100%' }} type='hidden' />
           </Form.Item>
-        </Col>
+        </Col> */}
         <Col span={24}>
           <Form.Item name="homeAdImage" label="首页广告图" htmlFor={undefined}>
             <CosImageUpload dir="hotel-ad" />
