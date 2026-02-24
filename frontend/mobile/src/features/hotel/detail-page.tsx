@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import { CalendarPicker, Swiper, Tabs } from 'antd-mobile'
+import { CalendarPicker, Dialog, Swiper, Tabs } from 'antd-mobile'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
 import { DateTriggerButton } from '@/components/common/date-trigger-button'
 import { GuestRoomCountFields } from '@/components/common/guest-room-count-fields'
@@ -14,6 +14,7 @@ import {
 } from '@/lib/hotel-search-form'
 import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
+import { useHotelDetailRealtime } from './realtime/use-hotel-detail-realtime'
 import { CalendarIcon } from 'lucide-react'
 
 type IntentRoomType = 'HOTEL' | 'HOURLY'
@@ -59,6 +60,7 @@ const HotelDetailPage = () => {
   const [hourlyCalendarValue, setHourlyCalendarValue] = useState<Date | null>(
     () => parseYmdDate(search.targetDate ?? searchStore.targetDate) ?? null,
   )
+  const updateDialogOpenRef = useRef(false)
 
   const detailQuery = useQuery({
     queryKey: ['mobile-hotel-detail', numericHotelId],
@@ -91,6 +93,25 @@ const HotelDetailPage = () => {
         limitPerCategory: 8,
       }),
   })
+
+  const onHotelDetailUpdated = async () => {
+    if (updateDialogOpenRef.current) return
+    updateDialogOpenRef.current = true
+
+    try {
+      const confirmed = await Dialog.confirm({
+        content: '酒店信息有更新，是否查看最新信息？',
+        confirmText: '是',
+        cancelText: '否',
+      })
+      if (!confirmed) return
+      await detailQuery.refetch()
+    } finally {
+      updateDialogOpenRef.current = false
+    }
+  }
+
+  useHotelDetailRealtime(numericHotelId, onHotelDetailUpdated)
 
   const roomTypes = useMemo(
     () =>
