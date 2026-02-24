@@ -8,5 +8,6 @@ onlyBuiltDependencies:
   - '@prisma/engines'
   - '@swc/core'
   - esbuild
+  - lefthook
   - prisma
   - unrs-resolver

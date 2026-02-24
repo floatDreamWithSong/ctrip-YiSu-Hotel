@@ -10,7 +10,7 @@ const baseConfig = defineConfig(
   {
     files: ["src/**/*.{ts,tsx}"],
     plugins: {
-      "react-hooks": reactHooks as any,
+      "react-hooks": reactHooks,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,

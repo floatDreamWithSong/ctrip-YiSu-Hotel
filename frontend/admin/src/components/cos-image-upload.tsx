@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react'
 import { useState } from 'react'
 
 interface CosImageUploadProps {
+  id?: string // 显式获取 id
   value?: string
   onChange?: (url: string | undefined) => void
   dir?: string
@@ -12,10 +13,12 @@ interface CosImageUploadProps {
 }
 
 export function CosImageUpload({
+  id,
   value,
   onChange,
   dir = 'hotel',
   maxSizeMB = 5,
+  ...restProps // 获取其余所有 props
 }: CosImageUploadProps) {
   const [localFileList, setLocalFileList] = useState<UploadFile[]>([])
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -75,6 +78,8 @@ export function CosImageUpload({
   return (
     <>
       <Upload
+        {...restProps} // 1. 关键：透传所有 antd 注入的属性（包含 id）
+        id={id}
         accept="image/*"
         listType="picture-card"
         fileList={fileList}
@@ -83,6 +88,7 @@ export function CosImageUpload({
         customRequest={customRequest}
         onRemove={onRemove}
         onPreview={() => setPreviewOpen(true)}
+        aria-label="图片上传"
         onChange={({ file, fileList: newFileList }) => {
           const normalized = newFileList.map((item) => {
             if (!item.url && typeof item.response === 'string') {

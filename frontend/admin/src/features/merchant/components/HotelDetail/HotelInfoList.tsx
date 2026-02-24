@@ -19,6 +19,12 @@ export function HotelInfoList({ hotelId }: HotelInfoListProps) {
   const actions = useHotelInfoActions(hotelId)
   const formHook = useHotelInfoForm(hotelId)
 
+  // 当前打开编辑的酒店是否为只读（已发布/审核中）
+  const editingInfo = infos.find((i) => i.id === formHook.editingInfoId)
+  const isReadOnly =
+    editingInfo?.reviewStatus === HotelReviewStatus.APPROVED ||
+    editingInfo?.reviewStatus === HotelReviewStatus.PENDING
+
   return (
     <Card>
       <Space orientation="vertical" size={12} style={{ width: '100%' }}>
@@ -71,11 +77,12 @@ export function HotelInfoList({ hotelId }: HotelInfoListProps) {
         <HotelInfoFormModal
           open={formHook.open}
           editingInfoId={formHook.editingInfoId}
+          readOnly={isReadOnly}
           form={formHook.form}
           locating={formHook.locating}
           handleLocate={formHook.handleLocate}
           onSubmit={formHook.onSubmit}
-          onClose={formHook.onClose}
+          onClose={async () => await formHook.onClose(isReadOnly)}
           submitting={formHook.submitting}
         />
       </Space>

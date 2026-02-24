@@ -776,7 +776,7 @@ const HotelDetailPage = ({ hotelId }: Props) => {
                                 { add: addSlot, remove: removeSlot },
                               ) => (
                                 <Space
-                                  direction="vertical"
+                                  orientation="vertical"
                                   style={{ width: '100%' }}
                                 >
                                   {slotFields.map((slotField) => (
