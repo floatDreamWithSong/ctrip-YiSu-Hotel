@@ -292,7 +292,11 @@ export function HotelInfoFormModal({
                       </Form.Item>
                     </Col>
                     <Col span={6}>
-                      <Form.Item name={[field.name, 'caption']} label="描述">
+                      <Form.Item
+                        name={[field.name, 'caption']}
+                        label="描述"
+                        rules={[{ required: true }]}
+                      >
                         <Input />
                       </Form.Item>
                     </Col>
