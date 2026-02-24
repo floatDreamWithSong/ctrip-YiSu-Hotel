@@ -16,25 +16,28 @@ const HotelListCard = ({ item, onClick, className }: HotelListCardProps) => {
       onClick={onClick}
     >
       <div className="flex gap-3">
-        <div className="h-24 w-28 shrink-0 overflow-hidden rounded-xl bg-gray-100">
-          {item.coverImage ? (
+        <div className="w-28 shrink-0 self-stretch overflow-hidden rounded-xl">
+          {item.coverImage && (
             <img
               src={item.coverImage}
               alt={item.name}
               className="h-full w-full object-cover"
             />
-          ) : (
-            <div className="h-full w-full" />
           )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="mb-1 truncate text-base font-medium text-gray-800">
             {item.name}
           </div>
+          {item.enName && (
+            <div className="mt-1 truncate text-[11px] text-gray-400">
+              {item.enName}
+            </div>
+          )}
           <div className="mb-1 text-xs text-gray-500">
             {'★'.repeat(item.starLevel)}
           </div>
-          <div className="mb-2 line-clamp-2 text-xs text-gray-500">
+          <div className="mb-2 line-clamp-1 text-xs text-gray-500 text-ellipsis overflow-hidden">
             {item.address}
           </div>
           <div className="flex items-center justify-between">
@@ -49,11 +52,6 @@ const HotelListCard = ({ item, onClick, className }: HotelListCardProps) => {
                 : `${(item.distanceMeters / 1000).toFixed(1)} km`}
             </div>
           </div>
-          {item.enName && (
-            <div className="mt-1 truncate text-[11px] text-gray-400">
-              {item.enName}
-            </div>
-          )}
           <div className="mt-2 flex flex-wrap gap-1">
             {item.tags.slice(0, 4).map((tag) => (
               <span

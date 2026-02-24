@@ -5,14 +5,26 @@ import {
   Button,
   CalendarPicker,
   Image,
+  Input,
   Selector,
   Slider,
   Swiper,
 } from 'antd-mobile'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
+import { DateTriggerButton } from '@/components/common/date-trigger-button'
+import { GuestRoomCountFields } from '@/components/common/guest-room-count-fields'
 import { LocationInput } from '@/components/home/location-input'
+import {
+  formatYmdDate,
+  getStartOfToday,
+  isOnOrAfterDate,
+  normalizePositiveInt,
+  parseYmdDate,
+} from '@/lib/hotel-search-form'
 import { useLocationStore } from '@/store/location'
 import { useHotelSearchStore, type RoomTypeTab } from '@/store/hotel-search'
+import dayjs from 'dayjs'
+import { CalendarIcon } from 'lucide-react'
 
 const roomTypeOptions = [
   { label: '酒店', value: 'HOTEL' },
@@ -37,38 +49,16 @@ const priceMarks = {
   [PRICE_UNLIMITED]: '不限',
 }
 
-const formatDate = (date?: Date | null) => {
-  if (!date) return undefined
-  const year = date.getFullYear()
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-const parseDate = (value?: string) => {
-  if (!value) return undefined
-  const [year, month, day] = value.split('-').map((item) => Number(item))
-  if (!year || !month || !day) return undefined
-  return new Date(year, month - 1, day)
-}
-
-const isOnOrAfter = (date: Date, target: Date) =>
-  date.getTime() >= target.getTime()
-const normalizePositiveInt = (value?: number) =>
-  Number.isInteger(value) && (value as number) >= 1 ? (value as number) : 1
-
 const Dashboard = () => {
   const navigate = useNavigate()
   const { city, location } = useLocationStore()
   const searchState = useHotelSearchStore()
   const today = useMemo(() => {
-    const date = new Date()
-    date.setHours(0, 0, 0, 0)
-    return date
+    return getStartOfToday()
   }, [])
   const toValidDate = (value?: string) => {
-    const date = parseDate(value)
-    return date && isOnOrAfter(date, today) ? date : undefined
+    const date = parseYmdDate(value)
+    return date && isOnOrAfterDate(date, today) ? date : undefined
   }
   const [hotelRangeVisible, setHotelRangeVisible] = useState(false)
   const [hourlyDateVisible, setHourlyDateVisible] = useState(false)
@@ -153,21 +143,13 @@ const Dashboard = () => {
     <div className="h-full overflow-y-auto bg-[#f6f6f1]">
       <div className="bg-blue-500 px-4 pt-8 pb-14 text-white">
         <div className="text-2xl font-semibold">易宿酒店</div>
-        <div className="text-sm/6 opacity-90">酒店查询 · 筛选 · 快速预订</div>
+        <div className="text-sm/6 opacity-90">酒店查询 · 快捷筛选</div>
       </div>
 
       <div className="-mt-8 px-4">
         <div className="overflow-hidden rounded-2xl bg-white p-2 shadow-sm">
           {(bannersQuery.data ?? []).length > 0 ? (
-            <Swiper
-              autoplay
-              loop
-              indicator={(total, current) => (
-                <div className="text-[10px] text-white/90">
-                  {current + 1}/{total}
-                </div>
-              )}
-            >
+            <Swiper autoplay loop>
               {(bannersQuery.data ?? []).map((banner) => (
                 <Swiper.Item key={`${banner.hotelId}-${banner.infoId}`}>
                   <div
@@ -185,6 +167,7 @@ const Dashboard = () => {
                         fit="cover"
                         width="100%"
                         height={148}
+                        className="rounded-xl"
                       />
                     ) : (
                       <div className="h-[148px] w-full rounded-xl bg-gray-100" />
@@ -224,30 +207,31 @@ const Dashboard = () => {
           </div>
           <div className="mb-3">
             <div className="mb-1 text-xs text-gray-500">关键词</div>
-            <input
+            <Input
               value={searchState.keyword}
-              onChange={(event) =>
-                searchState.setState({ keyword: event.target.value })
-              }
+              onChange={(value) => searchState.setState({ keyword: value })}
+              clearable
               placeholder="酒店名称、英文名、简介"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              className="w-full "
             />
           </div>
           {searchState.roomType === 'HOTEL' ? (
             <div className="mb-3">
-              <button
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-left text-sm"
+              <DateTriggerButton
+                className="rounded-xl text-sm"
+                icon={<CalendarIcon size={16} />}
                 onClick={() => {
                   const from = toValidDate(searchState.checkIn)
                   const to = toValidDate(searchState.checkOut)
                   setHotelCalendarValue(from && to ? [from, to] : null)
                   setHotelRangeVisible(true)
                 }}
-              >
-                {searchState.checkIn && searchState.checkOut
-                  ? `${searchState.checkIn} 至 ${searchState.checkOut}`
-                  : '选择入住/离店日期'}
-              </button>
+                text={
+                  searchState.checkIn && searchState.checkOut
+                    ? `${searchState.checkIn} 至 ${searchState.checkOut}，共 ${dayjs(searchState.checkOut).diff(dayjs(searchState.checkIn), 'day')} 晚`
+                    : '选择入住/离店日期'
+                }
+              />
               <CalendarPicker
                 visible={hotelRangeVisible}
                 selectionMode="range"
@@ -265,61 +249,41 @@ const Dashboard = () => {
                     })
                   } else {
                     searchState.setState({
-                      checkIn: formatDate(value[0]),
-                      checkOut: formatDate(value[1]),
+                      checkIn: formatYmdDate(value[0]),
+                      checkOut: formatYmdDate(value[1]),
                     })
                   }
                   setHotelRangeVisible(false)
                 }}
               />
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <div>
-                  <div className="mb-1 text-xs text-gray-500">入住人数</div>
-                  <input
-                    type="number"
-                    min={1}
-                    value={searchState.guestCount}
-                    onChange={(event) =>
-                      searchState.setState({
-                        guestCount: normalizePositiveInt(
-                          event.target.valueAsNumber,
-                        ),
-                      })
-                    }
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <div className="mb-1 text-xs text-gray-500">房间数量</div>
-                  <input
-                    type="number"
-                    min={1}
-                    value={searchState.roomCount}
-                    onChange={(event) =>
-                      searchState.setState({
-                        roomCount: normalizePositiveInt(
-                          event.target.valueAsNumber,
-                        ),
-                      })
-                    }
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
+              <GuestRoomCountFields
+                guestCount={searchState.guestCount}
+                roomCount={searchState.roomCount}
+                onGuestCountChange={(value) =>
+                  searchState.setState({
+                    guestCount: normalizePositiveInt(value),
+                  })
+                }
+                onRoomCountChange={(value) =>
+                  searchState.setState({
+                    roomCount: normalizePositiveInt(value),
+                  })
+                }
+                inputClassName="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              />
             </div>
           ) : (
             <div className="mb-3">
-              <button
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-left text-sm"
+              <DateTriggerButton
+                className="rounded-xl text-sm"
                 onClick={() => {
                   setHourlyCalendarValue(
                     toValidDate(searchState.targetDate) ?? null,
                   )
                   setHourlyDateVisible(true)
                 }}
-              >
-                {searchState.targetDate ?? '选择日期'}
-              </button>
+                text={searchState.targetDate ?? '选择日期'}
+              />
               <CalendarPicker
                 visible={hourlyDateVisible}
                 selectionMode="single"
@@ -330,7 +294,7 @@ const Dashboard = () => {
                 onMaskClick={() => setHourlyDateVisible(false)}
                 closeOnMaskClick
                 onConfirm={(value) => {
-                  searchState.setState({ targetDate: formatDate(value) })
+                  searchState.setState({ targetDate: formatYmdDate(value) })
                   setHourlyDateVisible(false)
                 }}
               />
@@ -371,7 +335,7 @@ const Dashboard = () => {
           </div>
           {tagOptions.length > 0 && (
             <div className="mb-4">
-              <div className="mb-1 text-xs text-gray-500">酒店标签</div>
+              <div className="mb-1 text-xs text-gray-500">快捷标签</div>
               <Selector
                 options={tagOptions}
                 value={searchState.tagIds}

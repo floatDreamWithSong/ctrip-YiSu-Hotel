@@ -1,4 +1,5 @@
 import { env } from '@/env'
+import { redirectForAuth } from '@/integrations/tanstack-query/root-provider'
 import { createAxiosInstance } from '@yisu/front-utils/request'
 import { USER_FROM_HEADER, userFrom } from '@yisu/shared'
 
@@ -18,5 +19,8 @@ createAxiosInstance({
   },
   timeout: 10000,
   onTokenGet: tokenStore.get,
-  onTokenRemove: tokenStore.remove,
+  onTokenRemove: () => {
+    tokenStore.remove()
+    redirectForAuth()
+  },
 })
