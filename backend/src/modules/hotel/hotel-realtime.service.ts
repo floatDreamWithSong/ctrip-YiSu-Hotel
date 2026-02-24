@@ -94,6 +94,7 @@ export class HotelRealtimeService
   ) => {
     const pathname = this.getRequestPathname(request)
     if (pathname !== this.wsPath) {
+      this.closeNonMatchingUpgradeSocket(socket)
       return
     }
 
@@ -197,5 +198,13 @@ export class HotelRealtimeService
   private normalizeToken(token?: string) {
     if (!token || typeof token !== 'string') return null
     return token.startsWith('Bearer ') ? token.slice(7) : token
+  }
+
+  private closeNonMatchingUpgradeSocket(socket: Duplex) {
+    try {
+      socket.destroy()
+    } catch {
+      // noop
+    }
   }
 }

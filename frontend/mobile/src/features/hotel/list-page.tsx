@@ -14,7 +14,7 @@ import {
 import { LocationFill } from 'antd-mobile-icons'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
 import { LocationRequest } from '@yisu/front-utils/apis/location'
-import { getCurrentPosition } from '@yisu/front-utils/geolocation'
+import { getCurrentPosition } from '@/lib/mobile-geolocation'
 import { DateTriggerButton } from '@/components/common/date-trigger-button'
 import { GuestRoomCountFields } from '@/components/common/guest-room-count-fields'
 import {

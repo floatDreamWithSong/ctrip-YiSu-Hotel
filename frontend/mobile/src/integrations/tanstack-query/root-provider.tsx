@@ -41,8 +41,6 @@ export const queryClient = new QueryClient({
       if (error instanceof AxiosError) {
         if (error.response?.status === 401) {
           tokenStore.remove()
-          const redirect = `${router.history.location.href}`
-          router.navigate({ to: '/login', search: { redirect } })
         }
         // if (error.response?.status === 500) {
         //   router.navigate({ to: '/500' })
@@ -65,6 +63,11 @@ export const router = createRouter({
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
 })
+
+export const redirectForAuth = () => {
+  const redirect = `${router.history.location.href}`
+  router.navigate({ to: '/login', search: { redirect } })
+}
 
 export function Provider({
   children,
