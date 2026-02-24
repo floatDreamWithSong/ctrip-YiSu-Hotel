@@ -18,3 +18,12 @@ code {
   display: block;
   margin: 0 auto;
 }
+.adm-slider-thumb svg {
+  display: block;
+  margin: 0 auto;
+  height: 100%;
+}
+
+html, .no-scrollbar>* {
+  scrollbar-width: none;
+}

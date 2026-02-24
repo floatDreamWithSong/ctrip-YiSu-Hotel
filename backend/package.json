@@ -45,9 +45,11 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "tencentcloud-sdk-nodejs": "^4.1.181",
+    "ws": "^8.19.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.3.0",
     "@jest/globals": "^29.7.0",
     "@nestjs/cli": "^11.0.14",
     "@nestjs/schematics": "^11.0.9",
@@ -61,6 +63,7 @@
     "@types/node": "^22.19.3",
     "@types/nodemailer": "^7.0.9",
     "@types/supertest": "^6.0.3",
+    "@types/ws": "^8.18.1",
     "@yisu/eslint-config": "workspace:*",
     "@yisu/typescript-config": "workspace:*",
     "cross-env": "^10.1.0",

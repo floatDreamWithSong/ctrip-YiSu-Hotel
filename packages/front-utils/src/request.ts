@@ -24,29 +24,44 @@ export interface ApiResponse<T = unknown> extends BaseResponse<T> {}
  * @param onResponse - 响应拦截器
  * @param onError - 错误拦截器
  */
-interface AxiosClientOptions  {
+interface AxiosClientOptions {
   baseURL: string;
   timeout: number;
-  headers: CreateAxiosDefaults['headers'];
+  headers: CreateAxiosDefaults["headers"];
   onTokenGet: () => string | null;
   onTokenRemove: () => void;
 
-  onRequest?: (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig;
-  onResponse?: (response: AxiosResponse<ApiResponse>) => AxiosResponse<ApiResponse>;
+  onRequest?: (
+    config: InternalAxiosRequestConfig,
+  ) => InternalAxiosRequestConfig;
+  onResponse?: (
+    response: AxiosResponse<ApiResponse>,
+  ) => AxiosResponse<ApiResponse>;
   onError?: (error: AxiosError) => AxiosError;
 }
 
-export let axiosClientRef : AxiosInstance | undefined = void 0;
+export let axiosClientRef: AxiosInstance | undefined = void 0;
 
 // 创建axios实例
-export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance {
-  const { baseURL, timeout, headers, onRequest, onResponse, onError, onTokenGet, onTokenRemove } = options;
+export function createAxiosInstance(
+  options: AxiosClientOptions,
+): AxiosInstance {
+  const {
+    baseURL,
+    timeout,
+    headers,
+    onRequest,
+    onResponse,
+    onError,
+    onTokenGet,
+    onTokenRemove,
+  } = options;
   const instance = axios.create({
     baseURL,
     timeout,
     headers,
   });
-  
+
   // 请求拦截器 - 自动token装配
   instance.interceptors.request.use(
     async (config) => {
@@ -62,10 +77,15 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
       return Promise.reject(error);
     },
   );
-  
+
   // 响应拦截器 - 全局错误拦截和数据格式验证
   instance.interceptors.response.use(
     (response: AxiosResponse<ApiResponse>) => {
+      // Handle 204 No Content responses as success
+      if (response.status === 204) {
+        return response;
+      }
+
       const { data: payload } = response;
       // 检查业务状态码
       if (payload.code !== 0) {
@@ -78,14 +98,14 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
     (error: AxiosError) => {
       // 网络错误处理
       let errorMessage = "网络请求失败";
-      
+
       if (error.response) {
         const status = error.response.status;
         switch (status) {
           case 400:
             errorMessage = "请求参数错误";
             break;
-            case 401:
+          case 401:
             errorMessage = "未授权，请重新登录";
             onTokenRemove();
             break;
@@ -124,7 +144,7 @@ export function createAxiosInstance(options: AxiosClientOptions): AxiosInstance 
 /**
  * 基础请求方法，可直接传入泛型以获得接口类型提示。或者传入zod验证器进行更严格的数据校验
  * @param config - 请求配置
- * @returns 
+ * @returns
  */
 export async function request<DATA>(
   config: AxiosRequestConfig & {
@@ -133,7 +153,7 @@ export async function request<DATA>(
     paramsValidator?: z.ZodSchema;
   },
 ): Promise<DATA> {
-  if(!axiosClientRef) {
+  if (!axiosClientRef) {
     throw new Error("axiosClientRef is not defined");
   }
   const httpClient = axiosClientRef;
@@ -155,17 +175,25 @@ export async function request<DATA>(
       }
     }
     const response = await httpClient.request<ApiResponse<DATA>>(config);
+
+    // Handle 204 No Content responses
+    if (response.status === 204) {
+      return undefined as any;
+    }
+
     if (!config.responseValidator) {
       return response.data.data;
     }
     const result = config.responseValidator.safeParse(response.data.data);
     if (!result.success) {
+      console.error(result.error);
       throw new Error(
         `请求${config.url}的响应数据格式错误:${result.error.message}`,
       );
     }
     return result.data;
   } catch (error) {
+    console.error(error)
     throw error instanceof Error ? error : new Error("未知错误");
   }
 }

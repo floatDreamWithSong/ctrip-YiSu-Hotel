@@ -8,7 +8,10 @@
     "start": "vite preview --port 7100",
     "test": "vitest run",
     "lint": "eslint",
-    "format": "prettier src/**/*.{js,jsx,ts,tsx}",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
+    "format:write": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "type-check": "tsc --noEmit",
     "check": "prettier src/**/*.{js,jsx,ts,tsx} --write . && eslint --fix"
   },
   "dependencies": {
@@ -26,6 +29,7 @@
     "ahooks": "^3.9.6",
     "antd": "^6.2.2",
     "axios": "^1.13.4",
+    "dayjs": "^1.11.19",
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

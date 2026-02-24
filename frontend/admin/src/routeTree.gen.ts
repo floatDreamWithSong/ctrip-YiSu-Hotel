@@ -13,6 +13,10 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as authRegisterRouteImport } from './routes/(auth)/register'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
+import { Route as authForgetPasswordRouteImport } from './routes/(auth)/forget-password'
+import { Route as AuthenticatedAdminReviewsRouteImport } from './routes/_authenticated/admin.reviews'
+import { Route as AuthenticatedMerchantHotelsIndexRouteImport } from './routes/_authenticated/merchant.hotels.index'
+import { Route as AuthenticatedMerchantHotelsHotelIdRouteImport } from './routes/_authenticated/merchant.hotels.$hotelId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -33,39 +37,93 @@ const authLoginRoute = authLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const authForgetPasswordRoute = authForgetPasswordRouteImport.update({
+  id: '/(auth)/forget-password',
+  path: '/forget-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminReviewsRoute =
+  AuthenticatedAdminReviewsRouteImport.update({
+    id: '/admin/reviews',
+    path: '/admin/reviews',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMerchantHotelsIndexRoute =
+  AuthenticatedMerchantHotelsIndexRouteImport.update({
+    id: '/merchant/hotels/',
+    path: '/merchant/hotels/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMerchantHotelsHotelIdRoute =
+  AuthenticatedMerchantHotelsHotelIdRouteImport.update({
+    id: '/merchant/hotels/$hotelId',
+    path: '/merchant/hotels/$hotelId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/forget-password': typeof authForgetPasswordRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
+  '/merchant/hotels/$hotelId': typeof AuthenticatedMerchantHotelsHotelIdRoute
+  '/merchant/hotels/': typeof AuthenticatedMerchantHotelsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/forget-password': typeof authForgetPasswordRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
   '/': typeof AuthenticatedIndexRoute
+  '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
+  '/merchant/hotels/$hotelId': typeof AuthenticatedMerchantHotelsHotelIdRoute
+  '/merchant/hotels': typeof AuthenticatedMerchantHotelsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/(auth)/forget-password': typeof authForgetPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/register': typeof authRegisterRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
+  '/_authenticated/merchant/hotels/$hotelId': typeof AuthenticatedMerchantHotelsHotelIdRoute
+  '/_authenticated/merchant/hotels/': typeof AuthenticatedMerchantHotelsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register'
+  fullPaths:
+    | '/'
+    | '/forget-password'
+    | '/login'
+    | '/register'
+    | '/admin/reviews'
+    | '/merchant/hotels/$hotelId'
+    | '/merchant/hotels/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/register' | '/'
+  to:
+    | '/forget-password'
+    | '/login'
+    | '/register'
+    | '/'
+    | '/admin/reviews'
+    | '/merchant/hotels/$hotelId'
+    | '/merchant/hotels'
   id:
     | '__root__'
     | '/_authenticated'
+    | '/(auth)/forget-password'
     | '/(auth)/login'
     | '/(auth)/register'
     | '/_authenticated/'
+    | '/_authenticated/admin/reviews'
+    | '/_authenticated/merchant/hotels/$hotelId'
+    | '/_authenticated/merchant/hotels/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  authForgetPasswordRoute: typeof authForgetPasswordRoute
   authLoginRoute: typeof authLoginRoute
   authRegisterRoute: typeof authRegisterRoute
 }
@@ -100,15 +158,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(auth)/forget-password': {
+      id: '/(auth)/forget-password'
+      path: '/forget-password'
+      fullPath: '/forget-password'
+      preLoaderRoute: typeof authForgetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/reviews': {
+      id: '/_authenticated/admin/reviews'
+      path: '/admin/reviews'
+      fullPath: '/admin/reviews'
+      preLoaderRoute: typeof AuthenticatedAdminReviewsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/merchant/hotels/': {
+      id: '/_authenticated/merchant/hotels/'
+      path: '/merchant/hotels'
+      fullPath: '/merchant/hotels/'
+      preLoaderRoute: typeof AuthenticatedMerchantHotelsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/merchant/hotels/$hotelId': {
+      id: '/_authenticated/merchant/hotels/$hotelId'
+      path: '/merchant/hotels/$hotelId'
+      fullPath: '/merchant/hotels/$hotelId'
+      preLoaderRoute: typeof AuthenticatedMerchantHotelsHotelIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAdminReviewsRoute: typeof AuthenticatedAdminReviewsRoute
+  AuthenticatedMerchantHotelsHotelIdRoute: typeof AuthenticatedMerchantHotelsHotelIdRoute
+  AuthenticatedMerchantHotelsIndexRoute: typeof AuthenticatedMerchantHotelsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAdminReviewsRoute: AuthenticatedAdminReviewsRoute,
+  AuthenticatedMerchantHotelsHotelIdRoute:
+    AuthenticatedMerchantHotelsHotelIdRoute,
+  AuthenticatedMerchantHotelsIndexRoute: AuthenticatedMerchantHotelsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -116,6 +209,7 @@ const AuthenticatedRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  authForgetPasswordRoute: authForgetPasswordRoute,
   authLoginRoute: authLoginRoute,
   authRegisterRoute: authRegisterRoute,
 }

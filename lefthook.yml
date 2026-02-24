@@ -1,0 +1,23 @@
+pre-push:
+  commands:
+    frontend-checks:
+      run: pnpm turbo run format lint type-check --filter=admin --filter=mobile
+pre-commit:
+  parallel: true
+  commands:
+    admin-format-write:
+      glob: "frontend/admin/**"
+      run: pnpm --filter admin format:write
+      stage_fixed: true
+    admin-lint-fix:
+      glob: "frontend/admin/**"
+      run: pnpm --filter admin lint:fix
+      stage_fixed: true
+    mobile-format-write:
+      glob: "frontend/mobile/**"
+      run: pnpm --filter mobile format:write
+      stage_fixed: true
+    mobile-lint-fix:
+      glob: "frontend/mobile/**"
+      run: pnpm --filter mobile lint:fix
+      stage_fixed: true

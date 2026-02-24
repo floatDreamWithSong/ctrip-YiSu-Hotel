@@ -48,38 +48,9 @@ export class UserController {
   async login(@Body(ZodValidationPipe.userLoginSchema) body: ApiUserTypes['UserLogin'], @Env() env: userFrom) {
     return await this.userService.login(env, body);
   }
-  // @Get('info')
-  // @Public()
-  // async info(@Query('uid', ParseIntPipe) uid: string) {
-  //   return await this.userService.publicInfo(uid);
-  // }
-  // @Get('self')
-  // async self(@User() user: JwtPayload){
-  //   return await this.userService.privateInfo(user.uid)
-  // }
-  // @Put('info')
-  // async updateInfo(@Body(ZodValidationPipe.userUpdateInfoSchema) body: ApiUserTypes['UserUpdateInfo'], @User() user: JwtPayload) {
-  //   return await this.userService.updateInfo({...body, uid: user.uid});
-  // }
-  // @Put('password')
-  // async updatePassword(@Body(ZodValidationPipe.userUpdatePasswordSchema) body: UserUpdatePassword, @User() user: JwtPayload) {
-  //   return await this.userService.updatePassword({...body, uid: user.uid});
-  // }
-  // @Put('email')
-  // async updateEmail(@Body(ZodValidationPipe.userUpdateEmailSchema) body: UserUpdateEmail, @User() user: JwtPayload) {
-  //   return await this.userService.updateEmail({...body, uid: user.uid});
-  // }
   @Put('forget')
   @Public()
   async forgetPassword(@Body(ZodValidationPipe.userForgetPasswordSchema) body: ApiUserTypes['UserForgetPassword'], @Env() env: userFrom) {
     return await this.userService.forgetPassword(env, body);
   }
-  // @Put('avatar')
-  // @UseInterceptors(FileInterceptor('avatar', {
-  //   fileFilter: (req, file, callback) => UploadFilter.fileFilter(file.fieldname, file, callback)
-  // }))
-  // async updateAvatar(@UploadedFile() file: Express.Multer.File, @User() user: JwtPayload) {
-  //   return await this.userService.updateAvatar(file, user.uid);
-  // }
-
 }

@@ -6,6 +6,7 @@ import {
   BadRequestException,
   UnauthorizedException,
   ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { AppException } from '../exceptions';
 import { Response } from 'express';
@@ -30,12 +31,12 @@ class BadRequestExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(BadRequestExceptionFilter.name);
 
   catch(exception: BadRequestException, host: ArgumentsHost) {
-    // 捕获BadRequestException，以400的错误码为客户端错误，1004为错误码
+    // 捕获BadRequestException，以400的错误码为客户端错误，1000为错误码
     this.logger.error(exception.stack);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 
-    response.status(400).json(MakeResponse.error(1004, exception.message));
+    response.status(400).json(MakeResponse.error(1000, exception.message));
   }
 }
 
@@ -44,7 +45,7 @@ class UnauthorizedExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(UnauthorizedExceptionFilter.name);
 
   catch(exception: UnauthorizedException, host: ArgumentsHost) {
-    // 捕获UnauthorizedException，以401的错误码为客户端错误，1003为错误码
+    // 捕获UnauthorizedException，以401的错误码为客户端错误，1001为错误码
     this.logger.error(exception.stack);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -58,7 +59,7 @@ class ForbiddenExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(ForbiddenExceptionFilter.name);
 
   catch(exception: ForbiddenException, host: ArgumentsHost) {
-    // 捕获ForbiddenException，以403的错误码为客户端错误，1002为错误码
+    // 捕获ForbiddenException，以403的错误码为客户端错误，1003为错误码
     this.logger.error(exception.stack);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -67,6 +68,19 @@ class ForbiddenExceptionFilter implements ExceptionFilter {
   }
 }
 
+@Catch(NotFoundException)
+class NotFoundExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(NotFoundExceptionFilter.name);
+
+  catch(exception: NotFoundException, host: ArgumentsHost) {
+    // 捕获NotFoundException，以404的错误码为客户端错误，1004为错误码
+    this.logger.error(exception.stack);
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+
+    response.status(404).json(MakeResponse.error(1004, exception.message));
+  }
+}
 @Catch()
 class ErrorFilter implements ExceptionFilter {
   private readonly logger = new Logger(ErrorFilter.name);
@@ -84,9 +98,10 @@ class ErrorFilter implements ExceptionFilter {
 const FiltersChain = [
   new ErrorFilter(),
   new AppExceptionFilter(),
-  new UnauthorizedExceptionFilter(),
   new BadRequestExceptionFilter(),
-  new ForbiddenExceptionFilter()
+  new ForbiddenExceptionFilter(),
+  new UnauthorizedExceptionFilter(),
+  new NotFoundExceptionFilter(),
 ]
 
 export default FiltersChain;

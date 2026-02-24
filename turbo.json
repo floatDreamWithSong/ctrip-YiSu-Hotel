@@ -30,6 +30,12 @@
         "@yisu/front-utils#build"
       ]
     },
+    "admin#type-check": {
+      "dependsOn": [
+        "@yisu/shared#build",
+        "@yisu/front-utils#build"
+      ]
+    },
     "mobile#dev": {
       "dependsOn": [
         "@yisu/shared#build",
@@ -37,6 +43,12 @@
       ]
     },
     "mobile#build": {
+      "dependsOn": [
+        "@yisu/shared#build",
+        "@yisu/front-utils#build"
+      ]
+    },
+    "mobile#type-check": {
       "dependsOn": [
         "@yisu/shared#build",
         "@yisu/front-utils#build"
@@ -54,6 +66,7 @@
     },
     "lint": {},
     "format": {},
+    "type-check": {},
     "check": {}
   }
 }

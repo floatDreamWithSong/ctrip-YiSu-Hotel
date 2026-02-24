@@ -10,7 +10,7 @@ export const AuthLayout = ({
     <div
       {...props}
       className={cn(
-        'w-screen h-screen flex items-center justify-center',
+        'w-screen min-h-screen overflow-y-auto flex items-center justify-center',
         className,
       )}
     >
