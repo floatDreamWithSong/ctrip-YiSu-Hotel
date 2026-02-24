@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
+import { useDebounce } from 'ahooks'
 import {
   CalendarPicker,
   Dropdown,
@@ -28,6 +29,7 @@ import { useLocationStore } from '@/store/location'
 import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
 import { CalendarIcon } from 'lucide-react'
+import type { ApiMobileHotelTypes } from '@yisu/shared'
 
 const sortOptions = [
   { label: '价格', value: 'price' },
@@ -172,52 +174,40 @@ const HotelListPage = () => {
     },
   })
 
+  const queryParams: Omit<
+    ApiMobileHotelTypes['MobileHotelSearchQuery'],
+    'page' | 'limit'
+  > = {
+    roomType: params.roomType as 'HOTEL' | 'HOURLY',
+    city: currentCity === '未定位' ? undefined : currentCity,
+    district: search.district,
+    keyword,
+    checkIn,
+    checkOut,
+    targetDate,
+    guestCount,
+    roomCount,
+    slotId: parseNumber(search.slotId),
+    priceMin: priceRange[0],
+    priceMax: priceRange[1] >= PRICE_UNLIMITED ? undefined : priceRange[1],
+    starLevels: starLevels.length > 0 ? starLevels.join(',') : undefined,
+    tagIds: tagIds.length > 0 ? tagIds.join(',') : undefined,
+    distanceKm: parseNumber(search.distanceKm),
+    sortBy: sortBy as 'price' | 'distance' | 'starLevel',
+    sortOrder,
+    userLng: location?.lng,
+    userLat: location?.lat,
+  }
+  const debouncedQueryParams = useDebounce(queryParams, { wait: 400 })
+
   const queryResult = useInfiniteQuery({
-    queryKey: [
-      'mobile-hotel-list',
-      params.roomType,
-      currentCity,
-      search.district,
-      checkIn,
-      checkOut,
-      targetDate,
-      guestCount,
-      roomCount,
-      search.slotId,
-      keyword,
-      priceRange[0],
-      priceRange[1],
-      starLevels.join(','),
-      tagIds.join(','),
-      sortBy,
-      sortOrder,
-      location?.lng,
-      location?.lat,
-    ],
+    queryKey: ['mobile-hotel-list', debouncedQueryParams],
     initialPageParam: Number(search.page ?? 1),
     queryFn: ({ pageParam }) =>
       MobileHotelRequest.searchHotels({
         page: pageParam,
         limit: Number(search.limit ?? 10),
-        roomType: params.roomType as 'HOTEL' | 'HOURLY',
-        city: currentCity === '未定位' ? undefined : currentCity,
-        district: search.district,
-        keyword,
-        checkIn,
-        checkOut,
-        targetDate,
-        guestCount,
-        roomCount,
-        slotId: parseNumber(search.slotId),
-        priceMin: priceRange[0],
-        priceMax: priceRange[1] >= PRICE_UNLIMITED ? undefined : priceRange[1],
-        starLevels: starLevels.length > 0 ? starLevels.join(',') : undefined,
-        tagIds: tagIds.length > 0 ? tagIds.join(',') : undefined,
-        distanceKm: parseNumber(search.distanceKm),
-        sortBy: sortBy as 'price' | 'distance' | 'starLevel',
-        sortOrder,
-        userLng: location?.lng,
-        userLat: location?.lat,
+        ...debouncedQueryParams,
       }),
     getNextPageParam: (lastPage) => {
       const currentCount = lastPage.page * lastPage.limit
