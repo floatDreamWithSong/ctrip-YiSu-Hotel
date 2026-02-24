@@ -12,7 +12,6 @@ import {
   Select,
   Space,
   TimePicker,
-  Typography,
 } from 'antd'
 import dayjs from 'dayjs'
 
@@ -31,7 +30,16 @@ export function RoomTypeList({ readOnly }: RoomTypeListProps) {
           {fields.map((field) => (
             <Card key={field.key} size="small">
               {/* 第一行：房型名 | 数量 | 价格 | 计价方式 | 购买时长（钟点房专属） */}
-              <Row gutter={12} align="bottom">
+              <Row gutter={12} align="middle">
+                <Col span={4}>
+                  <Form.Item
+                    name={[field.name, 'imageUrl']}
+                    label="参考图"
+                    htmlFor={undefined}
+                  >
+                    <CosImageUpload maxSizeMB={2} dir="hotel-room" />
+                  </Form.Item>
+                </Col>
                 <Col span={6}>
                   <Form.Item
                     name={[field.name, 'name']}
@@ -50,6 +58,36 @@ export function RoomTypeList({ readOnly }: RoomTypeListProps) {
                     <InputNumber min={0} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
+                <Col span={4}>
+                  <Form.Item
+                    name={[field.name, 'maxGuests']}
+                    label="入住人数"
+                    rules={[{ required: true }]}
+                  >
+                    <InputNumber min={1} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={4}>
+                  <Form.Item
+                    name={[field.name, 'sortOrder']}
+                    label="排序"
+                    rules={[{ required: true }]}
+                  >
+                    <InputNumber min={0} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={2}>
+                  <Form.Item label=" ">
+                    {/* 只读模式隐藏房型删除按钮 */}
+                    {!readOnly && (
+                      <Button danger onClick={() => remove(field.name)}>
+                        删除
+                      </Button>
+                    )}
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={12} align="bottom">
                 <Col span={4}>
                   <Form.Item
                     name={[field.name, 'price']}
@@ -90,7 +128,7 @@ export function RoomTypeList({ readOnly }: RoomTypeListProps) {
                     ])
                     if (priceMode === PriceMode.PER_NIGHT) {
                       return (
-                        <Col span={6}>
+                        <Col span={4}>
                           <Form.Item
                             name={[field.name, 'duration']}
                             label="购买时长：夜晚"
@@ -116,7 +154,7 @@ export function RoomTypeList({ readOnly }: RoomTypeListProps) {
                     }
                     if (priceMode === PriceMode.PER_HOUR) {
                       return (
-                        <Col span={6}>
+                        <Col span={4}>
                           <Form.Item
                             name={[field.name, 'duration']}
                             label="购买时长：小时"
@@ -143,29 +181,6 @@ export function RoomTypeList({ readOnly }: RoomTypeListProps) {
                     return null
                   }}
                 </Form.Item>
-              </Row>
-
-              {/* 第二行：入住人数 | 删除按钮 | 床型说明 | 房间面积 | 参考图 */}
-              <Row gutter={12}>
-                <Col span={4}>
-                  <Form.Item
-                    name={[field.name, 'maxGuests']}
-                    label="入住人数"
-                    rules={[{ required: true }]}
-                  >
-                    <InputNumber min={1} style={{ width: '100%' }} />
-                  </Form.Item>
-                </Col>
-                <Col span={2}>
-                  <Form.Item label=" ">
-                    {/* 只读模式隐藏房型删除按钮 */}
-                    {!readOnly && (
-                      <Button danger onClick={() => remove(field.name)}>
-                        删除
-                      </Button>
-                    )}
-                  </Form.Item>
-                </Col>
                 <Col span={6}>
                   <Form.Item name={[field.name, 'bedType']} label="床型说明">
                     <Input />
@@ -173,28 +188,6 @@ export function RoomTypeList({ readOnly }: RoomTypeListProps) {
                 </Col>
                 <Col span={6}>
                   <Form.Item name={[field.name, 'area']} label="房间面积">
-                    <InputNumber min={0} style={{ width: '100%' }} />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item
-                    name={[field.name, 'imageUrl']}
-                    label="参考图"
-                    htmlFor={undefined}
-                  >
-                    <CosImageUpload dir="hotel-room" />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              {/* 第三行：排序 */}
-              <Row gutter={12}>
-                <Col span={6}>
-                  <Form.Item
-                    name={[field.name, 'sortOrder']}
-                    label="排序"
-                    rules={[{ required: true }]}
-                  >
                     <InputNumber min={0} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
@@ -222,6 +215,9 @@ export function RoomTypeList({ readOnly }: RoomTypeListProps) {
                   return (
                     <>
                       <Divider style={{ margin: '12px 0' }}>钟点时段</Divider>
+                      <p className="text-center w-full text-sm text-gray-500">
+                        结束时间将按 房型时长单位(duration) 自动推导
+                      </p>
                       <Form.List name={[field.name, 'hourlySlots']}>
                         {(slotFields, { add: addSlot, remove: removeSlot }) => (
                           <Space
@@ -232,7 +228,7 @@ export function RoomTypeList({ readOnly }: RoomTypeListProps) {
                               <Row
                                 key={slotField.key}
                                 gutter={12}
-                                align="middle"
+                                align="bottom"
                               >
                                 <Col span={6}>
                                   <Form.Item
@@ -282,21 +278,16 @@ export function RoomTypeList({ readOnly }: RoomTypeListProps) {
                                     />
                                   </Form.Item>
                                 </Col>
-                                <Col span={14}>
-                                  <Typography.Text type="secondary">
-                                    结束时间将按 房型时长单位(duration) 自动推导
-                                  </Typography.Text>
-                                </Col>
+                                <Col span={14}></Col>
                                 <Col span={4} style={{ textAlign: 'right' }}>
                                   {/* 只读模式隐藏时段删除按钮 */}
                                   {!readOnly && (
                                     <Button
                                       danger
-                                      size="small"
                                       disabled={slotFields.length <= 1}
                                       onClick={() => removeSlot(slotField.name)}
                                     >
-                                      删
+                                      删除
                                     </Button>
                                   )}
                                 </Col>

@@ -15,7 +15,7 @@ export function CarouselList({ readOnly }: CarouselListProps) {
         <Space orientation="vertical" style={{ width: '100%' }}>
           {fields.map((field) => (
             <Card key={field.key} size="small">
-              <Row gutter={12}>
+              <Row gutter={12} align="middle">
                 <Col span={10}>
                   <Form.Item
                     name={[field.name, 'url']}
