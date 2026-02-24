@@ -143,7 +143,7 @@ const Dashboard = () => {
     <div className="h-full overflow-y-auto bg-[#f6f6f1]">
       <div className="bg-blue-500 px-4 pt-8 pb-14 text-white">
         <div className="text-2xl font-semibold">易宿酒店</div>
-        <div className="text-sm/6 opacity-90">酒店查询 · 筛选 · 快速预订</div>
+        <div className="text-sm/6 opacity-90">酒店查询 · 快捷筛选</div>
       </div>
 
       <div className="-mt-8 px-4">
