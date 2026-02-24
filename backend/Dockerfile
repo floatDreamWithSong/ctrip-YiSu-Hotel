@@ -7,6 +7,7 @@ RUN npm install -g pnpm
 
 # 根级包管理配置
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY scripts/prepare.mjs scripts/
 
 # 工作区各包的 package.json
 COPY packages/typescript-config/ packages/typescript-config/
