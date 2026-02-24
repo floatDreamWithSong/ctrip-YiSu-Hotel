@@ -63,21 +63,54 @@ const MERCHANT_VALIDATION_RULES = {
 }
 
 /**
- * 对对象键排序后进行字符串化，用于对象比较
- * 避免 JSON.stringify 键顺序不同导致的误判
+ * 深度比较函数：支持嵌套对象、数组，并自动过滤 AntD 干扰字段
  */
-const sortAndStringify = (obj: unknown): string => {
-  if (typeof obj !== 'object' || obj === null) {
-    return JSON.stringify(obj)
+export const isFormDeepEqual = (obj1: unknown, obj2: unknown): boolean => {
+  // 1. 基本类型判断（如果引用相同，或者都是 string/number 等且值相等）
+  if (obj1 === obj2) return true
+  // 2. 如果其中有一个不是对象（或者是 null），既然引用不等，值肯定不等
+  if (
+    typeof obj1 !== 'object' ||
+    obj1 === null ||
+    typeof obj2 !== 'object' ||
+    obj2 === null
+  ) {
+    return obj1 === obj2
   }
-  return JSON.stringify(
-    Object.keys(obj)
-      .sort()
-      .reduce((result: Record<string, unknown>, key) => {
-        result[key] = (obj as Record<string, unknown>)[key]
-        return result
-      }, {}),
-  )
+  // 3. 数组处理：如果是数组，必须逐个元素递归比较
+  if (Array.isArray(obj1) && Array.isArray(obj2)) {
+    if (obj1.length !== obj2.length) return false
+    // 每一个元素都得过一遍 isFormDeepEqual
+    return obj1.every((item, index) => isFormDeepEqual(item, obj2[index]))
+  }
+  // 如果一个是数组一个不是，直接返回 false
+  if (Array.isArray(obj1) !== Array.isArray(obj2)) return false
+  // 4. 对象处理
+  // 定义干扰项黑名单（AntD Upload 产生的动态字段）
+  const ignoreKeys = [
+    'uid',
+    'status',
+    'percent',
+    'originFileObj',
+    'response',
+    'xhr',
+  ]
+  const keys1 = Object.keys(obj1).filter((key) => !ignoreKeys.includes(key))
+  const keys2 = Object.keys(obj2).filter((key) => !ignoreKeys.includes(key))
+  // 有效字段数量不一致，说明内容变了
+  if (keys1.length !== keys2.length) return false
+  // 递归比较每一个有效 Key 的内容
+  for (const key of keys1) {
+    // 只要有一个 Key 的内容深度比较不一致，整体就是不等的
+    if (
+      !Object.prototype.hasOwnProperty.call(obj2, key) ||
+      !isFormDeepEqual(obj1[key], obj2[key])
+    ) {
+      return false
+    }
+  }
+
+  return true
 }
 
 const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
@@ -121,7 +154,7 @@ export function useHotelInfoForm(hotelId: number) {
     open &&
     initialValues &&
     watchedValues &&
-    sortAndStringify(normalizedInitial) !== sortAndStringify(normalizedWatched)
+    !isFormDeepEqual(normalizedInitial, normalizedWatched)
 
   /**
    * 数据规范化：处理 undefined/空值，确保对比一致性
@@ -138,7 +171,12 @@ export function useHotelInfoForm(hotelId: number) {
     return {
       ...values,
       tags: values.tags ?? [],
-      images: values.images ?? [],
+      // 处理轮播图：移除 id 字段（后端返回，但表单不跟踪）
+      images: (values.images ?? []).map(({ url, sortOrder, caption }) => ({
+        url,
+        sortOrder,
+        caption,
+      })),
       roomTypes: values.roomTypes ?? [],
       homeAdImage: values.homeAdImage ?? undefined,
       location: values.location ?? undefined,
@@ -165,7 +203,24 @@ export function useHotelInfoForm(hotelId: number) {
         resolve(true)
         return
       }
+      // // 添加调试信息，逐个检查对比字段
+      // console.log('open:', open);
+      // console.log('initialValues:', initialValues);
+      // console.log('watchedValues:', watchedValues);
+      // console.log('normalizedInitial:', normalizedInitial);
+      // console.log('normalizedWatched:', normalizedWatched);
+      // if (normalizedInitial && normalizedWatched) {
+      //   Object.keys(normalizedInitial).forEach((key) => {
+      //     const initialValue = normalizedInitial[key];
+      //     const watchedValue = normalizedWatched[key];
 
+      //     if (initialValue !== watchedValue) {
+      //       console.log(`Difference found at key: ${key}`);
+      //       console.log(`  Initial Value:`, initialValue);
+      //       console.log(`  Watched Value:`, watchedValue);
+      //     }
+      //   });
+      // }
       // 显示警告弹窗
       Modal.confirm({
         title: '提示',
@@ -303,7 +358,13 @@ export function useHotelInfoForm(hotelId: number) {
       ...values,
       tags: (values.tags ?? []).filter(Boolean),
       images: values.images ?? [],
-      roomTypes: values.roomTypes ?? [],
+      // 处理房型数据：过滤掉可选字段的 null/undefined 值
+      roomTypes: (values.roomTypes ?? []).map((room) => ({
+        ...room,
+        bedType: room.bedType ?? undefined,
+        area: room.area ?? undefined,
+        imageUrl: room.imageUrl ?? undefined,
+      })),
       location:
         values.location &&
         typeof values.location.lng === 'number' &&

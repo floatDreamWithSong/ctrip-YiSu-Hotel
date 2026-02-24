@@ -248,7 +248,11 @@ export function HotelInfoFormModal({
             </Form.Item>
           </Col>
           <Col span={24}>
-            <Form.Item name="homeAdImage" label="首页广告图">
+            <Form.Item
+              name="homeAdImage"
+              label="首页广告图"
+              htmlFor={undefined}
+            >
               <CosImageUpload dir="hotel-ad" />
             </Form.Item>
           </Col>
@@ -273,6 +277,7 @@ export function HotelInfoFormModal({
                         name={[field.name, 'url']}
                         label="图片"
                         rules={[{ required: true }]}
+                        htmlFor={undefined}
                       >
                         <CosImageUpload dir="hotel-carousel" />
                       </Form.Item>
@@ -469,7 +474,11 @@ export function HotelInfoFormModal({
                       </Form.Item>
                     </Col>
                     <Col span={6}>
-                      <Form.Item name={[field.name, 'imageUrl']} label="参考图">
+                      <Form.Item
+                        name={[field.name, 'imageUrl']}
+                        label="参考图"
+                        htmlFor={undefined}
+                      >
                         <CosImageUpload dir="hotel-room" />
                       </Form.Item>
                     </Col>
