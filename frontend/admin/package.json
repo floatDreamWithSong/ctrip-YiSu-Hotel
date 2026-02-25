@@ -29,6 +29,7 @@
     "ahooks": "^3.9.6",
     "antd": "^6.2.2",
     "axios": "^1.13.4",
+    "browser-image-compression": "^2.0.2",
     "dayjs": "^1.11.19",
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",

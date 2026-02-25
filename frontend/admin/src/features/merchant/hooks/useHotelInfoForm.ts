@@ -265,6 +265,7 @@ export function useHotelInfoForm(hotelId: number) {
         cancelText: '取消',
         onOk: () => resolve(true), // 确认退出：允许关闭
         onCancel: () => resolve(false), // 取消：拦截关闭
+        centered: true,
       })
     })
   }

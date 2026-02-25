@@ -215,9 +215,9 @@ export function RoomTypeList({ readOnly }: RoomTypeListProps) {
                   return (
                     <>
                       <Divider style={{ margin: '12px 0' }}>钟点时段</Divider>
-                      <p className="text-center w-full text-sm text-gray-500">
+                      {/* <p className="text-center w-full text-sm text-gray-500">
                         结束时间将按 房型时长单位(duration) 自动推导
-                      </p>
+                      </p> */}
                       <Form.List name={[field.name, 'hourlySlots']}>
                         {(slotFields, { add: addSlot, remove: removeSlot }) => (
                           <Space
