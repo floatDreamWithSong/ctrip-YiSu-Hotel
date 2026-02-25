@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { useDebounce } from 'ahooks'
 import {
   CalendarPicker,
+  DotLoading,
   Dropdown,
-  InfiniteScroll,
   Loading,
   Selector,
   Slider,
@@ -197,8 +198,49 @@ const HotelListPage = () => {
   const canUseDistance = Boolean(location?.lng && location?.lat)
   const nights = calcNightsFromYmd(checkIn, checkOut)
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const virtualizer = useVirtualizer({
+    count: hasMore ? data.length + 1 : data.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 160,
+    overscan: 5,
+  })
+
+  const virtualItems = virtualizer.getVirtualItems()
+
+  const { fetchNextPage, isFetchingNextPage, isFetchNextPageError } =
+    queryResult
+
+  useEffect(() => {
+    const lastItem = virtualItems.at(-1)
+    if (!lastItem) return
+    if (
+      lastItem.index >= data.length - 1 &&
+      hasMore &&
+      !isFetchingNextPage &&
+      !isFetchNextPageError
+    ) {
+      const timer = setTimeout(() => {
+        fetchNextPage()
+      }, 200)
+      return () => clearTimeout(timer)
+    }
+  }, [
+    virtualItems,
+    hasMore,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    data.length,
+    fetchNextPage,
+  ])
+
   return (
-    <div className="h-full min-h-0 overflow-y-auto bg-[#f4f4f2] [&>div]:px-3 pb-4">
+    <div
+      ref={scrollContainerRef}
+      className="h-full min-h-0 overflow-y-auto bg-[#f4f4f2] [&>div]:px-3 pb-4"
+    >
       <div className="sticky top-0 z-10 pb-3 bg-[#f4f4f2] pt-3">
         <div className="mb-2 flex items-center justify-between">
           <div className="text-base font-semibold">
@@ -412,55 +454,100 @@ const HotelListPage = () => {
         }}
       />
 
-      <div className="space-y-3">
-        {data.map((item) => (
-          <HotelListCard
-            key={`${item.hotelId}-${item.infoId}`}
-            onClick={() => {
-              const currentRoomType = params.roomType as 'HOTEL' | 'HOURLY'
-              searchStore.setState({
-                roomType: currentRoomType,
-                keyword,
-                checkIn: currentRoomType === 'HOTEL' ? checkIn : undefined,
-                checkOut: currentRoomType === 'HOTEL' ? checkOut : undefined,
-                targetDate:
-                  currentRoomType === 'HOURLY' ? targetDate : undefined,
-                guestCount:
-                  currentRoomType === 'HOTEL'
-                    ? guestCount
-                    : searchStore.guestCount,
-                roomCount:
-                  currentRoomType === 'HOTEL'
-                    ? roomCount
-                    : searchStore.roomCount,
-              })
-              navigate({
-                to: '/hotel/$hotelId',
-                params: { hotelId: String(item.hotelId) },
-                search: {
-                  roomType: currentRoomType,
-                  checkIn: currentRoomType === 'HOTEL' ? checkIn : undefined,
-                  checkOut: currentRoomType === 'HOTEL' ? checkOut : undefined,
-                  targetDate:
-                    currentRoomType === 'HOURLY' ? targetDate : undefined,
-                  guestCount:
-                    currentRoomType === 'HOTEL' ? guestCount : undefined,
-                  roomCount:
-                    currentRoomType === 'HOTEL' ? roomCount : undefined,
-                },
-              })
-            }}
-            item={item}
-          />
-        ))}
+      <div
+        className="relative px-3"
+        style={{ height: `${virtualizer.getTotalSize()}px` }}
+      >
+        {virtualItems.map((virtualRow) => {
+          const isLoaderRow = virtualRow.index >= data.length
+          if (isLoaderRow) {
+            return (
+              <div
+                key="loader"
+                className="absolute left-0 right-0 flex justify-center py-4 px-3"
+                style={{
+                  top: `${virtualRow.start}px`,
+                  height: `${virtualRow.size}px`,
+                }}
+              >
+                {hasMore ? (
+                  isFetchNextPageError ? (
+                    <button
+                      type="button"
+                      className="text-sm text-orange-500"
+                      onClick={() => void fetchNextPage()}
+                    >
+                      加载失败，点击重试
+                    </button>
+                  ) : (
+                    <span className="text-sm text-gray-400">
+                      加载中
+                      <DotLoading />
+                    </span>
+                  )
+                ) : null}
+              </div>
+            )
+          }
+          const item = data[virtualRow.index]
+          return (
+            <div
+              key={`${item.hotelId}-${item.infoId}`}
+              ref={virtualizer.measureElement}
+              data-index={virtualRow.index}
+              className="absolute left-0 right-0 px-3 pb-3"
+              style={{
+                top: `${virtualRow.start}px`,
+              }}
+            >
+              <HotelListCard
+                onClick={() => {
+                  const currentRoomType = params.roomType as 'HOTEL' | 'HOURLY'
+                  searchStore.setState({
+                    roomType: currentRoomType,
+                    keyword,
+                    checkIn: currentRoomType === 'HOTEL' ? checkIn : undefined,
+                    checkOut:
+                      currentRoomType === 'HOTEL' ? checkOut : undefined,
+                    targetDate:
+                      currentRoomType === 'HOURLY' ? targetDate : undefined,
+                    guestCount:
+                      currentRoomType === 'HOTEL'
+                        ? guestCount
+                        : searchStore.guestCount,
+                    roomCount:
+                      currentRoomType === 'HOTEL'
+                        ? roomCount
+                        : searchStore.roomCount,
+                  })
+                  navigate({
+                    to: '/hotel/$hotelId',
+                    params: { hotelId: String(item.hotelId) },
+                    search: {
+                      roomType: currentRoomType,
+                      checkIn:
+                        currentRoomType === 'HOTEL' ? checkIn : undefined,
+                      checkOut:
+                        currentRoomType === 'HOTEL' ? checkOut : undefined,
+                      targetDate:
+                        currentRoomType === 'HOURLY' ? targetDate : undefined,
+                      guestCount:
+                        currentRoomType === 'HOTEL' ? guestCount : undefined,
+                      roomCount:
+                        currentRoomType === 'HOTEL' ? roomCount : undefined,
+                    },
+                  })
+                }}
+                item={item}
+              />
+            </div>
+          )
+        })}
       </div>
 
-      <InfiniteScroll
-        loadMore={async () => {
-          await queryResult.fetchNextPage()
-        }}
-        hasMore={hasMore}
-      />
+      {!hasMore && data.length > 0 && (
+        <div className="py-4 text-center text-xs text-gray-400">没有更多了</div>
+      )}
     </div>
   )
 }
