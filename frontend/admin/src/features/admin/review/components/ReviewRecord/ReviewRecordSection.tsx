@@ -78,8 +78,8 @@ function RecordFilter({
           value={startAt && endAt ? [dayjs(startAt), dayjs(endAt)] : null}
           onChange={(dates) => {
             if (dates) {
-              onStartAtChange(dates[0]?.toISOString())
-              onEndAtChange(dates[1]?.toISOString())
+              onStartAtChange(dates[0]?.startOf('day').toISOString())
+              onEndAtChange(dates[1]?.endOf('day').toISOString())
             } else {
               onStartAtChange(undefined)
               onEndAtChange(undefined)
