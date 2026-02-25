@@ -51,7 +51,7 @@ const priceMarks = {
 
 const Dashboard = () => {
   const navigate = useNavigate()
-  const { city, location } = useLocationStore()
+  const { city } = useLocationStore()
   const searchState = useHotelSearchStore()
   const today = useMemo(() => {
     return getStartOfToday()
@@ -98,45 +98,49 @@ const Dashboard = () => {
   )
 
   const handleSearch = () => {
-    const query = new URLSearchParams()
-    query.set('page', '1')
-    query.set('limit', '10')
-    query.set('sortBy', 'price')
-    query.set('sortOrder', 'asc')
-    if (city) query.set('city', city)
-    if (searchState.keyword.trim())
-      query.set('keyword', searchState.keyword.trim())
-    if (searchState.checkIn) query.set('checkIn', searchState.checkIn)
-    if (searchState.checkOut) query.set('checkOut', searchState.checkOut)
-    if (searchState.targetDate) query.set('targetDate', searchState.targetDate)
-    if (searchState.roomType === 'HOTEL') {
-      query.set(
-        'guestCount',
-        String(normalizePositiveInt(searchState.guestCount)),
-      )
-      query.set(
-        'roomCount',
-        String(normalizePositiveInt(searchState.roomCount)),
-      )
-    }
-    if (searchState.slotId) query.set('slotId', String(searchState.slotId))
-    if (searchState.priceMin)
-      query.set('priceMin', String(searchState.priceMin))
-    if (
-      typeof searchState.priceMax === 'number' &&
-      searchState.priceMax < PRICE_UNLIMITED
-    ) {
-      query.set('priceMax', String(searchState.priceMax))
-    }
-    if (searchState.starLevels.length > 0)
-      query.set('starLevels', searchState.starLevels.join(','))
-    if (searchState.tagIds.length > 0)
-      query.set('tagIds', searchState.tagIds.join(','))
-    if (location) {
-      query.set('userLng', String(location.lng))
-      query.set('userLat', String(location.lat))
-    }
-    window.location.href = `/list/${searchState.roomType}?${query.toString()}`
+    const trimmedKeyword = searchState.keyword.trim()
+
+    navigate({
+      to: '/list/$roomType',
+      params: { roomType: searchState.roomType },
+      search: {
+        page: 1,
+        limit: 10,
+        sortBy: 'price',
+        sortOrder: 'asc',
+        city: city || undefined,
+        keyword: trimmedKeyword || undefined,
+        checkIn: searchState.checkIn,
+        checkOut: searchState.checkOut,
+        targetDate: searchState.targetDate,
+        guestCount:
+          searchState.roomType === 'HOTEL'
+            ? normalizePositiveInt(searchState.guestCount)
+            : undefined,
+        roomCount:
+          searchState.roomType === 'HOTEL'
+            ? normalizePositiveInt(searchState.roomCount)
+            : undefined,
+        slotId: searchState.slotId || undefined,
+        priceMin:
+          typeof searchState.priceMin === 'number' && searchState.priceMin > 0
+            ? searchState.priceMin
+            : undefined,
+        priceMax:
+          typeof searchState.priceMax === 'number' &&
+          searchState.priceMax < PRICE_UNLIMITED
+            ? searchState.priceMax
+            : undefined,
+        starLevels:
+          searchState.starLevels.length > 0
+            ? searchState.starLevels.join(',')
+            : undefined,
+        tagIds:
+          searchState.tagIds.length > 0
+            ? searchState.tagIds.join(',')
+            : undefined,
+      },
+    })
   }
 
   return (
