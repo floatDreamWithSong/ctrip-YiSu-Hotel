@@ -29,7 +29,7 @@ export function CosImageUpload({
   maxSizeMB = 5,
   compressMaxSizeMB = DEFAULT_COMPRESS_MAX_SIZE_MB,
   compressMaxWidthOrHeight = DEFAULT_COMPRESS_MAX_WH,
-  ...restProps // 获取其余所有 props
+  ...restProps
 }: CosImageUploadProps) {
   const [localFileList, setLocalFileList] = useState<UploadFile[]>([])
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -112,7 +112,7 @@ export function CosImageUpload({
   return (
     <>
       <Upload
-        {...restProps} // 1. 关键：透传所有 antd 注入的属性（包含 id）
+        {...restProps}
         id={id}
         accept="image/*"
         listType="picture-card"
