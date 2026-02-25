@@ -74,6 +74,7 @@ function RecordFilter({
       <Col xs={24} md={12}>
         <DatePicker.RangePicker
           style={{ width: '100%' }}
+          placeholder={['开始日期', '结束日期']}
           value={startAt && endAt ? [dayjs(startAt), dayjs(endAt)] : null}
           onChange={(dates) => {
             if (dates) {
