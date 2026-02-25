@@ -28,7 +28,7 @@ export function useHotels() {
       MerchantHotelRequest.getHotels({
         page,
         limit: pageSize,
-        keyword: keyword?.trim() || undefined,
+        keyword: keyword?.trim(),
       }),
   })
 

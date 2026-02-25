@@ -11,7 +11,7 @@
     "lint": "turbo lint",
     "format": "turbo format",
     "check": "turbo check",
-    "prepare": "node scripts/prepare.mjs"
+    "prepare": "lefthook install"
   },
   "keywords": [],
   "author": "",

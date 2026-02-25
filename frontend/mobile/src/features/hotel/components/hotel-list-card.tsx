@@ -15,19 +15,17 @@ const HotelListCard = ({ item, onClick, className }: HotelListCardProps) => {
       className={className ?? 'rounded-2xl bg-white p-3 shadow-sm'}
       onClick={onClick}
     >
-      <div className="flex gap-3 h-34">
-        <div className="h-full w-28 shrink-0 overflow-hidden rounded-xl bg-gray-100">
-          {item.coverImage ? (
+      <div className="flex gap-3">
+        <div className="w-28 shrink-0 self-stretch overflow-hidden rounded-xl">
+          {item.coverImage && (
             <img
               src={item.coverImage}
               alt={item.name}
               className="h-full w-full object-cover"
             />
-          ) : (
-            <div className="h-full w-full" />
           )}
         </div>
-        <div className="min-w-0 flex-1 flex flex-col">
+        <div className="min-w-0 flex-1">
           <div className="mb-1 truncate text-base font-medium text-gray-800">
             {item.name}
           </div>

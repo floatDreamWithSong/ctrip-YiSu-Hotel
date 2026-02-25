@@ -17,7 +17,6 @@ const nestJsConfig = [
       sourceType: "commonjs",
       parserOptions: {
         projectService: true,
-        // @ts-expect-error no-check
         tsconfigRootDir: import.meta.dirname,
       },
     },

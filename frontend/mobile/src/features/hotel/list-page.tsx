@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { useDebounce } from 'ahooks'
 import {
   CalendarPicker,
+  DotLoading,
   Dropdown,
-  InfiniteScroll,
   Loading,
   Selector,
   Slider,
@@ -47,39 +48,10 @@ const priceMarks = {
   [PRICE_UNLIMITED]: '不限',
 }
 
-const parseNumber = (value?: string) => {
-  if (!value) return undefined
-  const num = Number(value)
-  return Number.isFinite(num) ? num : undefined
-}
-const getSearchParams = () => {
-  const params = new URLSearchParams(window.location.search)
-  return {
-    city: params.get('city') ?? undefined,
-    district: params.get('district') ?? undefined,
-    keyword: params.get('keyword') ?? undefined,
-    checkIn: params.get('checkIn') ?? undefined,
-    checkOut: params.get('checkOut') ?? undefined,
-    targetDate: params.get('targetDate') ?? undefined,
-    guestCount: params.get('guestCount') ?? undefined,
-    roomCount: params.get('roomCount') ?? undefined,
-    slotId: params.get('slotId') ?? undefined,
-    priceMin: params.get('priceMin') ?? undefined,
-    priceMax: params.get('priceMax') ?? undefined,
-    starLevels: params.get('starLevels') ?? undefined,
-    tagIds: params.get('tagIds') ?? undefined,
-    distanceKm: params.get('distanceKm') ?? undefined,
-    sortBy: params.get('sortBy') ?? undefined,
-    sortOrder: params.get('sortOrder') ?? undefined,
-    page: params.get('page') ?? '1',
-    limit: params.get('limit') ?? '10',
-  }
-}
-
 const HotelListPage = () => {
   const navigate = useNavigate()
   const params = useParams({ from: '/_authenticated/list/$roomType' })
-  const search = getSearchParams()
+  const search = useSearch({ from: '/_authenticated/list/$roomType' })
   const { city, location, updateLocation } = useLocationStore()
   const searchStore = useHotelSearchStore()
   const tagsQuery = useQuery({
@@ -111,10 +83,10 @@ const HotelListPage = () => {
     return date ? formatYmdDate(date) : undefined
   })
   const [guestCount, setGuestCount] = useState(() =>
-    normalizePositiveInt(parseNumber(search.guestCount)),
+    normalizePositiveInt(search.guestCount),
   )
   const [roomCount, setRoomCount] = useState(() =>
-    normalizePositiveInt(parseNumber(search.roomCount)),
+    normalizePositiveInt(search.roomCount),
   )
   const [starLevels, setStarLevels] = useState<number[]>(
     search.starLevels
@@ -132,7 +104,9 @@ const HotelListPage = () => {
           .filter((item) => Number.isInteger(item))
       : [],
   )
-  const [sortBy, setSortBy] = useState(search.sortBy ?? 'price')
+  const [sortBy, setSortBy] = useState<'price' | 'distance' | 'starLevel'>(
+    search.sortBy ?? 'price',
+  )
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
     (search.sortOrder as 'asc' | 'desc') ?? 'asc',
   )
@@ -187,12 +161,12 @@ const HotelListPage = () => {
     targetDate,
     guestCount,
     roomCount,
-    slotId: parseNumber(search.slotId),
+    slotId: search.slotId,
     priceMin: priceRange[0],
     priceMax: priceRange[1] >= PRICE_UNLIMITED ? undefined : priceRange[1],
     starLevels: starLevels.length > 0 ? starLevels.join(',') : undefined,
     tagIds: tagIds.length > 0 ? tagIds.join(',') : undefined,
-    distanceKm: parseNumber(search.distanceKm),
+    distanceKm: search.distanceKm,
     sortBy: sortBy as 'price' | 'distance' | 'starLevel',
     sortOrder,
     userLng: location?.lng,
@@ -202,11 +176,11 @@ const HotelListPage = () => {
 
   const queryResult = useInfiniteQuery({
     queryKey: ['mobile-hotel-list', debouncedQueryParams],
-    initialPageParam: Number(search.page ?? 1),
+    initialPageParam: search.page ?? 1,
     queryFn: ({ pageParam }) =>
       MobileHotelRequest.searchHotels({
         page: pageParam,
-        limit: Number(search.limit ?? 10),
+        limit: search.limit ?? 10,
         ...debouncedQueryParams,
       }),
     getNextPageParam: (lastPage) => {
@@ -224,8 +198,49 @@ const HotelListPage = () => {
   const canUseDistance = Boolean(location?.lng && location?.lat)
   const nights = calcNightsFromYmd(checkIn, checkOut)
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const virtualizer = useVirtualizer({
+    count: hasMore ? data.length + 1 : data.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 160,
+    overscan: 5,
+  })
+
+  const virtualItems = virtualizer.getVirtualItems()
+
+  const { fetchNextPage, isFetchingNextPage, isFetchNextPageError } =
+    queryResult
+
+  useEffect(() => {
+    const lastItem = virtualItems.at(-1)
+    if (!lastItem) return
+    if (
+      lastItem.index >= data.length - 1 &&
+      hasMore &&
+      !isFetchingNextPage &&
+      !isFetchNextPageError
+    ) {
+      const timer = setTimeout(() => {
+        fetchNextPage()
+      }, 200)
+      return () => clearTimeout(timer)
+    }
+  }, [
+    virtualItems,
+    hasMore,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    data.length,
+    fetchNextPage,
+  ])
+
   return (
-    <div className="h-full min-h-0 overflow-y-auto bg-[#f4f4f2] [&>div]:px-3 pb-4">
+    <div
+      ref={scrollContainerRef}
+      className="h-full min-h-0 overflow-y-auto bg-[#f4f4f2] [&>div]:px-3 pb-4"
+    >
       <div className="sticky top-0 z-10 pb-3 bg-[#f4f4f2] pt-3">
         <div className="mb-2 flex items-center justify-between">
           <div className="text-base font-semibold">
@@ -364,7 +379,10 @@ const HotelListPage = () => {
                   )}
                   value={[sortBy]}
                   onChange={(value) =>
-                    setSortBy((value[0] as string) ?? 'price')
+                    setSortBy(
+                      (value[0] as 'price' | 'distance' | 'starLevel') ??
+                        'price',
+                    )
                   }
                 />
                 <div className="flex gap-2">
@@ -436,55 +454,100 @@ const HotelListPage = () => {
         }}
       />
 
-      <div className="space-y-3">
-        {data.map((item) => (
-          <HotelListCard
-            key={`${item.hotelId}-${item.infoId}`}
-            onClick={() => {
-              const currentRoomType = params.roomType as 'HOTEL' | 'HOURLY'
-              searchStore.setState({
-                roomType: currentRoomType,
-                keyword,
-                checkIn: currentRoomType === 'HOTEL' ? checkIn : undefined,
-                checkOut: currentRoomType === 'HOTEL' ? checkOut : undefined,
-                targetDate:
-                  currentRoomType === 'HOURLY' ? targetDate : undefined,
-                guestCount:
-                  currentRoomType === 'HOTEL'
-                    ? guestCount
-                    : searchStore.guestCount,
-                roomCount:
-                  currentRoomType === 'HOTEL'
-                    ? roomCount
-                    : searchStore.roomCount,
-              })
-              navigate({
-                to: '/hotel/$hotelId',
-                params: { hotelId: String(item.hotelId) },
-                search: {
-                  roomType: currentRoomType,
-                  checkIn: currentRoomType === 'HOTEL' ? checkIn : undefined,
-                  checkOut: currentRoomType === 'HOTEL' ? checkOut : undefined,
-                  targetDate:
-                    currentRoomType === 'HOURLY' ? targetDate : undefined,
-                  guestCount:
-                    currentRoomType === 'HOTEL' ? guestCount : undefined,
-                  roomCount:
-                    currentRoomType === 'HOTEL' ? roomCount : undefined,
-                },
-              })
-            }}
-            item={item}
-          />
-        ))}
+      <div
+        className="relative px-3"
+        style={{ height: `${virtualizer.getTotalSize()}px` }}
+      >
+        {virtualItems.map((virtualRow) => {
+          const isLoaderRow = virtualRow.index >= data.length
+          if (isLoaderRow) {
+            return (
+              <div
+                key="loader"
+                className="absolute left-0 right-0 flex justify-center py-4 px-3"
+                style={{
+                  top: `${virtualRow.start}px`,
+                  height: `${virtualRow.size}px`,
+                }}
+              >
+                {hasMore ? (
+                  isFetchNextPageError ? (
+                    <button
+                      type="button"
+                      className="text-sm text-orange-500"
+                      onClick={() => void fetchNextPage()}
+                    >
+                      加载失败，点击重试
+                    </button>
+                  ) : (
+                    <span className="text-sm text-gray-400">
+                      加载中
+                      <DotLoading />
+                    </span>
+                  )
+                ) : null}
+              </div>
+            )
+          }
+          const item = data[virtualRow.index]
+          return (
+            <div
+              key={`${item.hotelId}-${item.infoId}`}
+              ref={virtualizer.measureElement}
+              data-index={virtualRow.index}
+              className="absolute left-0 right-0 px-3 pb-3"
+              style={{
+                top: `${virtualRow.start}px`,
+              }}
+            >
+              <HotelListCard
+                onClick={() => {
+                  const currentRoomType = params.roomType as 'HOTEL' | 'HOURLY'
+                  searchStore.setState({
+                    roomType: currentRoomType,
+                    keyword,
+                    checkIn: currentRoomType === 'HOTEL' ? checkIn : undefined,
+                    checkOut:
+                      currentRoomType === 'HOTEL' ? checkOut : undefined,
+                    targetDate:
+                      currentRoomType === 'HOURLY' ? targetDate : undefined,
+                    guestCount:
+                      currentRoomType === 'HOTEL'
+                        ? guestCount
+                        : searchStore.guestCount,
+                    roomCount:
+                      currentRoomType === 'HOTEL'
+                        ? roomCount
+                        : searchStore.roomCount,
+                  })
+                  navigate({
+                    to: '/hotel/$hotelId',
+                    params: { hotelId: String(item.hotelId) },
+                    search: {
+                      roomType: currentRoomType,
+                      checkIn:
+                        currentRoomType === 'HOTEL' ? checkIn : undefined,
+                      checkOut:
+                        currentRoomType === 'HOTEL' ? checkOut : undefined,
+                      targetDate:
+                        currentRoomType === 'HOURLY' ? targetDate : undefined,
+                      guestCount:
+                        currentRoomType === 'HOTEL' ? guestCount : undefined,
+                      roomCount:
+                        currentRoomType === 'HOTEL' ? roomCount : undefined,
+                    },
+                  })
+                }}
+                item={item}
+              />
+            </div>
+          )
+        })}
       </div>
 
-      <InfiniteScroll
-        loadMore={async () => {
-          await queryResult.fetchNextPage()
-        }}
-        hasMore={hasMore}
-      />
+      {!hasMore && data.length > 0 && (
+        <div className="py-4 text-center text-xs text-gray-400">没有更多了</div>
+      )}
     </div>
   )
 }

@@ -1,7 +1,17 @@
 import type { ReviewRecordItem } from '@/apis/hotel'
 import { RejectReasonType } from '@yisu/shared'
 import type { ApiHotelTypes } from '@yisu/shared'
-import { Card, Col, Input, Row, Select, Space, Table, Typography } from 'antd'
+import dayjs from 'dayjs'
+import {
+  Card,
+  Col,
+  DatePicker,
+  Row,
+  Select,
+  Space,
+  Table,
+  Typography,
+} from 'antd'
 import type { TablePaginationConfig } from 'antd'
 import { useReviewRecords } from '../../hooks/useReviewRecords'
 
@@ -61,18 +71,20 @@ function RecordFilter({
           onChange={onRejectReasonChange}
         />
       </Col>
-      <Col xs={24} md={6}>
-        <Input
-          placeholder="开始时间 ISO"
-          value={startAt}
-          onChange={(e) => onStartAtChange(e.target.value || undefined)}
-        />
-      </Col>
-      <Col xs={24} md={6}>
-        <Input
-          placeholder="结束时间 ISO"
-          value={endAt}
-          onChange={(e) => onEndAtChange(e.target.value || undefined)}
+      <Col xs={24} md={12}>
+        <DatePicker.RangePicker
+          style={{ width: '100%' }}
+          placeholder={['开始日期', '结束日期']}
+          value={startAt && endAt ? [dayjs(startAt), dayjs(endAt)] : null}
+          onChange={(dates) => {
+            if (dates) {
+              onStartAtChange(dates[0]?.startOf('day').toISOString())
+              onEndAtChange(dates[1]?.endOf('day').toISOString())
+            } else {
+              onStartAtChange(undefined)
+              onEndAtChange(undefined)
+            }
+          }}
         />
       </Col>
     </Row>
@@ -120,7 +132,11 @@ function RecordTable({
           render: (value: string | null) => value ?? '-',
         },
         { title: '审核人', dataIndex: ['reviewer', 'username'] },
-        { title: '时间', dataIndex: 'createdAt' },
+        {
+          title: '时间',
+          dataIndex: 'createdAt',
+          render: (value: string) => dayjs(value).format('YYYY-MM-DD HH:mm'),
+        },
       ]}
     />
   )

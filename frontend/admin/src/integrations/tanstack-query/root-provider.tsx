@@ -64,6 +64,7 @@ export const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
+  defaultViewTransition: true,
 })
 
 export function Provider({
