@@ -5,6 +5,11 @@
   "scripts": {
     "dev": "vite --port 7001",
     "build": "vite build && tsc",
+    "build:android": "pnpm build && cap sync android",
+    "cap:sync": "cap sync android",
+    "cap:copy": "cap copy android",
+    "cap:open": "cap open android",
+    "cap:add:android": "cap add android",
     "start": "vite preview --port 7101",
     "test": "vitest run",
     "lint": "eslint",
@@ -15,6 +20,9 @@
     "check": "prettier src/**/*.{js,jsx,ts,tsx} --write . && eslint --fix"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/geolocation": "^7.1.2",
     "@ant-design/icons": "^6.1.0",
     "@t3-oss/env-core": "^0.13.8",
     "@tailwindcss/vite": "^4.0.6",
@@ -30,6 +38,7 @@
     "antd-mobile": "^5.42.3",
     "antd-mobile-icons": "^0.3.0",
     "axios": "^1.13.4",
+    "dayjs": "^1.11.19",
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -39,6 +48,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
     "@tanstack/devtools-vite": "^0.3.11",
     "@tanstack/eslint-config": "^0.3.0",
     "@testing-library/dom": "^10.4.0",

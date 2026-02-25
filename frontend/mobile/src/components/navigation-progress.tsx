@@ -14,5 +14,12 @@ export function NavigationProgress() {
     }
   }, [state.status])
 
-  return <LoadingBar ref={ref} shadow={true} height={2} />
+  return (
+    <LoadingBar
+      ref={ref}
+      shadow={false}
+      height={2}
+      style={{ backgroundColor: 'var(--adm-color-primary)' }}
+    />
+  )
 }

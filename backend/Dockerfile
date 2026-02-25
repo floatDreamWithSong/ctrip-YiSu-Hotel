@@ -7,6 +7,7 @@ RUN npm install -g pnpm
 
 # 根级包管理配置
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY scripts/prepare.mjs scripts/
 
 # 工作区各包的 package.json
 COPY packages/typescript-config/ packages/typescript-config/
@@ -21,6 +22,8 @@ COPY packages/shared/tsup.config.ts packages/shared/
 COPY packages/shared/src/          packages/shared/src/
 COPY backend/prisma/               backend/prisma/
 
+# 删除lefthook prepare
+RUN pnpm pkg delete scripts.prepare
 # 安装依赖（自动触发 shared build + prisma generate）
 RUN pnpm install --frozen-lockfile
 

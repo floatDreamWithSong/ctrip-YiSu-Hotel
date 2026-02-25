@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import path from 'node:path'
 import { PriceMode, PrismaClient, Realm, RejectReasonType, ReviewStatus } from '../prisma-generated'
+import { randomUUID } from 'node:crypto'
 
 const faker = new Faker({ locale: [zh_CN, en] })
 let prisma: PrismaClient | null = null
@@ -206,11 +207,11 @@ async function searchHotelPois(args: Args) {
 async function ensureUsers(realm: Realm, amount: number) {
   if (!prisma) throw new Error('Prisma client not initialized')
   const users = []
-  const suffix = Date.now().toString(36)
+  const suffix = randomUUID().slice(0, 6)
   const password = await bcrypt.hash(DEFAULT_PASSWORD, 12)
 
   for (let i = 0; i < amount; i += 1) {
-    const username = `mock_${realm.toLowerCase()}_${suffix}_${i}`
+    const username = `${realm.toLowerCase()}_${suffix}_${i}`
     const email = `${username}@example.com`
     const user = await prisma.user.create({
       data: {

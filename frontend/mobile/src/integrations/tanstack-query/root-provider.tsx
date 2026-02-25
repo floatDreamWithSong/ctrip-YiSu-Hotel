@@ -9,6 +9,39 @@ import {
 import { createRouter } from '@tanstack/react-router'
 import { AxiosError } from 'axios'
 
+type TransitionDirection = 'forward' | 'back'
+
+const getPathDepth = (pathname: string) => {
+  if (pathname === '/') return 0
+  return pathname.split('/').filter(Boolean).length
+}
+
+const isListPath = (pathname: string) => pathname.startsWith('/list/')
+const isHotelDetailPath = (pathname: string) => pathname.startsWith('/hotel/')
+
+const inferDirectionByRouteRelation = (
+  fromPathname?: string,
+  toPathname?: string,
+): TransitionDirection | undefined => {
+  if (!fromPathname || !toPathname || fromPathname === toPathname)
+    return undefined
+
+  if (fromPathname === '/address-search' && toPathname === '/') return 'back'
+  if (isListPath(fromPathname) && toPathname === '/') return 'back'
+  if (isHotelDetailPath(fromPathname) && isListPath(toPathname)) return 'back'
+
+  if (isListPath(fromPathname) && isHotelDetailPath(toPathname))
+    return 'forward'
+
+  const fromDepth = getPathDepth(fromPathname)
+  const toDepth = getPathDepth(toPathname)
+
+  if (toDepth > fromDepth) return 'forward'
+  if (toDepth < fromDepth) return 'back'
+
+  return undefined
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -41,8 +74,6 @@ export const queryClient = new QueryClient({
       if (error instanceof AxiosError) {
         if (error.response?.status === 401) {
           tokenStore.remove()
-          const redirect = `${router.history.location.href}`
-          router.navigate({ to: '/login', search: { redirect } })
         }
         // if (error.response?.status === 500) {
         //   router.navigate({ to: '/500' })
@@ -64,7 +95,41 @@ export const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
+  defaultViewTransition: {
+    types: ({ fromLocation, toLocation, pathChanged }) => {
+      if (!pathChanged) return false
+
+      const relationDirection = inferDirectionByRouteRelation(
+        fromLocation?.pathname,
+        toLocation.pathname,
+      )
+      if (relationDirection) {
+        return ['page-slide', relationDirection]
+      }
+
+      const fromIndex = (
+        fromLocation?.state as { __TSR_index?: number } | undefined
+      )?.__TSR_index
+      const toIndex = (toLocation.state as { __TSR_index?: number } | undefined)
+        ?.__TSR_index
+
+      if (
+        typeof fromIndex === 'number' &&
+        typeof toIndex === 'number' &&
+        toIndex < fromIndex
+      ) {
+        return ['page-slide', 'back']
+      }
+
+      return ['page-slide', 'forward']
+    },
+  },
 })
+
+export const redirectForAuth = () => {
+  const redirect = `${router.history.location.href}`
+  router.navigate({ to: '/login', search: { redirect } })
+}
 
 export function Provider({
   children,

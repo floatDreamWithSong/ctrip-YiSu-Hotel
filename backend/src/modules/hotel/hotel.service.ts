@@ -2,12 +2,16 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { ApiHotelTypes, HotelReviewStatus } from '@yisu/shared'
 import { PrismaService } from '@/utils/prisma/prisma.service'
 import { Prisma, PriceMode, ReviewStatus, RejectReasonType } from 'prisma-generated'
+import { HotelRealtimeService } from './hotel-realtime.service'
 
 type PrismaTransaction = Prisma.TransactionClient
 
 @Injectable()
 export class HotelService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly hotelRealtimeService: HotelRealtimeService,
+  ) {}
 
   private toPagination(page: number, limit: number) {
     return {
@@ -971,6 +975,14 @@ export class HotelService {
         },
       })
     })
+
+    if (nextStatus === ReviewStatus.APPROVED) {
+      this.hotelRealtimeService.notifyHotelInfoApproved({
+        hotelId: info.hotel.id,
+        infoId: info.id,
+      })
+    }
+
     return null
   }
 

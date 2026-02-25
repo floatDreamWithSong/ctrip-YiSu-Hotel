@@ -1,22 +1,35 @@
 import { useMemo, useState } from 'react'
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useDebounce } from 'ahooks'
 import {
   CalendarPicker,
   Dropdown,
   InfiniteScroll,
+  Loading,
   Selector,
   Slider,
   Toast,
 } from 'antd-mobile'
-import { LocationOutline } from 'antd-mobile-icons'
-import { useRequest } from 'ahooks'
+import { LocationFill } from 'antd-mobile-icons'
 import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
 import { LocationRequest } from '@yisu/front-utils/apis/location'
-import { getCurrentPosition } from '@yisu/front-utils/geolocation'
+import { getCurrentPosition } from '@/lib/mobile-geolocation'
+import { DateTriggerButton } from '@/components/common/date-trigger-button'
+import { GuestRoomCountFields } from '@/components/common/guest-room-count-fields'
+import {
+  calcNightsFromYmd,
+  formatYmdDate,
+  getStartOfToday,
+  isOnOrAfterDate,
+  normalizePositiveInt,
+  parseYmdDate,
+} from '@/lib/hotel-search-form'
 import { useLocationStore } from '@/store/location'
 import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
+import { CalendarIcon } from 'lucide-react'
+import type { ApiMobileHotelTypes } from '@yisu/shared'
 
 const sortOptions = [
   { label: '价格', value: 'price' },
@@ -34,71 +47,10 @@ const priceMarks = {
   [PRICE_UNLIMITED]: '不限',
 }
 
-const parseNumber = (value?: string) => {
-  if (!value) return undefined
-  const num = Number(value)
-  return Number.isFinite(num) ? num : undefined
-}
-const normalizePositiveInt = (value?: number) =>
-  Number.isInteger(value) && (value as number) >= 1 ? (value as number) : 1
-
-const getSearchParams = () => {
-  const params = new URLSearchParams(window.location.search)
-  return {
-    city: params.get('city') ?? undefined,
-    district: params.get('district') ?? undefined,
-    keyword: params.get('keyword') ?? undefined,
-    checkIn: params.get('checkIn') ?? undefined,
-    checkOut: params.get('checkOut') ?? undefined,
-    targetDate: params.get('targetDate') ?? undefined,
-    guestCount: params.get('guestCount') ?? undefined,
-    roomCount: params.get('roomCount') ?? undefined,
-    slotId: params.get('slotId') ?? undefined,
-    priceMin: params.get('priceMin') ?? undefined,
-    priceMax: params.get('priceMax') ?? undefined,
-    starLevels: params.get('starLevels') ?? undefined,
-    tagIds: params.get('tagIds') ?? undefined,
-    distanceKm: params.get('distanceKm') ?? undefined,
-    sortBy: params.get('sortBy') ?? undefined,
-    sortOrder: params.get('sortOrder') ?? undefined,
-    page: params.get('page') ?? '1',
-    limit: params.get('limit') ?? '10',
-  }
-}
-
-const calcNights = (checkIn?: string, checkOut?: string) => {
-  if (!checkIn || !checkOut) return undefined
-  const start = new Date(checkIn)
-  const end = new Date(checkOut)
-  const diff = Math.ceil(
-    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
-  )
-  if (!Number.isFinite(diff) || diff <= 0) return undefined
-  return diff
-}
-
-const formatDate = (date?: Date | null) => {
-  if (!date) return undefined
-  const year = date.getFullYear()
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-const parseDate = (value?: string) => {
-  if (!value) return undefined
-  const [year, month, day] = value.split('-').map((item) => Number(item))
-  if (!year || !month || !day) return undefined
-  return new Date(year, month - 1, day)
-}
-
-const isOnOrAfter = (date: Date, target: Date) =>
-  date.getTime() >= target.getTime()
-
 const HotelListPage = () => {
   const navigate = useNavigate()
   const params = useParams({ from: '/_authenticated/list/$roomType' })
-  const search = getSearchParams()
+  const search = useSearch({ from: '/_authenticated/list/$roomType' })
   const { city, location, updateLocation } = useLocationStore()
   const searchStore = useHotelSearchStore()
   const tagsQuery = useQuery({
@@ -111,31 +63,29 @@ const HotelListPage = () => {
     Number(search.priceMax ?? PRICE_UNLIMITED),
   ])
   const today = useMemo(() => {
-    const date = new Date()
-    date.setHours(0, 0, 0, 0)
-    return date
+    return getStartOfToday()
   }, [])
   const toValidDate = (value?: string) => {
-    const date = parseDate(value)
-    return date && isOnOrAfter(date, today) ? date : undefined
+    const date = parseYmdDate(value)
+    return date && isOnOrAfterDate(date, today) ? date : undefined
   }
   const [checkIn, setCheckIn] = useState<string | undefined>(() => {
     const date = toValidDate(search.checkIn)
-    return date ? formatDate(date) : undefined
+    return date ? formatYmdDate(date) : undefined
   })
   const [checkOut, setCheckOut] = useState<string | undefined>(() => {
     const date = toValidDate(search.checkOut)
-    return date ? formatDate(date) : undefined
+    return date ? formatYmdDate(date) : undefined
   })
   const [targetDate, setTargetDate] = useState<string | undefined>(() => {
     const date = toValidDate(search.targetDate)
-    return date ? formatDate(date) : undefined
+    return date ? formatYmdDate(date) : undefined
   })
   const [guestCount, setGuestCount] = useState(() =>
-    normalizePositiveInt(parseNumber(search.guestCount)),
+    normalizePositiveInt(search.guestCount),
   )
   const [roomCount, setRoomCount] = useState(() =>
-    normalizePositiveInt(parseNumber(search.roomCount)),
+    normalizePositiveInt(search.roomCount),
   )
   const [starLevels, setStarLevels] = useState<number[]>(
     search.starLevels
@@ -153,7 +103,9 @@ const HotelListPage = () => {
           .filter((item) => Number.isInteger(item))
       : [],
   )
-  const [sortBy, setSortBy] = useState(search.sortBy ?? 'price')
+  const [sortBy, setSortBy] = useState<'price' | 'distance' | 'starLevel'>(
+    search.sortBy ?? 'price',
+  )
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
     (search.sortOrder as 'asc' | 'desc') ?? 'asc',
   )
@@ -171,79 +123,64 @@ const HotelListPage = () => {
     () => toValidDate(targetDate) ?? null,
   )
   const currentCity = city ?? search.city ?? '未定位'
-  const { run: handleRelocate, loading: relocating } = useRequest(
-    async () => {
+  const relocateMutation = useMutation({
+    mutationFn: async () => {
       const pos = await getCurrentPosition()
       return LocationRequest.regeocode(`${pos.lng},${pos.lat}`)
     },
-    {
-      manual: true,
-      onSuccess: (data) => {
-        updateLocation({
-          city: data.city || data.province,
-          address: data.formattedAddress,
-          location: data.location,
-        })
-        Toast.show({
-          icon: 'success',
-          content: '定位成功',
-        })
-      },
-      onError: (error: Error) => {
-        Toast.show({
-          icon: 'fail',
-          content: error.message || '定位失败，请重试',
-        })
-      },
+    onSuccess: (data) => {
+      updateLocation({
+        city: data.city || data.province,
+        address: data.formattedAddress,
+        location: data.location,
+      })
+      Toast.show({
+        icon: 'success',
+        content: '定位成功',
+      })
     },
-  )
+    onError: (error: Error) => {
+      Toast.show({
+        icon: 'fail',
+        content: error.message || '定位失败，请重试',
+      })
+    },
+  })
+
+  const queryParams: Omit<
+    ApiMobileHotelTypes['MobileHotelSearchQuery'],
+    'page' | 'limit'
+  > = {
+    roomType: params.roomType as 'HOTEL' | 'HOURLY',
+    city: currentCity === '未定位' ? undefined : currentCity,
+    district: search.district,
+    keyword,
+    checkIn,
+    checkOut,
+    targetDate,
+    guestCount,
+    roomCount,
+    slotId: search.slotId,
+    priceMin: priceRange[0],
+    priceMax: priceRange[1] >= PRICE_UNLIMITED ? undefined : priceRange[1],
+    starLevels: starLevels.length > 0 ? starLevels.join(',') : undefined,
+    tagIds: tagIds.length > 0 ? tagIds.join(',') : undefined,
+    distanceKm: search.distanceKm,
+    sortBy: sortBy as 'price' | 'distance' | 'starLevel',
+    sortOrder,
+    userLng: location?.lng,
+    userLat: location?.lat,
+  }
+  const debouncedQueryParams = useDebounce(queryParams, { wait: 400 })
 
   const queryResult = useInfiniteQuery({
-    queryKey: [
-      'mobile-hotel-list',
-      params.roomType,
-      currentCity,
-      search.district,
-      checkIn,
-      checkOut,
-      targetDate,
-      guestCount,
-      roomCount,
-      search.slotId,
-      keyword,
-      priceRange[0],
-      priceRange[1],
-      starLevels.join(','),
-      tagIds.join(','),
-      sortBy,
-      sortOrder,
-      location?.lng,
-      location?.lat,
-    ],
-    initialPageParam: Number(search.page ?? 1),
+    queryKey: ['mobile-hotel-list', debouncedQueryParams],
+    initialPageParam: search.page ?? 1,
     queryFn: ({ pageParam }) =>
       MobileHotelRequest.searchHotels({
         page: pageParam,
-        limit: Number(search.limit ?? 10),
-        roomType: params.roomType as 'HOTEL' | 'HOURLY',
-        city: currentCity === '未定位' ? undefined : currentCity,
-        district: search.district,
-        keyword,
-        checkIn,
-        checkOut,
-        targetDate,
-        guestCount,
-        roomCount,
-        slotId: parseNumber(search.slotId),
-        priceMin: priceRange[0],
-        priceMax: priceRange[1] >= PRICE_UNLIMITED ? undefined : priceRange[1],
-        starLevels: starLevels.length > 0 ? starLevels.join(',') : undefined,
-        tagIds: tagIds.length > 0 ? tagIds.join(',') : undefined,
-        distanceKm: parseNumber(search.distanceKm),
-        sortBy: sortBy as 'price' | 'distance' | 'starLevel',
-        sortOrder,
-        userLng: location?.lng,
-        userLat: location?.lat,
+        limit: search.limit ?? 10,
+        ...debouncedQueryParams,
       }),
     getNextPageParam: (lastPage) => {
       const currentCount = lastPage.page * lastPage.limit
@@ -258,11 +195,11 @@ const HotelListPage = () => {
   )
   const hasMore = queryResult.hasNextPage
   const canUseDistance = Boolean(location?.lng && location?.lat)
-  const nights = calcNights(checkIn, checkOut)
+  const nights = calcNightsFromYmd(checkIn, checkOut)
 
   return (
-    <div className="h-full overflow-y-auto bg-[#f4f4f2] px-3 pb-4">
-      <div className="sticky top-0 z-10 mb-3 bg-[#f4f4f2] py-3">
+    <div className="h-full min-h-0 overflow-y-auto bg-[#f4f4f2] [&>div]:px-3 pb-4">
+      <div className="sticky top-0 z-10 pb-3 bg-[#f4f4f2] pt-3">
         <div className="mb-2 flex items-center justify-between">
           <div className="text-base font-semibold">
             {params.roomType === 'HOURLY' ? '钟点房列表' : '酒店列表'}
@@ -281,10 +218,10 @@ const HotelListPage = () => {
               type="button"
               aria-label="重新定位"
               className="text-gray-500"
-              disabled={relocating}
-              onClick={handleRelocate}
+              disabled={relocateMutation.isPending}
+              onClick={() => relocateMutation.mutate()}
             >
-              <LocationOutline />
+              {relocateMutation.isPending ? <Loading /> : <LocationFill />}
             </button>
           </div>
           <input
@@ -315,8 +252,9 @@ const HotelListPage = () => {
             <Dropdown.Item key="date" title="日期">
               <div className="p-3">
                 {params.roomType === 'HOTEL' ? (
-                  <button
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-left text-sm"
+                  <DateTriggerButton
+                    className="rounded-lg text-sm"
+                    icon={<CalendarIcon size={16} />}
                     onClick={() => {
                       setActiveDropdown(null)
                       const from = toValidDate(checkIn)
@@ -324,22 +262,22 @@ const HotelListPage = () => {
                       setHotelCalendarValue(from && to ? [from, to] : null)
                       setHotelRangeVisible(true)
                     }}
-                  >
-                    {checkIn && checkOut
-                      ? `${checkIn} 至 ${checkOut}`
-                      : '选择入住/离店日期'}
-                  </button>
+                    text={
+                      checkIn && checkOut
+                        ? `${checkIn} 至 ${checkOut}`
+                        : '选择入住/离店日期'
+                    }
+                  />
                 ) : (
-                  <button
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-left text-sm"
+                  <DateTriggerButton
+                    className="rounded-lg text-sm"
                     onClick={() => {
                       setActiveDropdown(null)
                       setHourlyCalendarValue(toValidDate(targetDate) ?? null)
                       setHourlyDateVisible(true)
                     }}
-                  >
-                    {targetDate ?? '选择日期'}
-                  </button>
+                    text={targetDate ?? '选择日期'}
+                  />
                 )}
                 <div className="mt-2 text-xs text-gray-500">
                   {params.roomType === 'HOTEL'
@@ -347,36 +285,18 @@ const HotelListPage = () => {
                     : `日期：${targetDate ?? '-'}`}
                 </div>
                 {params.roomType === 'HOTEL' && (
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <div>
-                      <div className="mb-1 text-xs text-gray-500">入住人数</div>
-                      <input
-                        type="number"
-                        min={1}
-                        value={guestCount}
-                        onChange={(event) =>
-                          setGuestCount(
-                            normalizePositiveInt(event.target.valueAsNumber),
-                          )
-                        }
-                        className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <div className="mb-1 text-xs text-gray-500">房间数量</div>
-                      <input
-                        type="number"
-                        min={1}
-                        value={roomCount}
-                        onChange={(event) =>
-                          setRoomCount(
-                            normalizePositiveInt(event.target.valueAsNumber),
-                          )
-                        }
-                        className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm"
-                      />
-                    </div>
-                  </div>
+                  <GuestRoomCountFields
+                    containerClassName="mt-3 grid grid-cols-2 gap-2"
+                    guestCount={guestCount}
+                    roomCount={roomCount}
+                    onGuestCountChange={(value) =>
+                      setGuestCount(normalizePositiveInt(value))
+                    }
+                    onRoomCountChange={(value) =>
+                      setRoomCount(normalizePositiveInt(value))
+                    }
+                    inputClassName="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm"
+                  />
                 )}
               </div>
             </Dropdown.Item>
@@ -417,7 +337,10 @@ const HotelListPage = () => {
                   )}
                   value={[sortBy]}
                   onChange={(value) =>
-                    setSortBy((value[0] as string) ?? 'price')
+                    setSortBy(
+                      (value[0] as 'price' | 'distance' | 'starLevel') ??
+                        'price',
+                    )
                   }
                 />
                 <div className="flex gap-2">
@@ -463,8 +386,8 @@ const HotelListPage = () => {
         closeOnMaskClick
         onConfirm={(value) => {
           if (value) {
-            setCheckIn(formatDate(value[0]))
-            setCheckOut(formatDate(value[1]))
+            setCheckIn(formatYmdDate(value[0]))
+            setCheckOut(formatYmdDate(value[1]))
           } else {
             setCheckIn(undefined)
             setCheckOut(undefined)
@@ -483,7 +406,7 @@ const HotelListPage = () => {
         onMaskClick={() => setHourlyDateVisible(false)}
         closeOnMaskClick
         onConfirm={(value) => {
-          setTargetDate(formatDate(value))
+          setTargetDate(formatYmdDate(value))
           setHourlyDateVisible(false)
           setActiveDropdown(null)
         }}
@@ -493,7 +416,6 @@ const HotelListPage = () => {
         {data.map((item) => (
           <HotelListCard
             key={`${item.hotelId}-${item.infoId}`}
-            className="rounded-2xl bg-white p-3 shadow-sm"
             onClick={() => {
               const currentRoomType = params.roomType as 'HOTEL' | 'HOURLY'
               searchStore.setState({
@@ -537,7 +459,7 @@ const HotelListPage = () => {
         loadMore={async () => {
           await queryResult.fetchNextPage()
         }}
-        hasMore={Boolean(hasMore)}
+        hasMore={hasMore}
       />
     </div>
   )

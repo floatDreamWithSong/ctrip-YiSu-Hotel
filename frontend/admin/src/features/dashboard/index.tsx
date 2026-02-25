@@ -50,7 +50,7 @@ const Dashboard = () => {
   }, [isAdmin])
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <Typography.Title level={3} className="m-0!">
         {isAdmin ? '管理后台总览' : '商户控制台'}
       </Typography.Title>
