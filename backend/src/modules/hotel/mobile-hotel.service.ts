@@ -137,18 +137,40 @@ export class MobileHotelService {
   }
 
   async getHomeBanners(query: ApiMobileHotelTypes['MobileHomeBannerQuery']) {
+    if (query.limit <= 0) {
+      return []
+    }
+
+    const whereConditions: Prisma.Sql[] = [
+      Prisma.sql`h."is_deleted" = FALSE`,
+      Prisma.sql`h."is_home_ad_enabled" = TRUE`,
+      Prisma.sql`h."published_info_id" IS NOT NULL`,
+      Prisma.sql`hi."review_status" = ${ReviewStatus.APPROVED}::"ReviewStatus"`,
+      Prisma.sql`hi."home_ad_image" IS NOT NULL`,
+    ]
+
+    if (query.city) {
+      whereConditions.push(Prisma.sql`hi."city" = ${query.city}`)
+    }
+
+    const randomRows = await this.prisma.$queryRaw<Array<{ hotel_id: number }>>(Prisma.sql`
+      SELECT h."id" AS "hotel_id"
+      FROM "hotels" h
+      JOIN "hotel_infos" hi ON hi."id" = h."published_info_id"
+      WHERE ${Prisma.join(whereConditions, ' AND ')}
+      ORDER BY RANDOM()
+      LIMIT ${query.limit}
+    `)
+
+    const selectedIds = randomRows.map((row) => row.hotel_id)
+    if (selectedIds.length === 0) {
+      return []
+    }
+
     const items = await this.prisma.hotel.findMany({
       where: {
-        isDeleted: false,
-        isHomeAdEnabled: true,
-        publishedInfo: {
-          is: {
-            reviewStatus: ReviewStatus.APPROVED,
-            ...(query.city ? { city: query.city } : {}),
-            homeAdImage: {
-              not: null,
-            },
-          },
+        id: {
+          in: selectedIds,
         },
       },
       include: {
@@ -170,14 +192,9 @@ export class MobileHotelService {
           },
         },
       },
-      take: query.limit * 3,
     })
-    const normalized = items
-      .map((hotel) => hotel.publishedInfo)
-      .filter((info): info is NonNullable<typeof info> => Boolean(info))
-      .map((info) => this.buildListItem(info))
-      .sort(() => Math.random() - 0.5)
-      .slice(0, query.limit)
+
+    const normalized =items.map((hotel) => this.buildListItem(hotel.publishedInfo))
     return normalized
   }
 
