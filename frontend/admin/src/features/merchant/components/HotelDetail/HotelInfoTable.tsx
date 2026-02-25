@@ -3,6 +3,10 @@ import type { HotelInfoItem } from '@/apis/hotel'
 import { Card, Table } from 'antd'
 import type { TablePaginationConfig } from 'antd'
 import { InfoActionButtons } from '../HotelInfo/InfoActionButtons'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+
+dayjs.extend(utc)
 
 interface HotelInfoTableProps {
   hotelId: number
@@ -43,9 +47,9 @@ export function HotelInfoTable({
         pagination={pagination}
         columns={[
           {
-            title: 'ID',
-            dataIndex: 'id',
+            title: '序号',
             width: 70,
+            render: (_, __, index) => index + 1,
           },
           {
             title: '信息昵称',
@@ -66,7 +70,8 @@ export function HotelInfoTable({
             title: '更新时间',
             dataIndex: 'updatedAt',
             width: 210,
-            render: (val: string) => val,
+            render: (val: string) =>
+              dayjs.utc(val).utcOffset(8).format('YYYY-MM-DD HH:mm:ss'),
           },
           {
             title: '操作',

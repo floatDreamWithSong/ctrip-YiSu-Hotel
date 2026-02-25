@@ -65,59 +65,81 @@ const MERCHANT_VALIDATION_RULES = {
 /**
  * 深度对比函数（带调试日志版）
  */
-/**
- * 深度对比函数 - 性能优化生产版
- * 解决了基本类型、数组、嵌套对象的深度对比
- */
 export const isFormDeepEqual = (
   initial: unknown,
   current: unknown,
+  path = '',
 ): boolean => {
-  // 1. 引用一致或基本类型相等，直接返回 true
+  // 1. 如果引用完全一致，直接返回 true
   if (initial === current) return true
 
-  // 2. 处理 null 或 undefined 的特殊情况
-  // 如果其中一个是空，另一个不是空，直接判定为不等
-  if (!initial || !current) {
-    return initial === current
-  }
-
-  // 3. 处理数组对比
-  if (Array.isArray(initial) && Array.isArray(current)) {
-    if (initial.length !== current.length) return false
-    for (let i = 0; i < initial.length; i++) {
-      if (!isFormDeepEqual(initial[i], current[i])) return false
+  // 2. 处理 null 或 undefined 的情况
+  if (
+    initial === null ||
+    initial === undefined ||
+    current === null ||
+    current === undefined
+  ) {
+    if (initial !== current) {
+      console.log(`🔍 [脏检查] 基础值不匹配: "${path}"`, {
+        初始值: initial,
+        当前值: current,
+      })
+      return false
     }
     return true
   }
 
-  // 4. 处理对象对比
+  // 4. 处理数组对比
+  if (Array.isArray(initial) && Array.isArray(current)) {
+    if (initial.length !== current.length) {
+      console.log(`🔍 [脏检查] 数组长度不一致: "${path}"`, {
+        初始长度: initial.length,
+        当前长度: current.length,
+      })
+      return false
+    }
+    for (let i = 0; i < initial.length; i++) {
+      if (!isFormDeepEqual(initial[i], current[i], `${path}[${i}]`)) {
+        return false
+      }
+    }
+    return true
+  }
+
+  // 5. 处理对象对比
   if (typeof initial === 'object' && typeof current === 'object') {
-    // 排除 null 的干扰（虽然前面判断过了，TS 需要明确类型）
-    if (initial === null || current === null) return initial === current
+    const keys1 = Object.keys(initial)
+    const keys2 = Object.keys(current)
 
-    const keys1 = Object.keys(initial as object)
-    const keys2 = Object.keys(current as object)
+    // 获取所有不重复的 key
+    const allKeys = new Set([...keys1, ...keys2])
 
-    // 过滤掉 AntD 内部字段后再比较键值数量
-    const filteredKeys1 = keys1.filter((k) => !k.startsWith('_'))
-    const filteredKeys2 = keys2.filter((k) => !k.startsWith('_'))
+    for (const key of allKeys) {
+      // 排除 AntD 内部可能注入的私有属性 (通常以 _ 开头)
+      if (key.startsWith('_')) continue
 
-    // 如果键的数量都不对，肯定不相等
-    if (filteredKeys1.length !== filteredKeys2.length) return false
-
-    for (const key of filteredKeys1) {
       const val1 = initial[key]
       const val2 = current[key]
 
-      if (!isFormDeepEqual(val1, val2)) return false
+      if (!isFormDeepEqual(val1, val2, path ? `${path}.${key}` : key)) {
+        return false
+      }
     }
     return true
   }
 
-  // 5. 兜底处理
-  return initial === current
+  // 6. 最后的兜底：基本类型对比
+  const isEqual = initial === current
+  if (!isEqual) {
+    console.log(`🔍 [脏检查] 字段值不匹配: "${path}"`, {
+      初始值: initial,
+      当前值: current,
+    })
+  }
+  return isEqual
 }
+
 const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
 const HOTEL_INFOS_QUERY_KEY = 'merchant-hotel-infos'
 
@@ -265,7 +287,6 @@ export function useHotelInfoForm(hotelId: number) {
         cancelText: '取消',
         onOk: () => resolve(true), // 确认退出：允许关闭
         onCancel: () => resolve(false), // 取消：拦截关闭
-        centered: true,
       })
     })
   }

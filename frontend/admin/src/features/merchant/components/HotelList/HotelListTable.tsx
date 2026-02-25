@@ -33,9 +33,9 @@ export function HotelListTable({
         pagination={pagination}
         columns={[
           {
-            title: '酒店ID',
-            dataIndex: 'id',
-            width: 100,
+            title: '序号',
+            width: 80,
+            render: (_, __, index) => index + 1,
           },
           {
             title: '酒店昵称',
