@@ -97,7 +97,7 @@ export const router = createRouter({
   defaultPreloadStaleTime: 0,
   defaultViewTransition: {
     types: ({ fromLocation, toLocation, pathChanged }) => {
-      if (!pathChanged) return false
+      if (!fromLocation || !pathChanged) return false
 
       const relationDirection = inferDirectionByRouteRelation(
         fromLocation?.pathname,
