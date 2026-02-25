@@ -5,7 +5,7 @@ import { codeInspectorPlugin } from 'code-inspector-plugin'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import { fileURLToPath, URL } from 'node:url'
-import { visualizer } from 'rollup-plugin-visualizer'
+// import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -33,7 +33,6 @@ export default defineConfig(({ mode }) => {
         },
       }),
       tailwindcss(),
-      isAnalyze && visualizer({ open: true, filename: 'dist/stats.html', gzipSize: true, brotliSize: true }),
     ].filter(Boolean),
     resolve: {
       alias: {
