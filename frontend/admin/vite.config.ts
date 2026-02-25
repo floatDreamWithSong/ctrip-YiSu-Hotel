@@ -9,7 +9,6 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isAnalyze = mode === 'analyze'
   console.log('mode: ', mode)
   return defineConfig({
     plugins: [
