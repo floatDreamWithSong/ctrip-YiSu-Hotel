@@ -82,7 +82,7 @@ export default defineConfig(({ mode }) => {
               return 'rc-picker-vendor';
             }
 
-            // 3. 最后才是你之前的日期范围组件
+            // 3. 最后才是日期范围组件
             if (id.includes('antd/es/date-picker/generatePicker/generateRangePicker.js')) {
               return 'antd-date-range-picker';
             }
