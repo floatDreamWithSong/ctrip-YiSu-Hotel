@@ -22,6 +22,8 @@ COPY packages/shared/tsup.config.ts packages/shared/
 COPY packages/shared/src/          packages/shared/src/
 COPY backend/prisma/               backend/prisma/
 
+# 删除lefthook prepare
+RUN pnpm pkg delete scripts.prepare
 # 安装依赖（自动触发 shared build + prisma generate）
 RUN pnpm install --frozen-lockfile
 

@@ -281,7 +281,7 @@ const ReviewsPage = () => {
                 value={recordStartAt}
                 onChange={(event) => {
                   setRecordPage(1)
-                  setRecordStartAt(event.target.value || undefined)
+                  setRecordStartAt(event.target.value)
                 }}
               />
             </Col>
@@ -291,7 +291,7 @@ const ReviewsPage = () => {
                 value={recordEndAt}
                 onChange={(event) => {
                   setRecordPage(1)
-                  setRecordEndAt(event.target.value || undefined)
+                  setRecordEndAt(event.target.value)
                 }}
               />
             </Col>

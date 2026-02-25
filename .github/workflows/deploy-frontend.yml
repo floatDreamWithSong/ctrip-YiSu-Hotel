@@ -29,6 +29,9 @@ jobs:
       - name: Ensure pnpm (pnpm/action-setup)
         uses: pnpm/action-setup@v4
 
+      - name: disable lefthook prepare
+        run: |
+          pnpm pkg delete scripts.prepare
       - name: Install dependencies & build
         run: |
           set -e

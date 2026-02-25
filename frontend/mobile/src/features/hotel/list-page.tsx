@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useDebounce } from 'ahooks'
 import {
   CalendarPicker,
@@ -47,39 +47,10 @@ const priceMarks = {
   [PRICE_UNLIMITED]: '不限',
 }
 
-const parseNumber = (value?: string) => {
-  if (!value) return undefined
-  const num = Number(value)
-  return Number.isFinite(num) ? num : undefined
-}
-const getSearchParams = () => {
-  const params = new URLSearchParams(window.location.search)
-  return {
-    city: params.get('city') ?? undefined,
-    district: params.get('district') ?? undefined,
-    keyword: params.get('keyword') ?? undefined,
-    checkIn: params.get('checkIn') ?? undefined,
-    checkOut: params.get('checkOut') ?? undefined,
-    targetDate: params.get('targetDate') ?? undefined,
-    guestCount: params.get('guestCount') ?? undefined,
-    roomCount: params.get('roomCount') ?? undefined,
-    slotId: params.get('slotId') ?? undefined,
-    priceMin: params.get('priceMin') ?? undefined,
-    priceMax: params.get('priceMax') ?? undefined,
-    starLevels: params.get('starLevels') ?? undefined,
-    tagIds: params.get('tagIds') ?? undefined,
-    distanceKm: params.get('distanceKm') ?? undefined,
-    sortBy: params.get('sortBy') ?? undefined,
-    sortOrder: params.get('sortOrder') ?? undefined,
-    page: params.get('page') ?? '1',
-    limit: params.get('limit') ?? '10',
-  }
-}
-
 const HotelListPage = () => {
   const navigate = useNavigate()
   const params = useParams({ from: '/_authenticated/list/$roomType' })
-  const search = getSearchParams()
+  const search = useSearch({ from: '/_authenticated/list/$roomType' })
   const { city, location, updateLocation } = useLocationStore()
   const searchStore = useHotelSearchStore()
   const tagsQuery = useQuery({
@@ -111,10 +82,10 @@ const HotelListPage = () => {
     return date ? formatYmdDate(date) : undefined
   })
   const [guestCount, setGuestCount] = useState(() =>
-    normalizePositiveInt(parseNumber(search.guestCount)),
+    normalizePositiveInt(search.guestCount),
   )
   const [roomCount, setRoomCount] = useState(() =>
-    normalizePositiveInt(parseNumber(search.roomCount)),
+    normalizePositiveInt(search.roomCount),
   )
   const [starLevels, setStarLevels] = useState<number[]>(
     search.starLevels
@@ -132,7 +103,9 @@ const HotelListPage = () => {
           .filter((item) => Number.isInteger(item))
       : [],
   )
-  const [sortBy, setSortBy] = useState(search.sortBy ?? 'price')
+  const [sortBy, setSortBy] = useState<'price' | 'distance' | 'starLevel'>(
+    search.sortBy ?? 'price',
+  )
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
     (search.sortOrder as 'asc' | 'desc') ?? 'asc',
   )
@@ -187,12 +160,12 @@ const HotelListPage = () => {
     targetDate,
     guestCount,
     roomCount,
-    slotId: parseNumber(search.slotId),
+    slotId: search.slotId,
     priceMin: priceRange[0],
     priceMax: priceRange[1] >= PRICE_UNLIMITED ? undefined : priceRange[1],
     starLevels: starLevels.length > 0 ? starLevels.join(',') : undefined,
     tagIds: tagIds.length > 0 ? tagIds.join(',') : undefined,
-    distanceKm: parseNumber(search.distanceKm),
+    distanceKm: search.distanceKm,
     sortBy: sortBy as 'price' | 'distance' | 'starLevel',
     sortOrder,
     userLng: location?.lng,
@@ -202,11 +175,11 @@ const HotelListPage = () => {
 
   const queryResult = useInfiniteQuery({
     queryKey: ['mobile-hotel-list', debouncedQueryParams],
-    initialPageParam: Number(search.page ?? 1),
+    initialPageParam: search.page ?? 1,
     queryFn: ({ pageParam }) =>
       MobileHotelRequest.searchHotels({
         page: pageParam,
-        limit: Number(search.limit ?? 10),
+        limit: search.limit ?? 10,
         ...debouncedQueryParams,
       }),
     getNextPageParam: (lastPage) => {
@@ -364,7 +337,10 @@ const HotelListPage = () => {
                   )}
                   value={[sortBy]}
                   onChange={(value) =>
-                    setSortBy((value[0] as string) ?? 'price')
+                    setSortBy(
+                      (value[0] as 'price' | 'distance' | 'starLevel') ??
+                        'price',
+                    )
                   }
                 />
                 <div className="flex gap-2">

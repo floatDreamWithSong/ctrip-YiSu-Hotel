@@ -65,14 +65,14 @@ function RecordFilter({
         <Input
           placeholder="开始时间 ISO"
           value={startAt}
-          onChange={(e) => onStartAtChange(e.target.value || undefined)}
+          onChange={(e) => onStartAtChange(e.target.value)}
         />
       </Col>
       <Col xs={24} md={6}>
         <Input
           placeholder="结束时间 ISO"
           value={endAt}
-          onChange={(e) => onEndAtChange(e.target.value || undefined)}
+          onChange={(e) => onEndAtChange(e.target.value)}
         />
       </Col>
     </Row>

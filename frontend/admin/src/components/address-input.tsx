@@ -63,10 +63,7 @@ export function AddressAutoComplete({
       try {
         const city = form.getFieldValue('city') as string | undefined
         console.log('搜索参数:', { keywords, city })
-        const tips = await LocationRequest.inputTips(
-          keywords,
-          city || undefined,
-        )
+        const tips = await LocationRequest.inputTips(keywords, city)
         console.log('搜索结果:', tips)
         const map = new Map<string, TipOption>()
         const opts = tips
