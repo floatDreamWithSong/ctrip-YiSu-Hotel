@@ -2,6 +2,7 @@ import { MerchantHotelRequest } from '@/apis/hotel'
 import { useAddressLocate } from '@/components/address-input'
 import { useModal } from '@/hooks/useModal'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { hotelInfoDetailQueryOptions } from '../queries/hotelQueries'
 import type { ApiHotelTypes } from '@yisu/shared'
 import { PriceMode } from '@yisu/shared'
 import { Form, Modal, message } from 'antd'
@@ -334,9 +335,12 @@ export function useHotelInfoForm(hotelId: number) {
     openModal()
   }
 
-  /** 打开「编辑」弹窗并加载已有数据 */
+  /** 打开「编辑」弹窗并加载已有数据。
+   * 优先命中 prefetchQuery 写入的缓存（staleTime 30 秒内），避免重复请求。 */
   const openEdit = async (infoId: number) => {
-    const data = await MerchantHotelRequest.getHotelInfoDetail(hotelId, infoId)
+    const data = await queryClient.ensureQueryData(
+      hotelInfoDetailQueryOptions(hotelId, infoId),
+    )
 
     const formValues: HotelInfoFormValues = {
       infoNickname: data.infoNickname,

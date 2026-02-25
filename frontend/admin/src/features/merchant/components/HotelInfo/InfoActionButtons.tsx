@@ -8,6 +8,8 @@ interface InfoActionButtonsProps {
   onWithdraw: () => void
   onOffline: () => void
   onEdit: () => void
+  /** 鼠标悬停「编辑/查看」按钮时触发，用于预取详情数据 */
+  onPrefetch?: () => void
   onDuplicate: () => void
   onDelete: () => void
   submitting?: boolean
@@ -27,6 +29,7 @@ export function InfoActionButtons({
   onWithdraw,
   onOffline,
   onEdit,
+  onPrefetch,
   onDuplicate,
   onDelete,
   submitting,
@@ -47,8 +50,9 @@ export function InfoActionButtons({
 
   return (
     <Space>
-      {/* 草稿/驳回：「编辑」；已发布/审核中：「查看」（始终可点击） */}
-      <Button size="small" onClick={onEdit}>
+      {/* 草稿/驳回：「编辑」；已发布/审核中：「查看」（始终可点击）
+       * onMouseEnter 悬停时触发预取，命中缓存后点击可零延迟填充表单 */}
+      <Button size="small" onClick={onEdit} onMouseEnter={onPrefetch}>
         {isReadOnly ? '查看' : '编辑'}
       </Button>
 

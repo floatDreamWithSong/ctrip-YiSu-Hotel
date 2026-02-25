@@ -3,8 +3,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ApiHotelTypes } from '@yisu/shared'
 import { message } from 'antd'
 import { useCallback, useMemo } from 'react'
-
-const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
+import {
+  HOTEL_DETAIL_QUERY_KEY,
+  hotelDetailQueryOptions,
+} from '../queries/hotelQueries'
 
 /**
  * 酒店详情业务逻辑 Hook
@@ -12,10 +14,7 @@ const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
 export function useHotelDetail(hotelId: number) {
   const queryClient = useQueryClient()
 
-  const hotelDetailQuery = useQuery({
-    queryKey: [HOTEL_DETAIL_QUERY_KEY, hotelId],
-    queryFn: () => MerchantHotelRequest.getHotelDetail(hotelId),
-  })
+  const hotelDetailQuery = useQuery(hotelDetailQueryOptions(hotelId))
 
   const updateHomeAdMutation = useMutation({
     mutationFn: (data: ApiHotelTypes['HotelUpdateHomeAd']) =>
