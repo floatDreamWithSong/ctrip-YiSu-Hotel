@@ -1,4 +1,4 @@
-import type { AdminReviewHotelInfoDetail } from '@/apis/hotel'
+import type { AdminReviewHotelInfoDetail, RoomType } from '@/apis/hotel'
 import type { ApiHotelTypes } from '@yisu/shared'
 import { HotelReviewStatus, PriceMode } from '@yisu/shared'
 import {
@@ -52,9 +52,10 @@ function HotelInfoCard({
         </Descriptions.Item>
         <Descriptions.Item label="星级">{info.starLevel}星</Descriptions.Item>
         <Descriptions.Item label="电话">{info.phone ?? '-'}</Descriptions.Item>
-        <Descriptions.Item label="地址" span={2}>
-          {info.address}
-        </Descriptions.Item>
+        <Descriptions.Item label="省">{info.province || '-'}</Descriptions.Item>
+        <Descriptions.Item label="市">{info.city || '-'}</Descriptions.Item>
+        <Descriptions.Item label="区">{info.district || '-'}</Descriptions.Item>
+        <Descriptions.Item label="详细地址">{info.address}</Descriptions.Item>
         <Descriptions.Item label="简介" span={2}>
           {info.description ?? '-'}
         </Descriptions.Item>
@@ -78,9 +79,29 @@ function HotelInfoCard({
         </Descriptions.Item>
         <Descriptions.Item label="轮播图" span={2}>
           <Image.PreviewGroup>
-            {info.images.map((image) => (
-              <Image key={image.id} src={image.url} width={120} />
-            ))}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+              {info.images.map((image) => (
+                <Card
+                  key={image.id}
+                  hoverable
+                  style={{ width: 150 }}
+                  cover={<Image alt={image.caption} src={image.url} />}
+                  bodyStyle={{ padding: '8px' }}
+                >
+                  {image.caption && (
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        color: '#888',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {image.caption}
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
           </Image.PreviewGroup>
         </Descriptions.Item>
       </Descriptions>
@@ -91,15 +112,44 @@ function HotelInfoCard({
         pagination={false}
         rowKey="id"
         dataSource={info.roomTypes}
+        expandable={{
+          expandedRowRender: (record: RoomType) => {
+            if (
+              record.priceMode !== PriceMode.PER_HOUR ||
+              !record.hourlySlots ||
+              record.hourlySlots.length === 0
+            ) {
+              return null
+            }
+            return (
+              <>
+                <p style={{ color: 'grey', fontSize: '12px', margin: 0 }}>
+                  结束时间将按 房型时长单位({record.duration}小时) 自动推导
+                </p>
+                <Space wrap>
+                  <span>可预订时段:</span>
+                  {record.hourlySlots.map((slot) => (
+                    <Tag key={slot.id}>{slot.startTime}</Tag>
+                  ))}
+                </Space>
+              </>
+            )
+          },
+          rowExpandable: (record: RoomType) =>
+            record.priceMode === PriceMode.PER_HOUR &&
+            !!record.hourlySlots &&
+            record.hourlySlots.length > 0,
+        }}
         columns={[
           { title: '房型名', dataIndex: 'name' },
+          { title: '数量', dataIndex: 'count' },
           { title: '价格', dataIndex: 'price' },
           {
             title: '房型',
             dataIndex: 'priceMode',
             render: (mode: PriceMode) => {
               if (mode === PriceMode.PER_NIGHT) {
-                return '酒店'
+                return '标准住宿'
               }
               if (mode === PriceMode.PER_HOUR) {
                 return '钟点房'
@@ -107,7 +157,24 @@ function HotelInfoCard({
               return mode
             },
           },
-          { title: '床型', dataIndex: 'bedType' },
+          {
+            title: '购买时长',
+            dataIndex: 'duration',
+            render: (duration: number, record: RoomType) => {
+              if (record.priceMode === PriceMode.PER_NIGHT) {
+                return `${duration}晚`
+              }
+              if (record.priceMode === PriceMode.PER_HOUR) {
+                return `${duration}小时`
+              }
+              return duration
+            },
+          },
+          {
+            title: '床型说明',
+            dataIndex: 'bedType',
+            render: (bedType: string | null) => bedType || '-',
+          },
           {
             title: '面积',
             dataIndex: 'area',
