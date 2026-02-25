@@ -161,7 +161,16 @@ const HotelDetailPage = () => {
           <Swiper autoplay loop>
             {detailQuery.data.images.map((img) => (
               <Swiper.Item key={img.id}>
-                <img src={img.url} className="h-52 w-full object-cover" />
+                <div className="relative">
+                  <img src={img.url} className="h-52 w-full object-cover" />
+                  {img.caption ? (
+                    <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/60 to-transparent px-3 py-2">
+                      <div className="truncate text-xs text-white">
+                        {img.caption}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               </Swiper.Item>
             ))}
           </Swiper>
