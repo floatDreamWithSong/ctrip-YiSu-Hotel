@@ -210,18 +210,31 @@ const HotelListPage = () => {
 
   const virtualItems = virtualizer.getVirtualItems()
 
-  const { fetchNextPage, isFetchingNextPage } = queryResult
+  const { fetchNextPage, isFetchingNextPage, isFetchNextPageError } =
+    queryResult
 
   useEffect(() => {
-    const lastItem = virtualItems[virtualItems.length - 1]
+    const lastItem = virtualItems.at(-1)
     if (!lastItem) return
-    if (lastItem.index >= data.length - 1 && hasMore && !isFetchingNextPage) {
+    if (
+      lastItem.index >= data.length - 1 &&
+      hasMore &&
+      !isFetchingNextPage &&
+      !isFetchNextPageError
+    ) {
       const timer = setTimeout(() => {
         fetchNextPage()
       }, 200)
       return () => clearTimeout(timer)
     }
-  }, [virtualItems, hasMore, isFetchingNextPage, data.length, fetchNextPage])
+  }, [
+    virtualItems,
+    hasMore,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    data.length,
+    fetchNextPage,
+  ])
 
   return (
     <div
@@ -458,10 +471,20 @@ const HotelListPage = () => {
                 }}
               >
                 {hasMore ? (
-                  <span className="text-sm text-gray-400">
-                    加载中
-                    <DotLoading />
-                  </span>
+                  isFetchNextPageError ? (
+                    <button
+                      type="button"
+                      className="text-sm text-orange-500"
+                      onClick={() => void fetchNextPage()}
+                    >
+                      加载失败，点击重试
+                    </button>
+                  ) : (
+                    <span className="text-sm text-gray-400">
+                      加载中
+                      <DotLoading />
+                    </span>
+                  )
                 ) : null}
               </div>
             )
