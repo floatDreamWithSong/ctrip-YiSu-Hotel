@@ -21,7 +21,7 @@ const Login = () => {
       tokenStore.set(data.accessToken)
       refreshTokenStore.set(data.refreshToken)
       message.success('登录成功，正在跳转...')
-      navigate({ to: '/merchant/hotels' })
+      navigate({ to: '/' })
     },
     onError: (error: Error) => {
       message.error(error.message || '登录失败，请重试')
