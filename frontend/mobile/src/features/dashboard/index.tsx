@@ -108,37 +108,35 @@ const Dashboard = () => {
         limit: 10,
         sortBy: 'price',
         sortOrder: 'asc',
-        city: city || undefined,
-        keyword: trimmedKeyword || undefined,
+        city: city,
+        keyword: trimmedKeyword,
         checkIn: searchState.checkIn,
         checkOut: searchState.checkOut,
         targetDate: searchState.targetDate,
         guestCount:
           searchState.roomType === 'HOTEL'
             ? normalizePositiveInt(searchState.guestCount)
-            : undefined,
+            : void 0,
         roomCount:
           searchState.roomType === 'HOTEL'
             ? normalizePositiveInt(searchState.roomCount)
-            : undefined,
-        slotId: searchState.slotId || undefined,
+            : void 0,
+        slotId: searchState.slotId,
         priceMin:
           typeof searchState.priceMin === 'number' && searchState.priceMin > 0
             ? searchState.priceMin
-            : undefined,
+            : void 0,
         priceMax:
           typeof searchState.priceMax === 'number' &&
           searchState.priceMax < PRICE_UNLIMITED
             ? searchState.priceMax
-            : undefined,
+            : void 0,
         starLevels:
           searchState.starLevels.length > 0
             ? searchState.starLevels.join(',')
-            : undefined,
+            : void 0,
         tagIds:
-          searchState.tagIds.length > 0
-            ? searchState.tagIds.join(',')
-            : undefined,
+          searchState.tagIds.length > 0 ? searchState.tagIds.join(',') : void 0,
       },
     })
   }
