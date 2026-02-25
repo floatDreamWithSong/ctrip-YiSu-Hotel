@@ -14,6 +14,8 @@ interface HotelInfoTableProps {
   loading: boolean
   pagination: TablePaginationConfig
   onEdit: (infoId: number) => void
+  /** 悬停「编辑」按钮时触发，预取对应的酒店信息详情 */
+  onPrefetch?: (infoId: number) => void
   actions: {
     submit: (infoId: number) => void
     withdraw: (infoId: number) => void
@@ -36,6 +38,7 @@ export function HotelInfoTable({
   loading,
   pagination,
   onEdit,
+  onPrefetch,
   actions,
 }: HotelInfoTableProps) {
   return (
@@ -84,6 +87,9 @@ export function HotelInfoTable({
                 onWithdraw={() => actions.withdraw(record.id)}
                 onOffline={() => actions.offline(record.id)}
                 onEdit={() => onEdit(record.id)}
+                onPrefetch={
+                  onPrefetch ? () => onPrefetch(record.id) : undefined
+                }
                 onDuplicate={() => actions.duplicate(record.id)}
                 onDelete={() => actions.delete(record.id)}
                 submitting={actions.submitting}
