@@ -64,7 +64,7 @@ const MERCHANT_VALIDATION_RULES = {
 }
 
 /**
- * 深度对比函数（带调试日志版）
+ * 深度对比函数
  */
 export const isFormDeepEqual = (
   initial: unknown,
@@ -82,10 +82,6 @@ export const isFormDeepEqual = (
     current === undefined
   ) {
     if (initial !== current) {
-      console.log(`🔍 [脏检查] 基础值不匹配: "${path}"`, {
-        初始值: initial,
-        当前值: current,
-      })
       return false
     }
     return true
@@ -94,10 +90,6 @@ export const isFormDeepEqual = (
   // 4. 处理数组对比
   if (Array.isArray(initial) && Array.isArray(current)) {
     if (initial.length !== current.length) {
-      console.log(`🔍 [脏检查] 数组长度不一致: "${path}"`, {
-        初始长度: initial.length,
-        当前长度: current.length,
-      })
       return false
     }
     for (let i = 0; i < initial.length; i++) {
@@ -131,14 +123,7 @@ export const isFormDeepEqual = (
   }
 
   // 6. 最后的兜底：基本类型对比
-  const isEqual = initial === current
-  if (!isEqual) {
-    console.log(`🔍 [脏检查] 字段值不匹配: "${path}"`, {
-      初始值: initial,
-      当前值: current,
-    })
-  }
-  return isEqual
+  return initial === current
 }
 
 const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
@@ -279,9 +264,10 @@ export function useHotelInfoForm(hotelId: number) {
       //     }
       //   });
       // }
-      // 显示警告弹窗
+      // 显示警告弹窗（水平垂直居中）
       Modal.confirm({
         title: '提示',
+        centered: true,
         content:
           '当前酒店信息内容未保存，确认退出将丢失已编辑内容，是否确认退出？',
         okText: '确认退出',
@@ -337,7 +323,7 @@ export function useHotelInfoForm(hotelId: number) {
       infoNickname: '',
       name: '',
       enName: '',
-      starLevel: 3,
+      starLevel: undefined as unknown as number,
       phone: '',
       description: '',
       province: '',
@@ -360,6 +346,8 @@ export function useHotelInfoForm(hotelId: number) {
   /** 打开「编辑」弹窗并加载已有数据。
    * 优先命中 prefetchQuery 写入的缓存（staleTime 30 秒内），避免重复请求。 */
   const openEdit = async (infoId: number) => {
+    // ensureQueryData：悬停预取已命中缓存时立即返回，否则等待请求完成
+    // 与 InfoActionButtons.onMouseEnter → prefetchQuery 共享同一 queryKey
     const data = await queryClient.ensureQueryData(
       hotelInfoDetailQueryOptions(hotelId, infoId),
     )

@@ -23,8 +23,9 @@ export function HotelInfoList({ hotelId }: HotelInfoListProps) {
   const queryClient = useQueryClient()
 
   /**
-   * 悬停「编辑」按钮时调用。
-   * prefetchQuery：缓存新鲜则跳过，否则后台静默请求，不阻塞任何 UI。
+   * 鼠标悬停「编辑/查看」按钮时静默预取表单数据
+   * prefetchQuery：缓存新鲜则跳过；否则后台请求，不阻塞任何 UI
+   * 用户点击后 openEdit 调用 ensureQueryData 命中缓存，实现弹窗打开即填充
    */
   const handlePrefetchInfo = (infoId: number) => {
     void queryClient.prefetchQuery(hotelInfoDetailQueryOptions(hotelId, infoId))

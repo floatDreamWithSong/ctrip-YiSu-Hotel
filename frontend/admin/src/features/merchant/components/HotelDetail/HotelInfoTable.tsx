@@ -14,7 +14,7 @@ interface HotelInfoTableProps {
   loading: boolean
   pagination: TablePaginationConfig
   onEdit: (infoId: number) => void
-  /** 悬停「编辑」按钮时触发，预取对应的酒店信息详情 */
+  /** 悬停「编辑/查看」按钮时触发预取，可选 */
   onPrefetch?: (infoId: number) => void
   actions: {
     submit: (infoId: number) => void

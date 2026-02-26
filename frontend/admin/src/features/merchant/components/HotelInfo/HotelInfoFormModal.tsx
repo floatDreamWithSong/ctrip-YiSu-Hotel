@@ -2,6 +2,7 @@ import type { ApiHotelTypes } from '@yisu/shared'
 import { Button, Divider, Form, Modal } from 'antd'
 import type { FormInstance } from 'antd'
 import { CarouselList, RoomTypeList, StaticSection } from './components'
+import { HotelInfoViewCard } from './HotelInfoViewCard'
 
 type HotelInfoFormValues = ApiHotelTypes['HotelInfoCreate']
 
@@ -60,56 +61,32 @@ export function HotelInfoFormModal({
       confirmLoading={submitting}
       destroyOnHidden
     >
-      {readOnly && (
-        <style>{`
-          .ant-input-disabled,
-          .ant-input-number-disabled,
-          .ant-input-number-disabled input,
-          .ant-select-disabled .ant-select-selector,
-          .ant-picker-disabled,
-          .ant-picker-disabled input,
-          .ant-input-affix-wrapper-disabled,
-          .ant-input-affix-wrapper-disabled input,
-          .ant-input-textarea-disabled,
-          .ant-input-textarea-disabled textarea,
-          .ant-form-item-disabled .ant-form-item-label > label,
-          .ant-form-item-disabled .ant-form-item-control-input input,
-          .ant-form-item-disabled .ant-form-item-control-input textarea,
-          .ant-form-item-disabled .ant-form-item-control-input .ant-input-number-input {
-            color: rgba(0, 0, 0, 0.88) !important;
-          }
-        `}</style>
+      {readOnly ? (
+        // 查看模式：使用与管理端审核页一致的 Descriptions + Image + Table 布局
+        // 注意：必须使用 getFieldsValue(true) 而非 getFieldsValue()
+        // readOnly 模式下不渲染 <Form>，没有 Form.Item 注册字段
+        // getFieldsValue() 只返回已注册字段的值，会得到空对象
+        // getFieldsValue(true) 返回 store 中所有值（含未注册字段）
+        <HotelInfoViewCard values={form.getFieldsValue(true)} />
+      ) : (
+        // 编辑 / 新建模式：完整表单
+        <Form form={form} layout="vertical">
+          <StaticSection
+            readOnly={false}
+            form={form}
+            locating={locating}
+            handleLocate={handleLocate}
+          />
+
+          {/* 轮播图 */}
+          <Divider>轮播图</Divider>
+          <CarouselList readOnly={false} />
+
+          {/* 房型 */}
+          <Divider>房型</Divider>
+          <RoomTypeList readOnly={false} />
+        </Form>
       )}
-      {/* readOnly 时：disabled 禁用所有交互，variant borderless 去掉输入框边框呈现纯文本效果 */}
-      <Form
-        form={form}
-        layout="vertical"
-        disabled={readOnly}
-        variant={readOnly ? 'borderless' : undefined}
-        style={
-          readOnly
-            ? ({
-                '--ant-color-text': 'rgba(0, 0, 0, 0.88)',
-                '--ant-color-text-disabled': 'rgba(0, 0, 0, 0.88) !important',
-              } as React.CSSProperties)
-            : undefined
-        }
-      >
-        <StaticSection
-          readOnly={readOnly}
-          form={form}
-          locating={locating}
-          handleLocate={handleLocate}
-        />
-
-        {/* 轮播图 */}
-        <Divider>轮播图</Divider>
-        <CarouselList readOnly={readOnly} />
-
-        {/* 房型 */}
-        <Divider>房型</Divider>
-        <RoomTypeList readOnly={readOnly} />
-      </Form>
     </Modal>
   )
 }

@@ -377,7 +377,7 @@ const ReviewsPage = () => {
                   0,
                 )}
               </Descriptions.Item>
-              <Descriptions.Item label="轮播图数量">
+              <Descriptions.Item label="轮播图数量" span={2}>
                 {detailQuery.data?.images.length ?? 0}
               </Descriptions.Item>
             </Descriptions>

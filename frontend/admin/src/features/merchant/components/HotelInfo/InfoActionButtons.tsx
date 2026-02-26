@@ -50,8 +50,8 @@ export function InfoActionButtons({
 
   return (
     <Space>
-      {/* 草稿/驳回：「编辑」；已发布/审核中：「查看」（始终可点击）
-       * onMouseEnter 悬停时触发预取，命中缓存后点击可零延迟填充表单 */}
+      {/* 草稿/驳回：「编辑」；已发布/审核中：「查看」（始终可点击） */}
+      {/* onMouseEnter：悬停时静默预取表单数据，点击时命中缓存实现零等待 */}
       <Button size="small" onClick={onEdit} onMouseEnter={onPrefetch}>
         {isReadOnly ? '查看' : '编辑'}
       </Button>
