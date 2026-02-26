@@ -45,7 +45,7 @@ const AddressSearchPage = () => {
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
           placeholder="输入城市、商圈、地标"
-          className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+          className="w-full rounded-xl px-3 py-2 text-sm outline-2 outline-primary"
         />
         <button
           className="min-w-fit rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"

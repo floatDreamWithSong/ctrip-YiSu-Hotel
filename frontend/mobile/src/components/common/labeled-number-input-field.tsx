@@ -23,8 +23,15 @@ export const LabeledNumberInputField = ({
   inputClassName,
 }: LabeledNumberInputFieldProps) => {
   return (
-    <div className={wrapperClassName}>
-      <div className={cn('mb-1 text-xs text-gray-500', labelClassName)}>
+    <div
+      className={cn(
+        'flex justify-between gap-1 items-center w-full',
+        wrapperClassName,
+      )}
+    >
+      <div
+        className={cn('mb-1 text-xs text-gray-500 text-nowrap', labelClassName)}
+      >
         {label}
       </div>
       <NumberKeyboardInput
@@ -32,7 +39,7 @@ export const LabeledNumberInputField = ({
         onChange={onChange}
         min={min}
         disabled={disabled}
-        className={inputClassName}
+        className={cn(inputClassName, 'w-12')}
       />
     </div>
   )

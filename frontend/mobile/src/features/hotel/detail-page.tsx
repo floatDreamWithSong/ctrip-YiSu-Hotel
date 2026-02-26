@@ -6,7 +6,6 @@ import { MobileHotelRequest } from '@yisu/front-utils/apis/hotel-mobile'
 import { DateTriggerButton } from '@/components/common/date-trigger-button'
 import { GuestRoomCountFields } from '@/components/common/guest-room-count-fields'
 import {
-  calcNightsFromYmd,
   formatYmdDate,
   getStartOfToday,
   normalizePositiveInt,
@@ -15,7 +14,6 @@ import {
 import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
 import { useHotelDetailRealtime } from './realtime/use-hotel-detail-realtime'
-import { CalendarIcon } from 'lucide-react'
 
 type IntentRoomType = 'HOTEL' | 'HOURLY'
 
@@ -126,11 +124,6 @@ const HotelDetailPage = () => {
     [detailQuery.data?.roomTypes, roomTypeIntent],
   )
   const intro = detailQuery.data?.description || '暂无介绍'
-  const poiGroups = useMemo(() => nearbyPoisQuery.data, [nearbyPoisQuery.data])
-  const nights = useMemo(
-    () => calcNightsFromYmd(checkIn, checkOut),
-    [checkIn, checkOut],
-  )
 
   return (
     <div className="h-full overflow-y-auto bg-[#f8f8f6]">
@@ -209,18 +202,14 @@ const HotelDetailPage = () => {
           <>
             <DateTriggerButton
               className="rounded-xl text-xs"
-              icon={<CalendarIcon size={16} />}
               onClick={() => {
                 const from = parseYmdDate(checkIn)
                 const to = parseYmdDate(checkOut)
                 setHotelCalendarValue(from && to ? [from, to] : null)
                 setHotelRangeVisible(true)
               }}
-              text={
-                checkIn && checkOut
-                  ? `${checkIn} 至 ${checkOut}`
-                  : '选择入住/离店日期'
-              }
+              from={checkIn}
+              to={checkOut}
             />
             <GuestRoomCountFields
               guestCount={guestCount}
@@ -237,9 +226,6 @@ const HotelDetailPage = () => {
               }}
               inputClassName="w-full rounded-xl border border-gray-200 px-2 py-2 text-xs"
             />
-            <div className="mt-2 text-xs text-gray-500">
-              {nights ? `共 ${nights} 晚` : '请选择入住和离店日期'}
-            </div>
           </>
         ) : (
           <DateTriggerButton
@@ -248,7 +234,7 @@ const HotelDetailPage = () => {
               setHourlyCalendarValue(parseYmdDate(targetDate) ?? null)
               setHourlyDateVisible(true)
             }}
-            text={targetDate ?? '选择入住日期'}
+            from={targetDate}
           />
         )}
       </div>
@@ -398,17 +384,19 @@ const HotelDetailPage = () => {
                           ? '娱乐'
                           : '交通'}
                   </div>
-                  {(poiGroups?.[key] ?? []).slice(0, 6).map((poi) => (
-                    <div
-                      key={poi.id}
-                      className="mb-1 flex items-center justify-between text-xs text-gray-600"
-                    >
-                      <span className="truncate">{poi.name}</span>
-                      <span>
-                        {poi.distance ? `${Math.round(poi.distance)}m` : '-'}
-                      </span>
-                    </div>
-                  ))}
+                  {(nearbyPoisQuery.data?.[key] ?? [])
+                    .slice(0, 6)
+                    .map((poi) => (
+                      <div
+                        key={poi.id}
+                        className="mb-1 flex items-center justify-between text-xs text-gray-600"
+                      >
+                        <span className="truncate">{poi.name}</span>
+                        <span>
+                          {poi.distance ? `${Math.round(poi.distance)}m` : '-'}
+                        </span>
+                      </div>
+                    ))}
                 </div>
               ),
             )}

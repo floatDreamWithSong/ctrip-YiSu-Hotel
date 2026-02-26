@@ -96,3 +96,26 @@ html, .no-scrollbar>* {
     transform: translateX(0);
   }
 }
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+}
+:root {
+  --primary: var(--adm-color-primary);
+  --secondary: #e7f1ff;
+}
+@layer base {
+  input {
+    @apply border-none focus:outline-primary
+  }
+}
+
+.tags-selector > .adm-space-horizontal.adm-space-wrap {
+  & > .adm-space-item {    
+    & > .adm-selector-item {
+      zoom: 80%;
+      border-radius: 8px;
+    }
+  }
+}
