@@ -2,6 +2,7 @@ import { MerchantHotelRequest } from '@/apis/hotel'
 import { useAddressLocate } from '@/components/address-input'
 import { useModal } from '@/hooks/useModal'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { hotelInfoDetailQueryOptions } from '../queries/hotelQueries'
 import type { ApiHotelTypes } from '@yisu/shared'
 import { PriceMode } from '@yisu/shared'
 import { Form, Modal, message } from 'antd'
@@ -63,63 +64,71 @@ const MERCHANT_VALIDATION_RULES = {
 }
 
 /**
- * 深度对比函数（带调试日志版）
- */
-/**
- * 深度对比函数 - 性能优化生产版
- * 解决了基本类型、数组、嵌套对象的深度对比
+ * 深度对比函数
  */
 export const isFormDeepEqual = (
   initial: unknown,
   current: unknown,
+  path = '',
 ): boolean => {
-  // 1. 引用一致或基本类型相等，直接返回 true
+  // 1. 如果引用完全一致，直接返回 true
   if (initial === current) return true
 
-  // 2. 处理 null 或 undefined 的特殊情况
-  // 如果其中一个是空，另一个不是空，直接判定为不等
-  if (!initial || !current) {
-    return initial === current
-  }
-
-  // 3. 处理数组对比
-  if (Array.isArray(initial) && Array.isArray(current)) {
-    if (initial.length !== current.length) return false
-    for (let i = 0; i < initial.length; i++) {
-      if (!isFormDeepEqual(initial[i], current[i])) return false
+  // 2. 处理 null 或 undefined 的情况
+  if (
+    initial === null ||
+    initial === undefined ||
+    current === null ||
+    current === undefined
+  ) {
+    if (initial !== current) {
+      return false
     }
     return true
   }
 
-  // 4. 处理对象对比
+  // 4. 处理数组对比
+  if (Array.isArray(initial) && Array.isArray(current)) {
+    if (initial.length !== current.length) {
+      return false
+    }
+    for (let i = 0; i < initial.length; i++) {
+      if (!isFormDeepEqual(initial[i], current[i], `${path}[${i}]`)) {
+        return false
+      }
+    }
+    return true
+  }
+
+  // 5. 处理对象对比
   if (typeof initial === 'object' && typeof current === 'object') {
-    // 排除 null 的干扰（虽然前面判断过了，TS 需要明确类型）
-    if (initial === null || current === null) return initial === current
+    const keys1 = Object.keys(initial)
+    const keys2 = Object.keys(current)
 
-    const keys1 = Object.keys(initial as object)
-    const keys2 = Object.keys(current as object)
+    // 获取所有不重复的 key
+    const allKeys = new Set([...keys1, ...keys2])
 
-    // 过滤掉 AntD 内部字段后再比较键值数量
-    const filteredKeys1 = keys1.filter((k) => !k.startsWith('_'))
-    const filteredKeys2 = keys2.filter((k) => !k.startsWith('_'))
+    for (const key of allKeys) {
+      // 排除 AntD 内部可能注入的私有属性 (通常以 _ 开头)
+      if (key.startsWith('_')) continue
 
-    // 如果键的数量都不对，肯定不相等
-    if (filteredKeys1.length !== filteredKeys2.length) return false
-
-    for (const key of filteredKeys1) {
       const val1 = initial[key]
       const val2 = current[key]
 
-      if (!isFormDeepEqual(val1, val2)) return false
+      if (!isFormDeepEqual(val1, val2, path ? `${path}.${key}` : key)) {
+        return false
+      }
     }
     return true
   }
 
-  // 5. 兜底处理
+  // 6. 最后的兜底：基本类型对比
   return initial === current
 }
+
 const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
 const HOTEL_INFOS_QUERY_KEY = 'merchant-hotel-infos'
+const HOTEL_INFOS_ALL_QUERY_KEY = 'merchant-hotel-infos-all'
 
 type HotelInfoFormValues = ApiHotelTypes['HotelInfoCreate']
 
@@ -256,16 +265,16 @@ export function useHotelInfoForm(hotelId: number) {
       //     }
       //   });
       // }
-      // 显示警告弹窗
+      // 显示警告弹窗（水平垂直居中）
       Modal.confirm({
         title: '提示',
+        centered: true,
         content:
           '当前酒店信息内容未保存，确认退出将丢失已编辑内容，是否确认退出？',
         okText: '确认退出',
         cancelText: '取消',
         onOk: () => resolve(true), // 确认退出：允许关闭
         onCancel: () => resolve(false), // 取消：拦截关闭
-        centered: true,
       })
     })
   }
@@ -277,6 +286,9 @@ export function useHotelInfoForm(hotelId: number) {
       }),
       queryClient.invalidateQueries({
         queryKey: [HOTEL_INFOS_QUERY_KEY, hotelId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [HOTEL_INFOS_ALL_QUERY_KEY, hotelId],
       }),
     ])
   }, [queryClient, hotelId])
@@ -315,7 +327,7 @@ export function useHotelInfoForm(hotelId: number) {
       infoNickname: '',
       name: '',
       enName: '',
-      starLevel: 3,
+      starLevel: undefined as unknown as number,
       phone: '',
       description: '',
       province: '',
@@ -335,9 +347,14 @@ export function useHotelInfoForm(hotelId: number) {
     openModal()
   }
 
-  /** 打开「编辑」弹窗并加载已有数据 */
+  /** 打开「编辑」弹窗并加载已有数据。
+   * 优先命中 prefetchQuery 写入的缓存（staleTime 30 秒内），避免重复请求。 */
   const openEdit = async (infoId: number) => {
-    const data = await MerchantHotelRequest.getHotelInfoDetail(hotelId, infoId)
+    // ensureQueryData：悬停预取已命中缓存时立即返回，否则等待请求完成
+    // 与 InfoActionButtons.onMouseEnter → prefetchQuery 共享同一 queryKey
+    const data = await queryClient.ensureQueryData(
+      hotelInfoDetailQueryOptions(hotelId, infoId),
+    )
 
     const formValues: HotelInfoFormValues = {
       infoNickname: data.infoNickname,

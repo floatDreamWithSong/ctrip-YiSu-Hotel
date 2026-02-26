@@ -50,4 +50,11 @@ export class LocationController {
   ) {
     return await this.locationService.geocode(query.address, query.city);
   }
+
+  @Get('china-city-index')
+  @Public()
+  @Throttle({ burst: { ttl: 1000, limit: 2 } })
+  async chinaCityIndex() {
+    return await this.locationService.chinaCityIndex();
+  }
 }

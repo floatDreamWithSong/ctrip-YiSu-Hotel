@@ -119,6 +119,7 @@ function RecordTable({
         {
           title: '结果',
           dataIndex: 'action',
+          width: 120,
           render: (value: string) => reviewStatusText[value] ?? value,
         },
         {
@@ -128,6 +129,7 @@ function RecordTable({
         },
         {
           title: '备注',
+          width: 120,
           dataIndex: 'rejectDetail',
           render: (value: string | null) => value ?? '-',
         },

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberKeyboard } from 'antd-mobile'
+import cn from '@yisu/front-utils/cn'
+import { MinusIcon, PlusIcon } from 'lucide-react'
 
 type NumberKeyboardInputProps = {
   value: number
@@ -103,16 +105,33 @@ export const NumberKeyboardInput = ({
 
   return (
     <>
-      <input
-        type="text"
-        inputMode="none"
-        readOnly
-        disabled={disabled}
-        value={visible ? draft : String(safeValue)}
-        onClick={openKeyboard}
-        onFocus={openKeyboard}
-        className={className}
-      />
+      <div className="flex items-center gap-2 [&>svg]:size-4">
+        <MinusIcon
+          onClick={() => {
+            if (disabled || safeValue === min) return
+            onChange(safeValue - 1)
+          }}
+          className={cn(safeValue === min && 'text-gray-300')}
+        />
+        <input
+          type="text"
+          inputMode="none"
+          readOnly
+          disabled={disabled}
+          value={visible ? draft : String(safeValue)}
+          onClick={openKeyboard}
+          onFocus={openKeyboard}
+          onBlur={closeKeyboard}
+          className={cn('text-center', className)}
+        />
+        <PlusIcon
+          className={cn(disabled && 'opacity-50 text-primary')}
+          onClick={() => {
+            if (disabled) return
+            onChange(safeValue + 1)
+          }}
+        />
+      </div>
       <NumberKeyboard
         visible={visible}
         onClose={closeKeyboard}

@@ -43,4 +43,15 @@ export const LocationRequest = {
       responseValidator: ApiLocationSchemas.geocodeResponse,
     });
   },
+
+  /**
+   * 国内城市行政区索引（用于地址搜索空状态）
+   */
+  chinaCityIndex: () => {
+    return request<ApiLocationTypes['ChinaCityIndexResponse']>({
+      url: '/location/china-city-index',
+      method: 'GET',
+      responseValidator: ApiLocationSchemas.chinaCityIndexResponse,
+    });
+  },
 };

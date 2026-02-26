@@ -1,10 +1,9 @@
 import { MerchantHotelRequest } from '@/apis/hotel'
+import { hotelDetailQueryOptions } from '../queries/hotelQueries'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ApiHotelTypes } from '@yisu/shared'
 import { message } from 'antd'
 import { useCallback, useMemo } from 'react'
-
-const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
 
 /**
  * 酒店详情业务逻辑 Hook
@@ -12,10 +11,9 @@ const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
 export function useHotelDetail(hotelId: number) {
   const queryClient = useQueryClient()
 
-  const hotelDetailQuery = useQuery({
-    queryKey: [HOTEL_DETAIL_QUERY_KEY, hotelId],
-    queryFn: () => MerchantHotelRequest.getHotelDetail(hotelId),
-  })
+  // 使用共享 QueryOptions，与 route loader 的 ensureQueryData 共享同一 queryKey
+  // 悬停预取后进入详情页时，此处 useQuery 会直接命中缓存，实现零等待
+  const hotelDetailQuery = useQuery(hotelDetailQueryOptions(hotelId))
 
   const updateHomeAdMutation = useMutation({
     mutationFn: (data: ApiHotelTypes['HotelUpdateHomeAd']) =>
@@ -23,7 +21,7 @@ export function useHotelDetail(hotelId: number) {
     onSuccess: () => {
       message.success('首页广告推送设置已更新')
       void queryClient.invalidateQueries({
-        queryKey: [HOTEL_DETAIL_QUERY_KEY, hotelId],
+        queryKey: ['merchant-hotel-detail', hotelId],
       })
     },
     onError: (error: Error) => message.error(error.message),

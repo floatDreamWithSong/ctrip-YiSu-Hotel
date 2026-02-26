@@ -1,3 +1,4 @@
+import cn from '@yisu/front-utils/cn'
 import { LabeledNumberInputField } from './labeled-number-input-field'
 
 type GuestRoomCountFieldsProps = {
@@ -14,11 +15,16 @@ export const GuestRoomCountFields = ({
   roomCount,
   onGuestCountChange,
   onRoomCountChange,
-  containerClassName = 'mt-2 grid grid-cols-2 gap-2',
+  containerClassName,
   inputClassName,
 }: GuestRoomCountFieldsProps) => {
   return (
-    <div className={containerClassName}>
+    <div
+      className={cn(
+        'flex flex-col gap-2 items-center w-full',
+        containerClassName,
+      )}
+    >
       <LabeledNumberInputField
         label="入住人数"
         value={guestCount}

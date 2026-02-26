@@ -5,6 +5,7 @@ import {
   inputTipsResponseSchema,
   geocodeRequestSchema,
   geocodeResponseSchema,
+  chinaCityIndexResponseSchema,
 } from "../schema/location";
 import z from "zod";
 
@@ -15,6 +16,7 @@ export const ApiLocationSchemas = {
   inputTipsResponse: inputTipsResponseSchema,
   geocodeRequest: geocodeRequestSchema,
   geocodeResponse: geocodeResponseSchema,
+  chinaCityIndexResponse: chinaCityIndexResponseSchema,
 };
 
 export type ApiLocationTypes = {

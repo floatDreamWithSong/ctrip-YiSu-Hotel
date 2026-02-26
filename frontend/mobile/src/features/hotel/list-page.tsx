@@ -7,7 +7,6 @@ import {
   CalendarPicker,
   DotLoading,
   Dropdown,
-  Loading,
   Selector,
   Slider,
   Toast,
@@ -19,7 +18,6 @@ import { getCurrentPosition } from '@/lib/mobile-geolocation'
 import { DateTriggerButton } from '@/components/common/date-trigger-button'
 import { GuestRoomCountFields } from '@/components/common/guest-room-count-fields'
 import {
-  calcNightsFromYmd,
   formatYmdDate,
   getStartOfToday,
   isOnOrAfterDate,
@@ -29,7 +27,7 @@ import {
 import { useLocationStore } from '@/store/location'
 import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
-import { CalendarIcon } from 'lucide-react'
+import { Loader2Icon } from 'lucide-react'
 import type { ApiMobileHotelTypes } from '@yisu/shared'
 
 const sortOptions = [
@@ -196,7 +194,6 @@ const HotelListPage = () => {
   )
   const hasMore = queryResult.hasNextPage
   const canUseDistance = Boolean(location?.lng && location?.lat)
-  const nights = calcNightsFromYmd(checkIn, checkOut)
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -254,18 +251,20 @@ const HotelListPage = () => {
           </button>
         </div>
         <div className="mb-2 flex items-center gap-2">
-          <div className="flex shrink-0 items-center gap-1 rounded-xl bg-white px-2 py-2 text-xs text-gray-600">
+          <button
+            type="button"
+            aria-label="重新定位"
+            className="flex shrink-0 items-center gap-1 rounded-xl bg-white px-2 py-2 text-xs text-gray-600"
+            disabled={relocateMutation.isPending}
+            onClick={() => relocateMutation.mutate()}
+          >
             <span>{currentCity}</span>
-            <button
-              type="button"
-              aria-label="重新定位"
-              className="text-gray-500"
-              disabled={relocateMutation.isPending}
-              onClick={() => relocateMutation.mutate()}
-            >
-              {relocateMutation.isPending ? <Loading /> : <LocationFill />}
-            </button>
-          </div>
+            {relocateMutation.isPending ? (
+              <Loader2Icon size={12} />
+            ) : (
+              <LocationFill />
+            )}
+          </button>
           <input
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
@@ -279,6 +278,7 @@ const HotelListPage = () => {
               <div className="p-3">
                 {(tagsQuery.data ?? []).length > 0 ? (
                   <Selector
+                    className="tags-selector"
                     options={(tagsQuery.data ?? [])
                       .slice(0, 12)
                       .map((item) => ({ label: item.name, value: item.id }))}
@@ -295,8 +295,6 @@ const HotelListPage = () => {
               <div className="p-3">
                 {params.roomType === 'HOTEL' ? (
                   <DateTriggerButton
-                    className="rounded-lg text-sm"
-                    icon={<CalendarIcon size={16} />}
                     onClick={() => {
                       setActiveDropdown(null)
                       const from = toValidDate(checkIn)
@@ -304,11 +302,8 @@ const HotelListPage = () => {
                       setHotelCalendarValue(from && to ? [from, to] : null)
                       setHotelRangeVisible(true)
                     }}
-                    text={
-                      checkIn && checkOut
-                        ? `${checkIn} 至 ${checkOut}`
-                        : '选择入住/离店日期'
-                    }
+                    from={checkIn}
+                    to={checkOut}
                   />
                 ) : (
                   <DateTriggerButton
@@ -318,17 +313,12 @@ const HotelListPage = () => {
                       setHourlyCalendarValue(toValidDate(targetDate) ?? null)
                       setHourlyDateVisible(true)
                     }}
-                    text={targetDate ?? '选择日期'}
+                    from={targetDate}
                   />
                 )}
-                <div className="mt-2 text-xs text-gray-500">
-                  {params.roomType === 'HOTEL'
-                    ? `入住：${checkIn ?? '-'} 离店：${checkOut ?? '-'} ${nights ? `· 共${nights}晚` : ''}`
-                    : `日期：${targetDate ?? '-'}`}
-                </div>
                 {params.roomType === 'HOTEL' && (
                   <GuestRoomCountFields
-                    containerClassName="mt-3 grid grid-cols-2 gap-2"
+                    containerClassName="w-full"
                     guestCount={guestCount}
                     roomCount={roomCount}
                     onGuestCountChange={(value) =>

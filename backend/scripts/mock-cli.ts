@@ -103,7 +103,7 @@ function randomStatus() {
 
 function pickImageUrls(size: number) {
   return Array.from({ length: size }).map(
-    () => `https://picsum.photos/seed/${faker.string.alphanumeric(12)}/1200/800`,
+    () => `https://picsum.photos/seed/${faker.string.alphanumeric(11)}/400/200`,
   )
 }
 

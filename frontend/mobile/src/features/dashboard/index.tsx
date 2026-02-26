@@ -23,8 +23,7 @@ import {
 } from '@/lib/hotel-search-form'
 import { useLocationStore } from '@/store/location'
 import { useHotelSearchStore, type RoomTypeTab } from '@/store/hotel-search'
-import dayjs from 'dayjs'
-import { CalendarIcon } from 'lucide-react'
+import { SearchIcon } from 'lucide-react'
 
 const roomTypeOptions = [
   { label: '酒店', value: 'HOTEL' },
@@ -204,16 +203,15 @@ const Dashboard = () => {
             />
           </div>
           <div className="mb-3">
-            <div className="mb-1 text-xs text-gray-500">当前地点</div>
             <LocationInput />
           </div>
-          <div className="mb-3">
-            <div className="mb-1 text-xs text-gray-500">关键词</div>
+          <div className="mb-3 flex items-center gap-2">
+            <SearchIcon className="text-gray-300" size={20} />
             <Input
               value={searchState.keyword}
               onChange={(value) => searchState.setState({ keyword: value })}
               clearable
-              placeholder="酒店名称、英文名、简介"
+              placeholder="酒店中英名称、关键词"
               className="w-full "
             />
           </div>
@@ -221,18 +219,14 @@ const Dashboard = () => {
             <div className="mb-3">
               <DateTriggerButton
                 className="rounded-xl text-sm"
-                icon={<CalendarIcon size={16} />}
                 onClick={() => {
                   const from = toValidDate(searchState.checkIn)
                   const to = toValidDate(searchState.checkOut)
                   setHotelCalendarValue(from && to ? [from, to] : null)
                   setHotelRangeVisible(true)
                 }}
-                text={
-                  searchState.checkIn && searchState.checkOut
-                    ? `${searchState.checkIn} 至 ${searchState.checkOut}，共 ${dayjs(searchState.checkOut).diff(dayjs(searchState.checkIn), 'day')} 晚`
-                    : '选择入住/离店日期'
-                }
+                from={searchState.checkIn}
+                to={searchState.checkOut}
               />
               <CalendarPicker
                 visible={hotelRangeVisible}
@@ -284,7 +278,7 @@ const Dashboard = () => {
                   )
                   setHourlyDateVisible(true)
                 }}
-                text={searchState.targetDate ?? '选择日期'}
+                from={searchState.targetDate}
               />
               <CalendarPicker
                 visible={hourlyDateVisible}
@@ -339,6 +333,7 @@ const Dashboard = () => {
             <div className="mb-4">
               <div className="mb-1 text-xs text-gray-500">快捷标签</div>
               <Selector
+                className="tags-selector"
                 options={tagOptions}
                 value={searchState.tagIds}
                 multiple

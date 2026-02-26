@@ -1,8 +1,10 @@
 import { Button, Card, Select, Space, Typography } from 'antd'
 import { HotelReviewStatus } from '@yisu/shared'
+import { useQueryClient } from '@tanstack/react-query'
 import { useHotelInfos } from '../../hooks/useHotelInfos'
 import { useHotelInfoActions } from '../../hooks/useHotelInfoActions'
 import { useHotelInfoForm } from '../../hooks/useHotelInfoForm'
+import { hotelInfoDetailQueryOptions } from '../../queries/hotelQueries'
 import { HotelInfoTable } from './HotelInfoTable'
 import { HotelInfoFormModal } from '../HotelInfo/HotelInfoFormModal'
 
@@ -18,6 +20,16 @@ export function HotelInfoList({ hotelId }: HotelInfoListProps) {
   const { infos, loading, pagination, filter } = useHotelInfos(hotelId)
   const actions = useHotelInfoActions(hotelId)
   const formHook = useHotelInfoForm(hotelId)
+  const queryClient = useQueryClient()
+
+  /**
+   * 鼠标悬停「编辑/查看」按钮时静默预取表单数据
+   * prefetchQuery：缓存新鲜则跳过；否则后台请求，不阻塞任何 UI
+   * 用户点击后 openEdit 调用 ensureQueryData 命中缓存，实现弹窗打开即填充
+   */
+  const handlePrefetchInfo = (infoId: number) => {
+    void queryClient.prefetchQuery(hotelInfoDetailQueryOptions(hotelId, infoId))
+  }
 
   // 当前打开编辑的酒店是否为只读（已发布/审核中）
   const editingInfo = infos.find((i) => i.id === formHook.editingInfoId)
@@ -59,6 +71,7 @@ export function HotelInfoList({ hotelId }: HotelInfoListProps) {
           loading={loading}
           pagination={pagination}
           onEdit={(infoId) => void formHook.openEdit(infoId)}
+          onPrefetch={handlePrefetchInfo}
           actions={{
             submit: actions.submit,
             withdraw: actions.withdraw,

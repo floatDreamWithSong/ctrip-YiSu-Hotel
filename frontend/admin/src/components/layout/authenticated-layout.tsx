@@ -20,11 +20,15 @@ export const AuthenticatedLayout = ({
   const currentUser = getCurrentUserPayload()
 
   const menuItems = [
-    {
-      key: '/',
-      icon: <LayoutDashboard size={16} />,
-      label: <Link to="/">总览</Link>,
-    },
+    ...(currentUser?.userType === 'ADMIN'
+      ? [
+          {
+            key: '/',
+            icon: <LayoutDashboard size={16} />,
+            label: <Link to="/">总览</Link>,
+          },
+        ]
+      : []),
     ...(currentUser?.userType === 'MERCHANT'
       ? [
           {

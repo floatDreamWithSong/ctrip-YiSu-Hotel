@@ -1,7 +1,8 @@
 import baseConfig from '@yisu/eslint-config/base'
 
-export default [...baseConfig,{
-  ignores: [
-    "android/**",
-  ],
-}]
+export default [
+  ...baseConfig,
+  {
+    ignores: ['android/**'],
+  },
+]

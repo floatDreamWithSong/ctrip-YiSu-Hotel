@@ -3,6 +3,10 @@ import type { HotelInfoItem } from '@/apis/hotel'
 import { Card, Table } from 'antd'
 import type { TablePaginationConfig } from 'antd'
 import { InfoActionButtons } from '../HotelInfo/InfoActionButtons'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+
+dayjs.extend(utc)
 
 interface HotelInfoTableProps {
   hotelId: number
@@ -10,6 +14,8 @@ interface HotelInfoTableProps {
   loading: boolean
   pagination: TablePaginationConfig
   onEdit: (infoId: number) => void
+  /** 悬停「编辑/查看」按钮时触发预取，可选 */
+  onPrefetch?: (infoId: number) => void
   actions: {
     submit: (infoId: number) => void
     withdraw: (infoId: number) => void
@@ -32,6 +38,7 @@ export function HotelInfoTable({
   loading,
   pagination,
   onEdit,
+  onPrefetch,
   actions,
 }: HotelInfoTableProps) {
   return (
@@ -43,9 +50,9 @@ export function HotelInfoTable({
         pagination={pagination}
         columns={[
           {
-            title: 'ID',
-            dataIndex: 'id',
+            title: '序号',
             width: 70,
+            render: (_, __, index) => index + 1,
           },
           {
             title: '信息昵称',
@@ -66,7 +73,8 @@ export function HotelInfoTable({
             title: '更新时间',
             dataIndex: 'updatedAt',
             width: 210,
-            render: (val: string) => val,
+            render: (val: string) =>
+              dayjs.utc(val).utcOffset(8).format('YYYY-MM-DD HH:mm:ss'),
           },
           {
             title: '操作',
@@ -79,6 +87,9 @@ export function HotelInfoTable({
                 onWithdraw={() => actions.withdraw(record.id)}
                 onOffline={() => actions.offline(record.id)}
                 onEdit={() => onEdit(record.id)}
+                onPrefetch={
+                  onPrefetch ? () => onPrefetch(record.id) : undefined
+                }
                 onDuplicate={() => actions.duplicate(record.id)}
                 onDelete={() => actions.delete(record.id)}
                 submitting={actions.submitting}
