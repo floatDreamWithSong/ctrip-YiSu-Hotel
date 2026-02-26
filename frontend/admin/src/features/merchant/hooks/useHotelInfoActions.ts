@@ -5,6 +5,7 @@ import { useCallback } from 'react'
 
 const HOTEL_DETAIL_QUERY_KEY = 'merchant-hotel-detail'
 const HOTEL_INFOS_QUERY_KEY = 'merchant-hotel-infos'
+const HOTEL_INFOS_ALL_QUERY_KEY = 'merchant-hotel-infos-all'
 
 /**
  * 酒店信息操作 Hook
@@ -20,6 +21,9 @@ export function useHotelInfoActions(hotelId: number) {
       }),
       queryClient.invalidateQueries({
         queryKey: [HOTEL_INFOS_QUERY_KEY, hotelId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [HOTEL_INFOS_ALL_QUERY_KEY, hotelId],
       }),
     ])
   }, [queryClient, hotelId])
