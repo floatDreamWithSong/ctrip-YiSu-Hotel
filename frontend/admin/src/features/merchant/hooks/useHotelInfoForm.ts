@@ -1,6 +1,7 @@
 import { MerchantHotelRequest } from '@/apis/hotel'
 import { useAddressLocate } from '@/components/address-input'
 import { useModal } from '@/hooks/useModal'
+import { hotelInfoDetailQueryOptions } from '../queries/hotelQueries'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ApiHotelTypes } from '@yisu/shared'
 import { PriceMode } from '@yisu/shared'
@@ -344,7 +345,11 @@ export function useHotelInfoForm(hotelId: number) {
 
   /** 打开「编辑」弹窗并加载已有数据 */
   const openEdit = async (infoId: number) => {
-    const data = await MerchantHotelRequest.getHotelInfoDetail(hotelId, infoId)
+    // ensureQueryData：悬停预取已命中缓存时立即返回，否则等待请求完成
+    // 与 InfoActionButtons.onMouseEnter → prefetchQuery 共享同一 queryKey
+    const data = await queryClient.ensureQueryData(
+      hotelInfoDetailQueryOptions(hotelId, infoId),
+    )
 
     const formValues: HotelInfoFormValues = {
       infoNickname: data.infoNickname,

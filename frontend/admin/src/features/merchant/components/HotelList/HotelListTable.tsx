@@ -1,7 +1,7 @@
 import type { MerchantHotelItem } from '@/apis/hotel'
 import { Button, Card, Popconfirm, Space, Table, Tag } from 'antd'
 import type { TablePaginationConfig } from 'antd'
-import { useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 
 interface HotelListTableProps {
   dataSource: MerchantHotelItem[]
@@ -22,8 +22,6 @@ export function HotelListTable({
   onDelete,
   deleting,
 }: HotelListTableProps) {
-  const navigate = useNavigate()
-
   return (
     <Card>
       <Table
@@ -72,19 +70,16 @@ export function HotelListTable({
             width: 280,
             render: (_, record) => (
               <Space>
-                <Button
-                  size="small"
-                  type="primary"
-                  ghost
-                  onClick={() =>
-                    navigate({
-                      to: '/merchant/hotels/$hotelId',
-                      params: { hotelId: String(record.id) },
-                    })
-                  }
+                {/* preload="intent"：鼠标悬停时触发 route loader，预取酒店详情 */}
+                <Link
+                  to="/merchant/hotels/$hotelId"
+                  params={{ hotelId: String(record.id) }}
+                  preload="intent"
                 >
-                  管理酒店
-                </Button>
+                  <Button size="small" type="primary" ghost>
+                    管理酒店
+                  </Button>
+                </Link>
                 <Popconfirm
                   title="确认删除该酒店？"
                   description="删除后酒店及其信息将不再可查询"
