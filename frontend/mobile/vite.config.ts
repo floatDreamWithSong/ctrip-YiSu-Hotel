@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import { devtools } from '@tanstack/devtools-vite'
 import viteReact from '@vitejs/plugin-react'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
@@ -54,6 +54,9 @@ const getManualChunk = (id: string) => {
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   console.log('mode: ', mode)
+  const env = loadEnv(mode, process.cwd(), '')
+  const amapJscode =
+    env.AMAP_SECURITY_JSCODE
   return defineConfig({
     plugins: [
       codeInspectorPlugin({
@@ -80,6 +83,30 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
+    server: {
+      proxy: {
+        '/_AMapService': {
+          target: 'https://restapi.amap.com',
+          changeOrigin: true,
+          secure: true,
+          rewrite: (path) => path.replace(/^\/_AMapService/, ''),
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq, req) => {
+              if (!amapJscode) return
+              const currentPath = proxyReq.path || req.url || ''
+              if (!currentPath) return
+              const [pathname, search = ''] = currentPath.split('?')
+              const params = new URLSearchParams(search)
+              if (!params.has('jscode')) {
+                params.set('jscode', amapJscode)
+              }
+              const nextSearch = params.toString()
+              proxyReq.path = nextSearch ? `${pathname}?${nextSearch}` : pathname
+            })
+          },
+        },
       },
     },
     build: {

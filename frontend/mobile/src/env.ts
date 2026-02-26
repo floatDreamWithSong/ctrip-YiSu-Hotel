@@ -11,6 +11,8 @@ export const env = createEnv({
   client: {
     VITE_APP_TITLE: z.string(),
     VITE_API_BASE_URL: z.url(),
+    VITE_AMAP_WEB_KEY: z.string(),
+    VITE_AMAP_SERVICE_HOST: z.string().optional().default('/_AMapService'),
   },
 
   /**

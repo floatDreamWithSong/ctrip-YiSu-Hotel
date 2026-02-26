@@ -1,3 +1,4 @@
+import Stars from '@/components/common/starts'
 import type { ApiMobileHotelTypes } from '@yisu/shared'
 
 type HotelListItem =
@@ -34,9 +35,7 @@ const HotelListCard = ({ item, onClick, className }: HotelListCardProps) => {
               {item.enName}
             </div>
           )}
-          <div className="mb-1 text-xs text-gray-500">
-            {'★'.repeat(item.starLevel)}
-          </div>
+          <Stars stars={item.starLevel} className="mb-1" />
           <div className="mb-2 line-clamp-1 text-xs text-gray-500 text-ellipsis overflow-hidden">
             {item.address}
           </div>
