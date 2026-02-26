@@ -108,7 +108,7 @@ export const NumberKeyboardInput = ({
       <div className="flex items-center gap-2 [&>svg]:size-4">
         <MinusIcon
           onClick={() => {
-            if (safeValue === min) return
+            if (disabled || safeValue === min) return
             onChange(safeValue - 1)
           }}
           className={cn(safeValue === min && 'text-gray-300')}
@@ -125,10 +125,11 @@ export const NumberKeyboardInput = ({
           className={cn('text-center', className)}
         />
         <PlusIcon
+          className={cn(disabled && 'opacity-50 text-primary')}
           onClick={() => {
+            if (disabled) return
             onChange(safeValue + 1)
           }}
-          className="text-primary"
         />
       </div>
       <NumberKeyboard
