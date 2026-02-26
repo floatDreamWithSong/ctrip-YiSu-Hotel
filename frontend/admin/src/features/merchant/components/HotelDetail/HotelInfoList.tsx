@@ -5,7 +5,6 @@ import { useHotelInfos } from '../../hooks/useHotelInfos'
 import { useHotelInfoActions } from '../../hooks/useHotelInfoActions'
 import { useHotelInfoForm } from '../../hooks/useHotelInfoForm'
 import { hotelInfoDetailQueryOptions } from '../../queries/hotelQueries'
-import { useQueryClient } from '@tanstack/react-query'
 import { HotelInfoTable } from './HotelInfoTable'
 import { HotelInfoFormModal } from '../HotelInfo/HotelInfoFormModal'
 

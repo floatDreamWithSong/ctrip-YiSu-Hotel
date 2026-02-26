@@ -12,8 +12,6 @@ interface InfoActionButtonsProps {
   onPrefetch?: () => void
   onDuplicate: () => void
   onDelete: () => void
-  /** 鼠标悬停「编辑/查看」按钮时触发预取，可选 */
-  onPrefetch?: () => void
   submitting?: boolean
   withdrawing?: boolean
   offlining?: boolean
@@ -34,7 +32,6 @@ export function InfoActionButtons({
   onPrefetch,
   onDuplicate,
   onDelete,
-  onPrefetch,
   submitting,
   withdrawing,
   offlining,

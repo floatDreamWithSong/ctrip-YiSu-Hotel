@@ -1,7 +1,6 @@
 import { MerchantHotelRequest } from '@/apis/hotel'
 import { useAddressLocate } from '@/components/address-input'
 import { useModal } from '@/hooks/useModal'
-import { hotelInfoDetailQueryOptions } from '../queries/hotelQueries'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { hotelInfoDetailQueryOptions } from '../queries/hotelQueries'
 import type { ApiHotelTypes } from '@yisu/shared'
