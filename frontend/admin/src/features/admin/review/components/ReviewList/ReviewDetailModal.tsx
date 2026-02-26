@@ -39,7 +39,12 @@ function HotelInfoCard({
   }
   return (
     <Card>
-      <Descriptions bordered size="small" column={2}>
+      <Descriptions
+        bordered
+        size="small"
+        column={2}
+        labelStyle={{ width: '120px' }}
+      >
         <Descriptions.Item label="酒店昵称">
           {info.hotel.hotelNickname}
         </Descriptions.Item>

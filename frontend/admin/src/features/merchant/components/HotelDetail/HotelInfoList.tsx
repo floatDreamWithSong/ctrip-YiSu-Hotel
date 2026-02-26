@@ -1,5 +1,6 @@
 import { Button, Card, Select, Space, Typography } from 'antd'
 import { HotelReviewStatus } from '@yisu/shared'
+import { useQueryClient } from '@tanstack/react-query'
 import { useHotelInfos } from '../../hooks/useHotelInfos'
 import { useHotelInfoActions } from '../../hooks/useHotelInfoActions'
 import { useHotelInfoForm } from '../../hooks/useHotelInfoForm'

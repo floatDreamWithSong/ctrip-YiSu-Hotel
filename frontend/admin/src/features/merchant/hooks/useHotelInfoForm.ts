@@ -3,6 +3,7 @@ import { useAddressLocate } from '@/components/address-input'
 import { useModal } from '@/hooks/useModal'
 import { hotelInfoDetailQueryOptions } from '../queries/hotelQueries'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { hotelInfoDetailQueryOptions } from '../queries/hotelQueries'
 import type { ApiHotelTypes } from '@yisu/shared'
 import { PriceMode } from '@yisu/shared'
 import { Form, Modal, message } from 'antd'
@@ -343,7 +344,8 @@ export function useHotelInfoForm(hotelId: number) {
     openModal()
   }
 
-  /** 打开「编辑」弹窗并加载已有数据 */
+  /** 打开「编辑」弹窗并加载已有数据。
+   * 优先命中 prefetchQuery 写入的缓存（staleTime 30 秒内），避免重复请求。 */
   const openEdit = async (infoId: number) => {
     // ensureQueryData：悬停预取已命中缓存时立即返回，否则等待请求完成
     // 与 InfoActionButtons.onMouseEnter → prefetchQuery 共享同一 queryKey

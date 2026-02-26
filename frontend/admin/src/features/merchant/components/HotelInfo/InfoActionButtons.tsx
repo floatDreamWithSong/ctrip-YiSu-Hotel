@@ -8,6 +8,8 @@ interface InfoActionButtonsProps {
   onWithdraw: () => void
   onOffline: () => void
   onEdit: () => void
+  /** 鼠标悬停「编辑/查看」按钮时触发，用于预取详情数据 */
+  onPrefetch?: () => void
   onDuplicate: () => void
   onDelete: () => void
   /** 鼠标悬停「编辑/查看」按钮时触发预取，可选 */
@@ -29,6 +31,7 @@ export function InfoActionButtons({
   onWithdraw,
   onOffline,
   onEdit,
+  onPrefetch,
   onDuplicate,
   onDelete,
   onPrefetch,
