@@ -54,3 +54,18 @@ export const geocodeResponseSchema = z.object({
   formattedAddress: z.string(),
   level: z.string().optional(),
 });
+
+// 国内城市索引项（用于地址搜索空状态）
+export const chinaCityIndexItemSchema = z.object({
+  name: z.string(),
+  initial: z.string().length(1),
+  adcode: z.string(),
+  citycode: z.string().optional(),
+  level: z.string().optional(),
+  center: z.object({
+    lng: z.number(),
+    lat: z.number(),
+  }),
+});
+
+export const chinaCityIndexResponseSchema = z.array(chinaCityIndexItemSchema);

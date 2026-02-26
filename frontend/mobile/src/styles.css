@@ -24,8 +24,9 @@ code {
   height: 100%;
 }
 
-html, .no-scrollbar>* {
-  scrollbar-width: none;
+html,
+.no-scrollbar > * {
+  scrollbar-width: thin;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -107,12 +108,12 @@ html, .no-scrollbar>* {
 }
 @layer base {
   input {
-    @apply border-none focus:outline-primary
+    @apply border-none focus:outline-primary;
   }
 }
 
 .tags-selector > .adm-space-horizontal.adm-space-wrap {
-  & > .adm-space-item {    
+  & > .adm-space-item {
     & > .adm-selector-item {
       zoom: 80%;
       border-radius: 8px;

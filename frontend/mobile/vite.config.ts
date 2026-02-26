@@ -33,7 +33,13 @@ const getManualChunk = (id: string) => {
   }
 
   for (const [chunkName, packages] of chunkGroups) {
-    if (packages.some((pkg) => id.includes(`/node_modules/${pkg}/`) || id.includes(`\\node_modules\\${pkg}\\`))) {
+    if (
+      packages.some(
+        (pkg) =>
+          id.includes(`/node_modules/${pkg}/`) ||
+          id.includes(`\\node_modules\\${pkg}\\`),
+      )
+    ) {
       return chunkName
     }
   }

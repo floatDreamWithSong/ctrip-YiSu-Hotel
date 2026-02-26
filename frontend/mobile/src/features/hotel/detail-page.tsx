@@ -201,7 +201,6 @@ const HotelDetailPage = () => {
         {roomTypeIntent === 'HOTEL' ? (
           <>
             <DateTriggerButton
-              className="rounded-xl text-xs"
               onClick={() => {
                 const from = parseYmdDate(checkIn)
                 const to = parseYmdDate(checkOut)

@@ -1,8 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { Configurations } from '@/config';
 import { firstValueFrom } from 'rxjs';
-import type { ApiLocationTypes, PoiCategory } from '@yisu/shared';
+import { ApiLocationSchemas, type ApiLocationTypes, type PoiCategory } from '@yisu/shared';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 interface AmapApiResponse<T> {
   status: string;
@@ -57,6 +59,15 @@ interface AmapNearbyPoiResponse extends AmapApiResponse<never> {
   }>;
 }
 
+interface AmapDistrictNode {
+  name?: string;
+  adcode?: string | string[];
+  citycode?: string | string[];
+  level?: string;
+  center?: string | string[];
+  districts?: AmapDistrictNode[];
+}
+
 interface AmapInputTipsData {
   tips: Array<{
     name: string;
@@ -85,14 +96,48 @@ interface AmapGeocodeData {
 }
 
 @Injectable()
-export class LocationService {
+export class LocationService implements OnModuleInit {
   private readonly logger = new Logger(LocationService.name);
   private readonly baseUrl = 'https://restapi.amap.com/v3';
+  private chinaCityIndexCache: ApiLocationTypes['ChinaCityIndexResponse'] = [];
   private get key() {
     return Configurations.AMAP_WEB_KEY;
   }
 
   constructor(private readonly httpService: HttpService) { }
+
+  onModuleInit() {
+    this.loadChinaCityIndexFromFile();
+  }
+
+  private loadChinaCityIndexFromFile() {
+    const fileCandidates = [
+      path.resolve(__dirname, '../../template/citys.json'),
+    ];
+
+    let lastError: unknown;
+
+    for (const filePath of fileCandidates) {
+      try {
+        if (!fs.existsSync(filePath)) continue;
+
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const parsed = JSON.parse(raw) as { data?: unknown };
+        const validated = ApiLocationSchemas.chinaCityIndexResponse.parse(parsed.data ?? []);
+
+        this.chinaCityIndexCache = validated;
+        this.logger.log(`已加载城市索引: ${validated.length} 条 (${filePath})`);
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    this.chinaCityIndexCache = [];
+    throw new Error(
+      `加载城市索引缓存失败: 未找到有效的 citys.json, error=${lastError instanceof Error ? lastError.stack : String(lastError ?? '')}`,
+    );
+  }
 
   /**
    * 逆地理编码 - 根据经纬度获取地址
@@ -267,6 +312,16 @@ export class LocationService {
       this.logger.error('地理编码异常', error);
       throw error;
     }
+  }
+
+  /**
+   * 国内城市行政区索引（用于地址搜索空状态）
+   */
+  async chinaCityIndex(): Promise<ApiLocationTypes['ChinaCityIndexResponse']> {
+    if (this.chinaCityIndexCache.length === 0) {
+      this.loadChinaCityIndexFromFile();
+    }
+    return this.chinaCityIndexCache;
   }
 
   /**

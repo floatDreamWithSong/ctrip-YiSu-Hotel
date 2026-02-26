@@ -278,6 +278,7 @@ const HotelListPage = () => {
               <div className="p-3">
                 {(tagsQuery.data ?? []).length > 0 ? (
                   <Selector
+                    className="tags-selector"
                     options={(tagsQuery.data ?? [])
                       .slice(0, 12)
                       .map((item) => ({ label: item.name, value: item.id }))}
@@ -294,7 +295,6 @@ const HotelListPage = () => {
               <div className="p-3">
                 {params.roomType === 'HOTEL' ? (
                   <DateTriggerButton
-                    className="rounded-lg text-sm"
                     onClick={() => {
                       setActiveDropdown(null)
                       const from = toValidDate(checkIn)
