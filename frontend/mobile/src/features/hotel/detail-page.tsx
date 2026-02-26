@@ -14,6 +14,7 @@ import {
 import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
 import { useHotelDetailRealtime } from './realtime/use-hotel-detail-realtime'
+import Stars from '@/components/common/starts'
 
 type IntentRoomType = 'HOTEL' | 'HOURLY'
 
@@ -174,9 +175,7 @@ const HotelDetailPage = () => {
 
       <div className="mt-2 bg-white px-3 py-3">
         <div className="text-lg font-semibold">{detailQuery.data?.name}</div>
-        <div className="mt-1 text-xs text-gray-500">
-          {detailQuery.data ? '★'.repeat(detailQuery.data.starLevel) : ''}
-        </div>
+        <Stars stars={detailQuery.data?.starLevel ?? 0} className="mb-1" />
         <div className="mt-1 text-xs text-gray-500">
           {detailQuery.data?.address}
         </div>
