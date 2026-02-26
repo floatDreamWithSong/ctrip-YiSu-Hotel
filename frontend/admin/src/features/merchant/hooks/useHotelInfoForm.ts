@@ -322,7 +322,7 @@ export function useHotelInfoForm(hotelId: number) {
       infoNickname: '',
       name: '',
       enName: '',
-      starLevel: 3,
+      starLevel: undefined as unknown as number,
       phone: '',
       description: '',
       province: '',
