@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { CalendarPicker, Dialog, Swiper, Tabs } from 'antd-mobile'
@@ -12,12 +12,134 @@ import {
   parseYmdDate,
 } from '@/lib/hotel-search-form'
 import { useHotelSearchStore } from '@/store/hotel-search'
+import { env } from '@/env'
 import HotelListCard from './components/hotel-list-card'
 import { useHotelDetailRealtime } from './realtime/use-hotel-detail-realtime'
 import Stars from '@/components/common/starts'
-import { CarFront, MountainSnow, Music, Utensils } from 'lucide-react'
+import { CarFront, Eye, MountainSnow, Music, Utensils } from 'lucide-react'
 
 type IntentRoomType = 'HOTEL' | 'HOURLY'
+type PoiCategoryKey = 'scenic' | 'food' | 'entertainment' | 'traffic'
+
+type AMapLike = {
+  Map: new (
+    container: HTMLElement,
+    options?: Record<string, unknown>,
+  ) => {
+    add: (overlays: unknown | unknown[]) => void
+    remove: (overlays: unknown | unknown[]) => void
+    setCenter: (center: [number, number]) => void
+    setZoom: (zoom: number) => void
+    setFitView: (
+      overlays?: unknown[],
+      immediately?: boolean,
+      avoid?: [number, number, number, number],
+      maxZoom?: number,
+    ) => void
+    destroy: () => void
+  }
+  Marker: new (options?: Record<string, unknown>) => unknown
+}
+
+const POI_MAP_RESET_ZOOM = 16
+
+const POI_CATEGORY_META: Record<
+  PoiCategoryKey,
+  {
+    label: string
+    icon: typeof MountainSnow
+    markerColor: string
+  }
+> = {
+  scenic: { label: '景点', icon: MountainSnow, markerColor: '#16a34a' },
+  food: { label: '餐饮', icon: Utensils, markerColor: '#ea580c' },
+  entertainment: { label: '娱乐', icon: Music, markerColor: '#2563eb' },
+  traffic: { label: '交通', icon: CarFront, markerColor: '#4b5563' },
+}
+
+let amapScriptLoadingPromise: Promise<AMapLike> | null = null
+
+const getWindowWithAmap = () =>
+  window as Window & {
+    AMap?: AMapLike
+    _AMapSecurityConfig?: {
+      serviceHost?: string
+    }
+  }
+
+const loadAmapScript = (key: string) => {
+  const win = getWindowWithAmap()
+  win._AMapSecurityConfig = {
+    ...(win._AMapSecurityConfig ?? {}),
+    serviceHost: env.VITE_AMAP_SERVICE_HOST,
+  }
+  if (win.AMap) {
+    return Promise.resolve(win.AMap)
+  }
+  if (amapScriptLoadingPromise) {
+    return amapScriptLoadingPromise
+  }
+
+  amapScriptLoadingPromise = new Promise<AMapLike>((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(key)}`
+    script.async = true
+    script.onload = () => {
+      if (win.AMap) {
+        resolve(win.AMap)
+        return
+      }
+      reject(new Error('高德地图脚本加载成功，但 AMap 未挂载到 window'))
+    }
+    script.onerror = () => reject(new Error('高德地图脚本加载失败'))
+    document.head.appendChild(script)
+  }).catch((error) => {
+    amapScriptLoadingPromise = null
+    throw error
+  })
+
+  return amapScriptLoadingPromise
+}
+
+const parseLngLat = (location?: string | null) => {
+  if (!location) return null
+  const [lngText, latText] = location.split(',')
+  const lng = Number(lngText)
+  const lat = Number(latText)
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null
+  return { lng, lat }
+}
+
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+
+const buildHotelMarkerHtml = (hotelName: string) => {
+  const safeName = escapeHtml(hotelName)
+  return `
+    <div style="display:flex;align-items:center;gap:6px;transform:translate(-14px,-40px);">
+      <div style="width:28px;height:28px;border-radius:999px;background:#111827;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 6px 14px rgba(17,24,39,.25);">酒</div>
+      <div style="max-width:160px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.95);color:#111827;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 6px 14px rgba(15,23,42,.12);border:1px solid rgba(17,24,39,.08);">${safeName}</div>
+    </div>
+    <div style="width:10px;height:10px;border-radius:999px;background:#111827;border:2px solid #fff;box-shadow:0 2px 6px rgba(17,24,39,.24);transform:translate(-1px,-8px);"></div>
+  `
+}
+
+const buildPoiMarkerHtml = (name: string, color: string) => {
+  const safeName = escapeHtml(name)
+  return `
+    <div style="display:flex;align-items:center;gap:6px;transform:translate(-8px,-24px);">
+      <div style="width:14px;height:14px;border-radius:999px;background:${color};border:2px solid #fff;box-shadow:0 4px 10px rgba(15,23,42,.18);"></div>
+      <div style="max-width:140px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.94);color:#1f2937;font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(17,24,39,.08);box-shadow:0 4px 12px rgba(15,23,42,.10);">
+        <span style="display:inline-block;width:6px;height:6px;border-radius:999px;background:${color};margin-right:6px;vertical-align:middle;"></span>${safeName}
+      </div>
+    </div>
+  `
+}
 
 const HotelDetailPage = () => {
   const navigate = useNavigate()
@@ -60,7 +182,16 @@ const HotelDetailPage = () => {
   const [hourlyCalendarValue, setHourlyCalendarValue] = useState<Date | null>(
     () => parseYmdDate(search.targetDate ?? searchStore.targetDate) ?? null,
   )
+  const [activePoiCategory, setActivePoiCategory] =
+    useState<PoiCategoryKey>('scenic')
   const updateDialogOpenRef = useRef(false)
+  const poiMapContainerRef = useRef<HTMLDivElement | null>(null)
+  const poiMapRef = useRef<InstanceType<AMapLike['Map']> | null>(null)
+  const poiMapOverlaysRef = useRef<unknown[]>([])
+  const poiHotelOverlayRef = useRef<unknown | null>(null)
+  const [poiMapStatus, setPoiMapStatus] = useState<
+    'idle' | 'loading' | 'ready' | 'error'
+  >('idle')
 
   const detailQuery = useQuery({
     queryKey: ['mobile-hotel-detail', numericHotelId],
@@ -126,6 +257,133 @@ const HotelDetailPage = () => {
     [detailQuery.data?.roomTypes, roomTypeIntent],
   )
   const intro = detailQuery.data?.description || '暂无介绍'
+  const hotelLocation = detailQuery.data?.location ?? null
+  const poiCategoryKeys = useMemo(
+    () => Object.keys(POI_CATEGORY_META) as PoiCategoryKey[],
+    [],
+  )
+  const nearbyPoiPointsByCategory = useMemo(() => {
+    const source = nearbyPoisQuery.data
+    return poiCategoryKeys.reduce(
+      (acc, category) => {
+        acc[category] = (source?.[category] ?? [])
+          .map((poi) => {
+            const parsed = parseLngLat(poi.location)
+            if (!parsed) return null
+            return { ...poi, ...parsed }
+          })
+          .filter((item): item is NonNullable<typeof item> => Boolean(item))
+        return acc
+      },
+      {} as Record<
+        PoiCategoryKey,
+        Array<
+          NonNullable<typeof nearbyPoisQuery.data>[PoiCategoryKey][number] & {
+            lng: number
+            lat: number
+          }
+        >
+      >,
+    )
+  }, [nearbyPoisQuery, poiCategoryKeys])
+
+  useEffect(() => {
+    const next = poiCategoryKeys.find(
+      (category) => (nearbyPoisQuery.data?.[category]?.length ?? 0) > 0,
+    )
+    if (next) {
+      setActivePoiCategory((prev) =>
+        (nearbyPoisQuery.data?.[prev]?.length ?? 0) > 0 ? prev : next,
+      )
+    }
+  }, [nearbyPoisQuery.data, poiCategoryKeys])
+
+  useEffect(() => {
+    if (activeTab !== 'poi' || !hotelLocation || !poiMapContainerRef.current)
+      return
+    let cancelled = false
+
+    setPoiMapStatus((prev) => (prev === 'ready' ? prev : 'loading'))
+    void loadAmapScript(env.VITE_AMAP_WEB_KEY)
+      .then((AMap) => {
+        if (cancelled || !poiMapContainerRef.current || poiMapRef.current)
+          return
+        const map = new AMap.Map(poiMapContainerRef.current, {
+          zoom: POI_MAP_RESET_ZOOM,
+          center: [hotelLocation.lng, hotelLocation.lat],
+          resizeEnable: true,
+        })
+        poiMapRef.current = map
+        setPoiMapStatus('ready')
+      })
+      .catch(() => {
+        if (cancelled) return
+        setPoiMapStatus('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeTab, hotelLocation])
+
+  useEffect(() => {
+    const map = poiMapRef.current
+    if (!map || !hotelLocation) return
+    const win = getWindowWithAmap()
+    const AMap = win.AMap
+    if (!AMap) return
+
+    if (poiMapOverlaysRef.current.length > 0) {
+      map.remove(poiMapOverlaysRef.current)
+      poiMapOverlaysRef.current = []
+    }
+    if (poiHotelOverlayRef.current) {
+      map.remove(poiHotelOverlayRef.current)
+      poiHotelOverlayRef.current = null
+    }
+
+    const hotelMarker = new AMap.Marker({
+      position: [hotelLocation.lng, hotelLocation.lat],
+      title: detailQuery.data?.name ?? '当前酒店',
+      content: buildHotelMarkerHtml(detailQuery.data?.name ?? '当前酒店'),
+      zIndex: 120,
+    })
+    poiHotelOverlayRef.current = hotelMarker
+
+    const categoryMeta = POI_CATEGORY_META[activePoiCategory]
+    const poiMarkers = nearbyPoiPointsByCategory[activePoiCategory].map(
+      (poi) => {
+        return new AMap.Marker({
+          position: [poi.lng, poi.lat],
+          title: poi.name,
+          content: buildPoiMarkerHtml(poi.name, categoryMeta.markerColor),
+          zIndex: 100,
+        })
+      },
+    )
+
+    map.add(hotelMarker)
+    if (poiMarkers.length > 0) {
+      map.add(poiMarkers)
+    }
+    poiMapOverlaysRef.current = poiMarkers
+    map.setZoom(POI_MAP_RESET_ZOOM)
+    map.setCenter([hotelLocation.lng, hotelLocation.lat])
+  }, [
+    activePoiCategory,
+    detailQuery.data?.name,
+    hotelLocation,
+    nearbyPoiPointsByCategory,
+  ])
+
+  useEffect(() => {
+    return () => {
+      if (poiMapRef.current) {
+        poiMapRef.current.destroy()
+        poiMapRef.current = null
+      }
+    }
+  }, [])
 
   return (
     <div className="h-full overflow-y-auto bg-[#f8f8f6]">
@@ -371,44 +629,80 @@ const HotelDetailPage = () => {
         )}
         {activeTab === 'poi' && (
           <div className="space-y-2">
-            {(['scenic', 'food', 'entertainment', 'traffic'] as const).map(
-              (key) => (
-                <div key={key} className="rounded-xl bg-white p-3">
-                  <div className="mb-2 text-sm font-bold flex items-center flex-nowrap gap-2">
-                    {key === 'scenic' ? (
-                      <>
-                        <MountainSnow size={16} /> <span>景点</span>
-                      </>
-                    ) : key === 'food' ? (
-                      <>
-                        <Utensils size={16} /> <span>餐饮</span>
-                      </>
-                    ) : key === 'entertainment' ? (
-                      <>
-                        <Music size={16} /> <span>娱乐</span>
-                      </>
-                    ) : (
-                      <>
-                        <CarFront size={16} /> <span>交通</span>
-                      </>
-                    )}
+            <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+              <div className="border-b border-gray-100 px-3 py-2.5">
+                <div className="text-sm font-semibold text-gray-900">
+                  周边地图
+                </div>
+                <div className="mt-1 text-[11px] text-gray-500">
+                  以当前酒店为中心，点击下方分类卡片切换点位
+                </div>
+              </div>
+              {!hotelLocation ? (
+                <div className="flex h-52 items-center justify-center px-4 text-center text-xs text-gray-500">
+                  当前酒店暂无坐标信息，无法展示地图
+                </div>
+              ) : (
+                <div className="relative h-80 w-full bg-gray-100">
+                  <div ref={poiMapContainerRef} className="h-full w-full" />
+                  {poiMapStatus !== 'ready' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/75 text-xs text-gray-600">
+                      {poiMapStatus === 'error'
+                        ? '地图加载失败，请检查高德 Key 与白名单配置'
+                        : '地图加载中...'}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {poiCategoryKeys.map((key) => {
+              const meta = POI_CATEGORY_META[key]
+              const Icon = meta.icon
+              const isActive = activePoiCategory === key
+              const items = nearbyPoisQuery.data?.[key] ?? []
+
+              return (
+                <button
+                  type="button"
+                  key={key}
+                  onClick={() => setActivePoiCategory(key)}
+                  className={`block w-full rounded-xl p-3 text-left ${
+                    isActive ? 'bg-blue-50 ring-1 ring-blue-200' : 'bg-white'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-sm font-bold">
+                      <Icon size={16} />
+                      <span>{meta.label}</span>
+                      {isActive && (
+                        <span className="rounded-full bg-blue-100 px-2 py-[2px] text-[10px] font-medium text-blue-700">
+                          <Eye size={12} />
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-gray-500">
+                      {items.length} 个地点
+                    </span>
                   </div>
-                  {(nearbyPoisQuery.data?.[key] ?? [])
-                    .slice(0, 6)
-                    .map((poi) => (
+                  {items.length === 0 ? (
+                    <div className="text-xs text-gray-400">暂无数据</div>
+                  ) : (
+                    items.slice(0, 6).map((poi) => (
                       <div
                         key={poi.id}
-                        className="mb-1 flex items-center justify-between text-xs text-gray-600"
+                        className="mb-1 flex items-center justify-between text-xs text-gray-600 last:mb-0"
                       >
-                        <span className="truncate">{poi.name}</span>
-                        <span>
+                        <span className="truncate pr-2">{poi.name}</span>
+                        <span className="shrink-0">
                           {poi.distance ? `${Math.round(poi.distance)}m` : '-'}
                         </span>
                       </div>
-                    ))}
-                </div>
-              ),
-            )}
+                    ))
+                  )}
+                </button>
+              )
+            })}
           </div>
         )}
         {activeTab === 'nearby' && (
