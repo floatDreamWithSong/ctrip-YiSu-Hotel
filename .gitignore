@@ -15,3 +15,4 @@ count.txt
 !docs/用户端查询业务.md
 docs/backup
 docs/architecture
+docs/seed_hotels.sql

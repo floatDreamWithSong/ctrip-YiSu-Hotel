@@ -47,7 +47,7 @@ export function HotelInfoCard({ hotelId }: HotelInfoCardProps) {
 
   return (
     <Card loading={loading}>
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <Button onClick={() => navigate({ to: '/merchant/hotels' })}>
           返回酒店列表
         </Button>

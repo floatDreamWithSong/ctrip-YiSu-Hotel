@@ -70,10 +70,7 @@ export function HotelListTable({
             width: 280,
             render: (_, record) => (
               <Space>
-                {/*
-                 * preload="intent"：鼠标悬停或触摸时触发路由 loader，
-                 * 提前将酒店详情存入 Query 缓存，进入详情页后无需等待首屏请求。
-                 */}
+                {/* preload="intent"：鼠标悬停时触发 route loader，预取酒店详情 */}
                 <Link
                   to="/merchant/hotels/$hotelId"
                   params={{ hotelId: String(record.id) }}
