@@ -15,6 +15,7 @@ import { useHotelSearchStore } from '@/store/hotel-search'
 import HotelListCard from './components/hotel-list-card'
 import { useHotelDetailRealtime } from './realtime/use-hotel-detail-realtime'
 import Stars from '@/components/common/starts'
+import { CarFront, MountainSnow, Music, Utensils } from 'lucide-react'
 
 type IntentRoomType = 'HOTEL' | 'HOURLY'
 
@@ -373,14 +374,24 @@ const HotelDetailPage = () => {
             {(['scenic', 'food', 'entertainment', 'traffic'] as const).map(
               (key) => (
                 <div key={key} className="rounded-xl bg-white p-3">
-                  <div className="mb-2 text-sm font-medium">
-                    {key === 'scenic'
-                      ? '景点'
-                      : key === 'food'
-                        ? '餐饮'
-                        : key === 'entertainment'
-                          ? '娱乐'
-                          : '交通'}
+                  <div className="mb-2 text-sm font-bold flex items-center flex-nowrap gap-2">
+                    {key === 'scenic' ? (
+                      <>
+                        <MountainSnow size={16} /> <span>景点</span>
+                      </>
+                    ) : key === 'food' ? (
+                      <>
+                        <Utensils size={16} /> <span>餐饮</span>
+                      </>
+                    ) : key === 'entertainment' ? (
+                      <>
+                        <Music size={16} /> <span>娱乐</span>
+                      </>
+                    ) : (
+                      <>
+                        <CarFront size={16} /> <span>交通</span>
+                      </>
+                    )}
                   </div>
                   {(nearbyPoisQuery.data?.[key] ?? [])
                     .slice(0, 6)
