@@ -21,7 +21,7 @@ type Args = {
 type AmapPoi = {
   id: string
   name: string
-  address?: string
+  address?: string|string []
   location?: string
   pname?: string
   cityname?: string
@@ -296,7 +296,7 @@ async function createHotelByPoi(params: {
         province: provinceName,
         city: cityName,
         district,
-        address,
+        address: Array.isArray(address) ? address.join(',') : address,
         openedAt: faker.date.past({ years: 20 }),
         reviewStatus: status,
         createdBy: merchantId,
