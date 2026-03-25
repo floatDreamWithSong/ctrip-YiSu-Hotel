@@ -1,5 +1,7 @@
 # Daydream-Yisu（易宿酒店）
 
+[项目详情-飞书文档](https://boyuanclub.feishu.cn/wiki/DjCpw84gxicuUYkUMCJcxmrnnoh)
+
 面向酒店商家与旅客的酒店信息管理与查询系统
 
 - 用户端（`frontend/mobile`）：酒店搜索、筛选、列表、详情、周边信息、实时更新提示
