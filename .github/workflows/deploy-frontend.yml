@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - dev
+    paths:
+      - frontend/admin/**
+      - frontend/mobile/**
+      - .github/workflows/deploy-frontend.yml
 
 env:
   COS_MOBILE_BUCKET: yisu-mobile-1305081043
